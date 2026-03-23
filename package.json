@@ -14,7 +14,9 @@
     "build:all": "pnpm -r build",
     "new:app": "node infrastructure/scripts/new-app.mjs",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "docker:build": "docker build -t sass-factory/template:latest apps/template",
+    "docker:stop-all": "node infrastructure/scripts/docker-stop-all.mjs"
   },
   "engines": {
     "node": ">=20"

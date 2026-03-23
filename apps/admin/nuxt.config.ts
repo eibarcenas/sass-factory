@@ -3,6 +3,7 @@ const hasFirebase = !!(process.env.FIREBASE_API_KEY && process.env.FIREBASE_PROJ
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   future: { compatibilityVersion: 4 },
+  devtools: { enabled: true },
   modules: [
     '@unocss/nuxt',
     '@vueuse/nuxt',

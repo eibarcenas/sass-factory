@@ -1,141 +1,198 @@
 # SASS Factory
 
-A **multi-tenant SaaS platform** for creating and managing themed web experiences — Valentine's Day, Three Kings Day, Mother's Day, Father's Day, Christmas, and any custom occasion.
+> Multi-tenant SaaS platform for creating and managing themed web experiences.
+> One codebase, infinite occasions — Valentine's Day, Mother's Day, Three Kings Day, Christmas, and more.
 
-Built with **Nuxt 4 · UnoCSS · Firestore · GCP · pnpm workspaces**.
+**Stack:** Nuxt 4 · UnoCSS · Firestore · GCP Cloud Build · Terraform · pnpm workspaces · Docker
 
 ---
 
-## Architecture
+## How It Works
+
+```
+Admin Panel (Nuxt 4)
+  │
+  ├─ Create App        → topic + theme + features → saved to Firestore
+  │
+  ├─ 🐳 Simulate       → Docker build + run locally → http://localhost:301x
+  │   (no GCP needed)      SSE streams real-time progress
+  │
+  ├─ ☁️ Deploy to GCP  → Cloud Build pipeline
+  │                         └─ Terraform: new GCP project
+  │                         └─ Docker: build + push Artifact Registry
+  │                         └─ Cloud Run: deploy with APP_SLUG env
+  │                         └─ SSE: live step progress back to admin
+  │
+  └─ Preview           → per-app dev server on stable port (3010+)
+```
+
+---
+
+## Project Structure
 
 ```
 sass-factory/
 ├── apps/
-│   ├── admin/          # Nuxt 4 admin panel (this repo's main app)
-│   └── template/       # Base Nuxt 4 themed app — cloned per topic
+│   ├── admin/                   # Nuxt 4 admin panel
+│   │   ├── app/
+│   │   │   ├── pages/
+│   │   │   │   ├── index.vue            # Dashboard
+│   │   │   │   ├── apps/new.vue         # Create app (4-step wizard)
+│   │   │   │   ├── apps/[id].vue        # Edit app
+│   │   │   │   ├── infra/new.vue        # 🐳 Local simulate / ☁️ Provision
+│   │   │   │   └── infra/deploy.vue     # 🚀 Deploy to GCP via Cloud Build
+│   │   │   ├── composables/
+│   │   │   │   ├── useApps.ts           # Firestore CRUD (mock-aware)
+│   │   │   │   ├── useProvision.ts      # SSE client for simulate/provision
+│   │   │   │   ├── useCloudBuildDeploy.ts # SSE client for Cloud Build
+│   │   │   │   └── useDevPorts.ts       # Local dev port registry
+│   │   │   └── layouts/default.vue      # Admin shell + sidebar
+│   │   └── server/
+│   │       ├── api/
+│   │       │   ├── infra/
+│   │       │   │   ├── simulate.post.ts         # Start Docker simulation
+│   │       │   │   ├── register.post.ts         # Start fake provisioner
+│   │       │   │   ├── deploy.post.ts           # Trigger Cloud Build
+│   │       │   │   ├── deploy-complete.post.ts  # Cloud Build callback
+│   │       │   │   ├── [jobId]/stream.get.ts    # SSE for jobs
+│   │       │   │   └── [buildId]/cloud-build-stream.get.ts  # SSE for CB
+│   │       │   └── dev/
+│   │       │       ├── launch.post.ts   # Start template dev server
+│   │       │       ├── sync.post.ts     # Update config without restart
+│   │       │       ├── ports.get.ts     # List running dev servers
+│   │       │       └── stop.post.ts     # Stop dev server
+│   │       └── utils/
+│   │           ├── job-store.ts         # In-memory job state + SSE data
+│   │           ├── local-simulator.ts   # Docker build/run orchestration
+│   │           ├── provisioning.ts      # Fake/stub provisioner (→ real GCP)
+│   │           ├── cloud-build.ts       # Cloud Build REST API client
+│   │           └── dev-registry.ts      # Port + config file registry
+│   │
+│   └── template/                # Nuxt 4 base themed app
+│       ├── app/
+│       │   ├── pages/index.vue          # Themed landing page
+│       │   └── composables/
+│       │       ├── useAppConfig.ts      # Load config (Firebase or file)
+│       │       └── useTheme.ts          # Inject CSS vars from AppConfig
+│       └── server/api/
+│           └── app-config.get.ts        # Serve config from .dev-configs/
+│
 ├── packages/
-│   ├── core/           # @sass-factory/core — types, presets, constants
-│   └── ui/             # @sass-factory/ui — shared Vue 3 components
+│   ├── core/                    # @sass-factory/core
+│   │   └── src/
+│   │       ├── types/app.ts     # AppConfig, AppTheme, TOPIC_PRESETS
+│   │       └── utils/firestore.ts  # Collection constants
+│   └── ui/                      # @sass-factory/ui
+│       └── src/components/
+│           ├── AppCard.vue
+│           ├── ThemePicker.vue
+│           └── FeatureToggle.vue
+│
 ├── infrastructure/
-│   ├── firestore/      # Security rules, indexes, seed scripts
-│   └── scripts/        # CLI: new-app.mjs scaffolder
-└── .github/
-    └── workflows/      # CI/CD: typecheck, deploy to Firebase + Cloud Run
+│   ├── cloudbuild/
+│   │   └── deploy-app.yaml      # Cloud Build pipeline (5 steps)
+│   ├── terraform/
+│   │   ├── main.tf               # Root module (GCS backend)
+│   │   ├── variables.tf
+│   │   ├── terraform.tfvars.example
+│   │   └── modules/gcp-project/ # Creates project, APIs, Artifact Registry, Cloud Run
+│   ├── firestore/
+│   │   ├── rules.firestore       # Security rules
+│   │   ├── indexes.json          # Composite indexes
+│   │   └── seed.ts               # Seed 4 apps (love, reyes, mom, dad)
+│   ├── gcp/
+│   │   └── setup.sh              # One-time service account setup
+│   └── scripts/
+│       ├── new-app.mjs           # CLI: scaffold new themed app
+│       ├── dev-app.mjs           # CLI: launch app on stable port
+│       └── docker-stop-all.mjs  # CLI: stop all sass containers
+│
+├── .dev-ports.json               # gitignored — port assignments
+├── .dev-configs/                 # gitignored — per-app runtime configs
+├── firebase.json                 # Firebase Hosting + Emulator config
+├── .firebaserc
+└── pnpm-workspace.yaml
 ```
 
-### How it works
-
-1. **Register an app** in the admin panel — pick a topic, customize the theme, select features
-2. **Provision infrastructure** — the admin triggers async GCP + Firebase provisioning, watching real-time SSE progress
-3. **App goes live** — the `template` app reads its `AppConfig` from Firestore and renders the themed experience
-4. **Scale** — add more topics, clone the template, change only the config
-
 ---
 
-## Stack
-
-| Layer | Technology |
-|---|---|
-| Admin & Template | Nuxt 4 + Vue 3 (Composition API) |
-| Styling | UnoCSS (utility-first, same as npmx.dev) |
-| Database | Firebase Firestore |
-| Hosting | Firebase Hosting (admin) + Cloud Run (template) |
-| Realtime | Server-Sent Events (SSE) via H3 |
-| Monorepo | pnpm workspaces |
-| Language | TypeScript end-to-end |
-
----
-
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm 9+
-- Firebase project + GCP project
+| Tool | Version | Notes |
+|------|---------|-------|
+| Node.js | ≥ 20 | Use nvm |
+| pnpm | ≥ 9 | `npm i -g pnpm` |
+| Docker | Desktop | For local simulation |
+| Firebase CLI | latest | `npm i -g firebase-tools` (optional) |
+| gcloud CLI | latest | For GCP deployment only |
 
-### Install
+### 1. Install
 
 ```bash
+git clone https://github.com/eibarcenas/sass-factory.git
+cd sass-factory
 pnpm install
 ```
 
-### Configure Firebase
+### 2. Choose your mode
+
+#### Mode A — Mock (zero config, works immediately)
+
+No `.env` file needed. The admin loads with 6 seed apps from `TOPIC_PRESETS`.
+
+```bash
+pnpm dev:admin    # http://localhost:3000
+```
+
+#### Mode B — Firebase Emulator (realistic local Firestore)
+
+```bash
+npm install -g firebase-tools
+firebase emulators:start --only firestore   # terminal 1 → http://localhost:4000
+
+cp apps/admin/.env.emulator apps/admin/.env
+pnpm dev:admin                              # terminal 2
+```
+
+#### Mode C — Real Firebase
+
+1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Enable Firestore in Native mode
+3. Register a Web App and copy the config:
 
 ```bash
 cp apps/admin/.env.example apps/admin/.env
-cp apps/template/.env.example apps/template/.env
-# Fill in your Firebase credentials in each .env
-```
-
-### Development
-
-```bash
-# Admin panel (http://localhost:3000)
+# Fill in FIREBASE_* values
 pnpm dev:admin
-
-# Template app (http://localhost:3001)
-pnpm dev:template
 ```
-
----
-
-## Admin Panel
-
-### Pages
-
-| Route | Description |
-|---|---|
-| `/` | Dashboard — app grid, stats, search/filter |
-| `/apps/new` | 4-step wizard: topic → theme → features → metadata |
-| `/apps/[id]` | Edit app config |
-| `/apps/[id]/analytics` | Per-app stats |
-| `/infra` | Infrastructure environments list |
-| `/infra/new` | Register + provision new GCP infrastructure |
-| `/settings` | Admin settings |
-
-### Register Infrastructure (SSE Flow)
-
-When you provision infrastructure for an app, the admin opens an SSE connection and streams real-time progress:
-
-```
-POST /api/infra/register      → returns { jobId }
-GET  /api/infra/:jobId/stream → SSE stream of ProvisionJob updates
-GET  /api/infra/:jobId/status → polling fallback
-```
-
-Provisioning steps:
-1. `init` — Validate GCP credentials
-2. `firestore_config` — Write AppConfig to Firestore
-3. `firebase_hosting` — Create Firebase Hosting site
-4. `cloud_run` — Deploy template to Cloud Run
-5. `domain` — Configure custom domain (skipped if none)
-6. `ssl` — Wait for SSL certificate
-7. `complete` — Finalize and return URLs
 
 ---
 
 ## Topic Presets
 
-| Key | Name | Emoji | Font |
-|---|---|---|---|
-| `love` | Valentine's Day | ❤️ | Playfair Display |
-| `reyes` | Reyes Magos | ⭐ | Cinzel |
-| `mom` | Mother's Day | 🌸 | Lora |
-| `dad` | Father's Day | 👔 | Merriweather |
-| `bday` | Birthday | 🎂 | Nunito |
-| `xmas` | Christmas | 🎄 | Mountains of Christmas |
+Built-in themes in `packages/core/src/types/app.ts`:
 
-Add more in `packages/core/src/types/app.ts` → `TOPIC_PRESETS`.
+| Key | Name | Emoji | Font | Primary |
+|-----|------|-------|------|---------|
+| `love` | Valentine's Day | ❤️ | Playfair Display | `#e11d48` |
+| `reyes` | Reyes Magos | ⭐ | Cinzel | `#7c3aed` |
+| `mom` | Mother's Day | 🌸 | Lora | `#db2777` |
+| `dad` | Father's Day | 👔 | Merriweather | `#1d4ed8` |
+| `bday` | Birthday | 🎂 | Nunito | `#7c3aed` |
+| `xmas` | Christmas | 🎄 | Mountains of Christmas | `#15803d` |
+
+Add more by extending `TOPIC_PRESETS` in `packages/core/src/types/app.ts`.
 
 ---
 
 ## App Features
 
-Each app can enable/disable any combination:
+Each app enables any combination of sections:
 
 | Feature | Description |
-|---|---|
+|---------|-------------|
 | `hero` | Opening banner with title and message |
 | `timeline` | Chronological story of moments |
 | `gallery` | Photo grid |
@@ -148,17 +205,87 @@ Each app can enable/disable any combination:
 
 ---
 
-## Scaffold a New App (CLI)
+## Admin Panel — Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Dashboard — app grid, stats, search/filter, per-app Preview button |
+| `/apps/new` | 4-step wizard: topic → theme → features → metadata |
+| `/apps/:id` | Edit app config |
+| `/apps/:id/analytics` | Per-app stats |
+| `/infra/new` | 🐳 Local Docker simulation **or** ☁️ GCP provisioning |
+| `/infra/deploy` | 🚀 Deploy to GCP via Cloud Build + Terraform |
+| `/infra` | Infrastructure environments list |
+| `/settings` | Admin settings |
+
+---
+
+## Local Development Workflow
+
+### Run a specific app locally
+
+Each themed app gets a **stable port** (assigned once, saved in `.dev-ports.json`):
 
 ```bash
-node infrastructure/scripts/new-app.mjs --topic=mom --name="Dia de las Madres" --slug=madres-2025
+# From terminal — shows build output
+pnpm dev:app love    # → http://localhost:3010
+pnpm dev:app mom     # → http://localhost:3011
+pnpm dev:app dad     # → http://localhost:3012
+
+# List running
+pnpm dev:list
+
+# Stop one
+pnpm dev:stop love
 ```
 
-Options:
-- `--topic` — `love`, `reyes`, `mom`, `dad`, `bday`, `xmas`, or any custom string
-- `--name` — Display name
-- `--slug` — URL slug (auto-generated from name if omitted)
-- `--status` — `draft` | `active` | `archived` (default: `draft`)
+### Preview from admin dashboard
+
+Click **▶ Preview** on any app card → launches template on its port → opens browser after 5s boot.
+
+Running apps show a live green badge: `● http://localhost:3010`.
+
+### Local Docker simulation (test before GCP)
+
+Tests the **exact same Docker image** that will be deployed to Cloud Run:
+
+```bash
+# Make sure Docker Desktop is running
+# Open admin → /infra/new → select "🐳 Local (Docker)" mode
+# Select app → click "Run in Docker"
+```
+
+Real-time SSE progress:
+1. `Checking Docker daemon` — `docker info`
+2. `Writing app config` — `.dev-configs/{slug}.json`
+3. `Building Docker image` — `docker build apps/template`
+4. `Starting container` — `docker run -p 301x:3000 -v .dev-configs:/dev-configs`
+5. `Waiting for app to be ready` — health check
+6. `Done` → `http://localhost:301x`
+
+The image is reused on subsequent runs (step 3 skipped if already built).
+
+### Config hot-reload
+
+Change an app's theme/features in the admin → click **Sync** → running container picks up the new `.dev-configs/{slug}.json` on the next request (no restart needed).
+
+---
+
+## Creating New Apps
+
+### Via Admin UI
+
+1. Go to `/apps/new`
+2. Pick topic → customize theme → select features → fill metadata
+3. Click **Create App**
+4. Click **▶ Preview** to launch locally
+
+### Via CLI
+
+```bash
+pnpm new:app --topic=mom --name="Dia de las Madres" --slug=madres-2025
+# Options: --topic, --name, --slug, --status (draft|active|archived)
+```
 
 ---
 
@@ -166,50 +293,158 @@ Options:
 
 ```
 apps/{appId}
-  id, name, slug, topic, status
-  theme: { primary, secondary, accent, background, font, emoji, gradient[] }
-  features: string[]
-  metadata: { title, description, ogImage }
-  domain, ownerId
-  createdAt, updatedAt
+  id:            string
+  name:          string
+  slug:          string        # URL-safe identifier
+  topic:         string        # love | reyes | mom | dad | bday | xmas | custom
+  status:        draft | active | archived
+  theme:
+    primary:     string        # hex color
+    secondary:   string
+    accent:      string
+    background:  string
+    font:        string        # Google Font name
+    emoji:       string
+    gradient:    string[]
+  features:      string[]      # hero | timeline | gallery | …
+  metadata:
+    title:       string
+    description: string
+    ogImage:     string?
+  domain:        string?        # custom domain
+  ownerId:       string?
+  deployment:                   # filled by Cloud Build callback
+    cloudRunUrl: string?
+    hostingUrl:  string?
+    projectId:   string?
+    deployedAt:  string?
+  createdAt:     Timestamp
+  updatedAt:     Timestamp
 
 apps/{appId}/moments/{momentId}
-  userId, content, mediaUrl, createdAt
+  userId:    string
+  content:   string
+  mediaUrl:  string?
+  createdAt: Timestamp
 ```
 
 ---
 
-## Seed Firestore
+## Deploying to GCP
+
+### One-time setup
 
 ```bash
-# Add service account to infrastructure/firestore/service-account.json (don't commit)
-npx ts-node infrastructure/firestore/seed.ts
+chmod +x infrastructure/gcp/setup.sh
+./infrastructure/gcp/setup.sh <factory-project-id> <org-id> <billing-account>
 ```
 
-Seed creates 4 apps: `love`, `reyes`, `mom`, `dad` with full preset configs.
+This creates the service account with the right permissions and a Terraform state bucket.
+
+### Deploy the admin (SASS Factory itself)
+
+```bash
+# Build and deploy the admin panel to Cloud Run
+gcloud run deploy sass-factory-admin \
+  --source apps/admin \
+  --region us-central1 \
+  --project $GCP_PROJECT_ID \
+  --set-env-vars "FIREBASE_API_KEY=...,FIREBASE_PROJECT_ID=...,GCP_PROJECT_ID=...,FACTORY_URL=...,TF_STATE_BUCKET=..."
+
+# Get the URL
+gcloud run services describe sass-factory-admin \
+  --region us-central1 --format "value(status.url)"
+```
+
+### Deploy a themed app
+
+From the admin UI:
+
+1. Go to `/infra/deploy`
+2. Select the app
+3. Enter GCP Org ID and Billing Account
+4. Click **🚀 Deploy to GCP**
+
+Cloud Build pipeline (`infrastructure/cloudbuild/deploy-app.yaml`):
+
+```
+Step 1: tf-init         Terraform init (GCS backend)
+Step 2: tf-apply        Create GCP project + enable APIs + Artifact Registry
+Step 3: docker-build    Build template image
+Step 4: docker-push     Push to Artifact Registry
+Step 5: cloud-run-deploy Deploy to Cloud Run with APP_SLUG env
+Step 6: notify-complete  POST back URLs to factory → Firestore updated
+```
+
+Live progress streamed via SSE to the admin UI.
+
+### Terraform state
+
+Each app gets its own state prefix in GCS:
+
+```
+gs://{TF_STATE_BUCKET}/terraform/apps/{slug}/
+```
 
 ---
 
-## Deploy Firestore Rules
+## Environment Variables
+
+### `apps/admin/.env`
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `FIREBASE_API_KEY` | For Firebase mode | Firebase web API key |
+| `FIREBASE_AUTH_DOMAIN` | For Firebase mode | `{project}.firebaseapp.com` |
+| `FIREBASE_PROJECT_ID` | For Firebase mode | Firebase project ID |
+| `FIREBASE_STORAGE_BUCKET` | For Firebase mode | `{project}.appspot.com` |
+| `FIREBASE_MESSAGING_SENDER_ID` | For Firebase mode | Messaging sender ID |
+| `FIREBASE_APP_ID` | For Firebase mode | Firebase app ID |
+| `GCP_PROJECT_ID` | For GCP deploy | Factory's GCP project ID |
+| `FACTORY_URL` | For GCP deploy | Factory's Cloud Run URL |
+| `TF_STATE_BUCKET` | For GCP deploy | GCS bucket for Terraform state |
+| `CLOUD_BUILD_REPO` | For GCP deploy | Source repo name |
+
+If none of the `FIREBASE_*` vars are set → **mock mode activates automatically**.
+
+### `apps/template/.env`
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `APP_SLUG` | Always | Identifies which app config to load |
+| `FIREBASE_*` | For Firebase mode | Same as admin |
+| `DEV_CONFIGS_DIR` | Docker only | Mount path for config files (`/dev-configs`) |
+
+---
+
+## Firestore Rules & Indexes
 
 ```bash
+# Deploy security rules
 firebase deploy --only firestore:rules
+
+# Deploy composite indexes
 firebase deploy --only firestore:indexes
+
+# Seed initial apps (love, reyes, mom, dad)
+# Add service-account.json to infrastructure/firestore/ first (gitignored)
+npx ts-node infrastructure/firestore/seed.ts
 ```
 
 ---
 
 ## CI/CD
 
-GitHub Actions (requires `workflow` scope on PAT):
+GitHub Actions (requires PAT with `workflow` scope):
 
-| Trigger | Job |
-|---|---|
-| PR to `main`/`develop` | Typecheck |
-| Push to `main` | Deploy admin → Firebase Hosting |
-| Push to `main` | Deploy template → Cloud Run |
+| Trigger | Jobs |
+|---------|------|
+| PR → `main` / `develop` | Typecheck all packages |
+| Push → `main` | Deploy admin → Firebase Hosting |
+| Push → `main` | Deploy template → Cloud Run |
 
-Required GitHub secrets:
+### Required GitHub Secrets
+
 ```
 FIREBASE_API_KEY
 FIREBASE_AUTH_DOMAIN
@@ -217,8 +452,8 @@ FIREBASE_PROJECT_ID
 FIREBASE_STORAGE_BUCKET
 FIREBASE_MESSAGING_SENDER_ID
 FIREBASE_APP_ID
-FIREBASE_SERVICE_ACCOUNT
-GCP_SERVICE_ACCOUNT_KEY
+FIREBASE_SERVICE_ACCOUNT       # Firebase Hosting deploy key (JSON)
+GCP_SERVICE_ACCOUNT_KEY        # Cloud Run deploy key (JSON)
 GCP_PROJECT_ID
 GCP_REGION
 ```
@@ -228,14 +463,35 @@ GCP_REGION
 ## Branches
 
 | Branch | Purpose |
-|---|---|
-| `develop` | Active development base |
-| `main` | Production — triggers deploys |
+|--------|---------|
+| `develop` | Active development — all PRs target here |
+| `main` | Production — merging triggers deploys |
 
 ---
 
-## Contributing
+## Development Tips
 
-1. Branch from `develop`
-2. PR back to `develop`
-3. `develop` → `main` for releases
+**Rebuild Docker image after template changes:**
+```bash
+pnpm docker:build
+```
+
+**Stop all running app containers:**
+```bash
+pnpm docker:stop-all
+```
+
+**Force rebuild on simulate:**
+The simulator reuses the image if it exists. Delete it to force rebuild:
+```bash
+docker rmi sass-factory/template:latest
+# Then simulate again from admin
+```
+
+**Port collisions:**
+Ports are permanently assigned in `.dev-ports.json`. Delete the file to reset all assignments.
+
+**Logs for a running container:**
+```bash
+docker logs sass-love --follow
+```
