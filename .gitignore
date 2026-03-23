@@ -2,6 +2,9 @@
 node_modules/
 .pnpm-store/
 
+# Local dev port registry
+.dev-ports.json
+
 # Build outputs
 dist/
 .output/

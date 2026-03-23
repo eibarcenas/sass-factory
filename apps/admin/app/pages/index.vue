@@ -2,12 +2,14 @@
 import type { AppConfig } from '@sass-factory/core'
 import { useApps } from '~/composables/useApps'
 import { useToast } from '~/composables/useToast'
+import { useDevPorts } from '~/composables/useDevPorts'
 
 definePageMeta({ layout: 'default' })
 
 const { apps, deleteApp } = useApps()
 const toast = useToast()
 const router = useRouter()
+const { launchApp, stopApp, getDevUrl, isLaunching, isRunning } = useDevPorts()
 
 const filterStatus = ref<'' | 'draft' | 'active' | 'archived'>('')
 const searchQuery = ref('')
@@ -54,6 +56,21 @@ function handleView(id: string) {
     window.open(`https://${app.domain}`, '_blank')
   } else {
     router.push(`/apps/${id}/analytics`)
+  }
+}
+
+async function handlePreview(app: AppConfig) {
+  const existing = getDevUrl(app.slug)
+  if (existing) {
+    window.open(existing, '_blank')
+    return
+  }
+  try {
+    const result = await launchApp(app.slug, app)
+    toast.success(`Launching on port ${result.port}… give it ~5s to boot`)
+    setTimeout(() => window.open(result.url, '_blank'), 5000)
+  } catch {
+    toast.error('Failed to launch dev server')
   }
 }
 
@@ -266,13 +283,34 @@ const statCards = computed(() => [
           </div>
         </div>
 
-        <!-- Actions -->
-        <div class="px-4 pb-4 flex gap-2">
-          <button
-            class="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 transition-colors"
-            @click="handleView(app.id)"
+        <!-- Dev server badge -->
+        <div v-if="isRunning(app.slug)" class="px-4 pb-1">
+          <a
+            :href="getDevUrl(app.slug)!"
+            target="_blank"
+            class="inline-flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1 hover:bg-emerald-100 transition-colors font-mono"
           >
-            View
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+            {{ getDevUrl(app.slug) }}
+          </a>
+        </div>
+
+        <!-- Actions -->
+        <div class="px-4 pb-4 pt-2 flex gap-2">
+          <!-- Preview / Launch -->
+          <button
+            class="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1"
+            :class="isRunning(app.slug)
+              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700'
+              : 'bg-violet-50 hover:bg-violet-100 text-violet-700'"
+            :disabled="isLaunching(app.slug)"
+            @click="handlePreview(app)"
+          >
+            <svg v-if="isLaunching(app.slug)" class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <span>{{ isRunning(app.slug) ? '↗ Open' : isLaunching(app.slug) ? 'Starting…' : '▶ Preview' }}</span>
           </button>
           <button
             class="flex-1 text-xs font-medium py-1.5 px-3 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition-colors"
