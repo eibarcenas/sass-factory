@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if user is an admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    // Helper: check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper: check if user owns a resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Apps collection: readable by all, writable by admins only
+    match /apps/{appId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      // Moments sub-collection: readable by all, writable by authenticated users
+      match /moments/{momentId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update: if isAuthenticated() && isOwner(resource.data.userId);
+        allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+      }
+
+      // Analytics sub-collection: readable only by admins
+      match /analytics/{analyticsId} {
+        allow read: if isAdmin();
+        allow write: if false; // Written only by server-side functions
+      }
+    }
+
+    // Users collection: users can read/write their own data
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

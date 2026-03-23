@@ -1,0 +1,21 @@
+{
+  "name": "sass-factory",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev:admin": "pnpm --filter admin dev",
+    "dev:template": "pnpm --filter template dev",
+    "build:admin": "pnpm --filter admin build",
+    "build:template": "pnpm --filter template build",
+    "build:all": "pnpm -r build",
+    "new:app": "node infrastructure/scripts/new-app.mjs",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
