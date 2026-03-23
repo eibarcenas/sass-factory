@@ -1,0 +1,94 @@
+steps:
+  # ── Step 1: Terraform init & apply (creates GCP project + infra) ──────────
+  - id: tf-init
+    name: hashicorp/terraform:1.7
+    entrypoint: terraform
+    args: [init, -reconfigure,
+           -backend-config=bucket=$_STATE_BUCKET,
+           -backend-config=prefix=terraform/apps/$_SLUG]
+    dir: infrastructure/terraform
+
+  - id: tf-apply
+    name: hashicorp/terraform:1.7
+    entrypoint: terraform
+    args:
+      - apply
+      - -auto-approve
+      - -var=factory_project_id=$_FACTORY_PROJECT_ID
+      - -var=app_project_id=$_APP_PROJECT_ID
+      - -var=app_display_name=$_SLUG
+      - -var=app_slug=$_SLUG
+      - -var=org_id=$_ORG_ID
+      - -var=billing_account=$_BILLING_ACCOUNT
+      - -var=region=$_REGION
+      - -var=state_bucket=$_STATE_BUCKET
+    dir: infrastructure/terraform
+    waitFor: [tf-init]
+
+  # ── Step 2: Build template Docker image ────────────────────────────────────
+  - id: docker-build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - $_REGION-docker.pkg.dev/$_APP_PROJECT_ID/apps/template:$_SLUG
+      - -t
+      - $_REGION-docker.pkg.dev/$_APP_PROJECT_ID/apps/template:latest
+      - --build-arg
+      - APP_SLUG=$_SLUG
+      - apps/template
+    waitFor: [tf-apply]
+
+  # ── Step 3: Push image to Artifact Registry ────────────────────────────────
+  - id: docker-push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - $_REGION-docker.pkg.dev/$_APP_PROJECT_ID/apps/template
+    waitFor: [docker-build]
+
+  # ── Step 4: Deploy to Cloud Run ────────────────────────────────────────────
+  - id: cloud-run-deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - $_SLUG
+      - --project=$_APP_PROJECT_ID
+      - --image=$_REGION-docker.pkg.dev/$_APP_PROJECT_ID/apps/template:$_SLUG
+      - --region=$_REGION
+      - --allow-unauthenticated
+      - --set-env-vars=APP_SLUG=$_SLUG
+      - --quiet
+    waitFor: [docker-push]
+
+  # ── Step 5: Write result back to factory Firestore ─────────────────────────
+  - id: notify-complete
+    name: node:20-alpine
+    entrypoint: node
+    args: [infrastructure/scripts/notify-deploy-complete.mjs]
+    env:
+      - APP_ID=$_APP_ID
+      - APP_SLUG=$_SLUG
+      - APP_PROJECT_ID=$_APP_PROJECT_ID
+      - REGION=$_REGION
+      - FACTORY_PROJECT_ID=$_FACTORY_PROJECT_ID
+      - FACTORY_URL=$_FACTORY_URL
+    waitFor: [cloud-run-deploy]
+
+substitutions:
+  _SLUG: love
+  _APP_ID: ''
+  _APP_PROJECT_ID: ''
+  _BILLING_ACCOUNT: ''
+  _ORG_ID: ''
+  _REGION: us-central1
+  _FACTORY_PROJECT_ID: ''
+  _FACTORY_URL: ''
+  _STATE_BUCKET: ''
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8

@@ -16,6 +16,7 @@
     "@unocss/nuxt": "^0.61.0",
     "@vueuse/nuxt": "^10.9.0",
     "firebase": "^10.11.0",
+    "google-auth-library": "^9.0.0",
     "nuxt": "^4.0.0",
     "nuxt-vuefire": "^1.0.4",
     "vue": "^3.4.0",

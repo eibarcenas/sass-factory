@@ -9,6 +9,7 @@ const navItems = [
   { label: 'Dashboard', to: '/', icon: '🏠' },
   { label: 'Apps', to: '/apps/new', icon: '✨' },
   { label: 'Infrastructure', to: '/infra', icon: '🏗️' },
+  { label: 'Deploy', to: '/infra/deploy', icon: '🚀' },
   { label: 'Settings', to: '/settings', icon: '⚙️' },
 ]
 
