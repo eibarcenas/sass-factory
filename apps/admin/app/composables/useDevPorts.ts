@@ -35,6 +35,14 @@ export function useDevPorts() {
     } catch {}
   }
 
+  /** Push updated config to running instance without restart */
+  async function syncConfig(slug: string, appConfig: unknown) {
+    return $fetch<{ ok: boolean; running: boolean; url: string | null }>('/api/dev/sync', {
+      method: 'POST',
+      body: { slug, appConfig },
+    })
+  }
+
   function getDevUrl(slug: string): string | null {
     const entry = ports.value[slug]
     return entry ? `http://localhost:${entry.port}` : null
@@ -55,5 +63,5 @@ export function useDevPorts() {
     onUnmounted(() => clearInterval(interval))
   })
 
-  return { ports, launching, refresh, launchApp, stopApp, getDevUrl, isLaunching, isRunning }
+  return { ports, launching, refresh, launchApp, stopApp, syncConfig, getDevUrl, isLaunching, isRunning }
 }

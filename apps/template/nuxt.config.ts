@@ -28,8 +28,6 @@ export default defineNuxtConfig({
       appSlug: process.env.APP_SLUG ?? '',
       appDomain: process.env.APP_DOMAIN ?? '',
       mockMode: !hasFirebase,
-      // Injected by dev launcher when running locally
-      mockConfig: process.env.APP_MOCK_CONFIG ?? '',
     },
   },
 })

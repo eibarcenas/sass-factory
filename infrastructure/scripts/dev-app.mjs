@@ -8,16 +8,53 @@
  * Each app gets a stable port starting at 3010, saved in .dev-ports.json
  */
 
-import { spawn, execSync } from 'node:child_process'
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { spawn } from 'node:child_process'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dir = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dir, '../..')
 const REGISTRY = resolve(ROOT, '.dev-ports.json')
+const CONFIGS_DIR = resolve(ROOT, '.dev-configs')
 const TEMPLATE_DIR = resolve(ROOT, 'apps/template')
 const BASE_PORT = 3010
+
+// Inline TOPIC_PRESETS so the CLI has no build step
+const PRESETS = {
+  love:  { name: "Valentine's Day", emoji: '❤️',  primary: '#e11d48', secondary: '#fda4af', accent: '#fb7185', background: '#fff1f2', font: 'Playfair Display', gradient: ['#fda4af','#e11d48'] },
+  reyes: { name: 'Reyes Magos',     emoji: '⭐',  primary: '#7c3aed', secondary: '#c4b5fd', accent: '#f59e0b', background: '#1e1b4b', font: 'Cinzel',           gradient: ['#7c3aed','#f59e0b'] },
+  mom:   { name: "Mother's Day",    emoji: '🌸',  primary: '#db2777', secondary: '#fbcfe8', accent: '#86efac', background: '#fdf2f8', font: 'Lora',             gradient: ['#fbcfe8','#db2777'] },
+  dad:   { name: "Father's Day",    emoji: '👔',  primary: '#1d4ed8', secondary: '#bfdbfe', accent: '#64748b', background: '#eff6ff', font: 'Merriweather',     gradient: ['#bfdbfe','#1d4ed8'] },
+  bday:  { name: 'Birthday',        emoji: '🎂',  primary: '#7c3aed', secondary: '#ddd6fe', accent: '#f59e0b', background: '#faf5ff', font: 'Nunito',           gradient: ['#ddd6fe','#f59e0b'] },
+  xmas:  { name: 'Christmas',       emoji: '🎄',  primary: '#15803d', secondary: '#bbf7d0', accent: '#ef4444', background: '#f0fdf4', font: 'Mountains of Christmas', gradient: ['#15803d','#ef4444'] },
+}
+
+function writeConfig(slug) {
+  if (!existsSync(CONFIGS_DIR)) mkdirSync(CONFIGS_DIR, { recursive: true })
+  const cfgPath = resolve(CONFIGS_DIR, `${slug}.json`)
+
+  // Only build from preset if no config file exists yet
+  if (!existsSync(cfgPath)) {
+    const preset = PRESETS[slug]
+    if (preset) {
+      const config = {
+        id: `dev_${slug}`, topic: slug, name: preset.name, slug, status: 'active',
+        theme: { primary: preset.primary, secondary: preset.secondary, accent: preset.accent,
+          background: preset.background, font: preset.font, emoji: preset.emoji, gradient: preset.gradient },
+        features: ['hero', 'gallery', 'timeline', 'letter', 'closing'],
+        metadata: { title: preset.name, description: `${preset.emoji} ${preset.name} themed experience` },
+        createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      }
+      writeFileSync(cfgPath, JSON.stringify(config, null, 2))
+      console.log(`  ✓ Config written → .dev-configs/${slug}.json`)
+    } else {
+      console.log(`  ⚠ No preset for "${slug}". Create config in admin panel first.`)
+    }
+  } else {
+    console.log(`  ✓ Config exists → .dev-configs/${slug}.json`)
+  }
+}
 
 // ── Registry helpers ────────────────────────────────────────────────────────
 
@@ -102,6 +139,9 @@ if (reg[slug]?.pid && alive(reg[slug].pid)) {
 }
 
 const port = reg[slug]?.port ?? nextPort(reg)
+
+// Write config before spawning
+writeConfig(slug)
 
 console.log(`\n  Starting "${slug}" on http://localhost:${port} …\n`)
 

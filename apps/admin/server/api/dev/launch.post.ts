@@ -1,6 +1,12 @@
 import { spawn } from 'node:child_process'
 import { resolve } from 'node:path'
-import { assignPort, readRegistry, writeRegistry, isProcessRunning } from '../../utils/dev-registry'
+import {
+  assignPort,
+  readRegistry,
+  writeRegistry,
+  isProcessRunning,
+  writeDevConfig,
+} from '../../utils/dev-registry'
 
 export default defineEventHandler(async (event) => {
   const { slug, appConfig } = await readBody(event)
@@ -9,23 +15,32 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'slug is required' })
   }
 
-  // Check if already running
+  // Write config file so template can read it (even before process starts)
+  if (appConfig) {
+    writeDevConfig(slug, appConfig)
+  }
+
+  // If already running, just return the URL (config file was already updated above)
   const registry = readRegistry()
   const existing = registry[slug]
   if (existing?.pid && isProcessRunning(existing.pid)) {
-    return { port: existing.port, url: `http://localhost:${existing.port}`, isNew: false }
+    return {
+      port: existing.port,
+      url: `http://localhost:${existing.port}`,
+      isNew: false,
+      configSynced: !!appConfig,
+    }
   }
 
   const port = assignPort(slug)
   const templateDir = resolve(process.cwd(), '../../apps/template')
 
+  // Only pass identity — config is read from .dev-configs/{slug}.json
   const env: Record<string, string> = {
-    ...process.env as Record<string, string>,
+    ...(process.env as Record<string, string>),
     APP_SLUG: slug,
     PORT: String(port),
     NUXT_PORT: String(port),
-    // Pass mock config as JSON if provided
-    ...(appConfig ? { APP_MOCK_CONFIG: JSON.stringify(appConfig) } : {}),
   }
 
   const child = spawn('pnpm', ['dev', '--port', String(port)], {
@@ -37,7 +52,6 @@ export default defineEventHandler(async (event) => {
 
   child.unref()
 
-  // Save PID to registry
   const updated = readRegistry()
   updated[slug] = { port, pid: child.pid, startedAt: Date.now() }
   writeRegistry(updated)

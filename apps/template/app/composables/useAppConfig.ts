@@ -1,34 +1,5 @@
 import type { AppConfig } from '@sass-factory/core'
-import { TOPIC_PRESETS, COLLECTIONS } from '@sass-factory/core'
-
-// Build a full mock AppConfig from TOPIC_PRESETS for a given slug
-function buildMockConfig(slug: string): AppConfig | null {
-  const preset = TOPIC_PRESETS[slug]
-  if (!preset) return null
-  return {
-    id: `mock_${slug}`,
-    topic: slug,
-    name: preset.name,
-    slug,
-    status: 'active',
-    theme: {
-      primary: preset.primary ?? '#6366f1',
-      secondary: preset.secondary ?? '#a5b4fc',
-      accent: preset.accent ?? '#f59e0b',
-      background: preset.background ?? '#ffffff',
-      font: preset.font ?? 'Inter',
-      emoji: preset.emoji ?? '✨',
-      gradient: preset.gradient ?? ['#6366f1', '#8b5cf6'],
-    },
-    features: ['hero', 'gallery', 'timeline', 'letter', 'closing'],
-    metadata: {
-      title: preset.name,
-      description: `${preset.emoji} ${preset.name} themed experience`,
-    },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-}
+import { COLLECTIONS } from '@sass-factory/core'
 
 export function useAppConfig() {
   const config = useRuntimeConfig()
@@ -36,57 +7,48 @@ export function useAppConfig() {
   const isLoading = ref(true)
   const error = ref<string | null>(null)
 
-  // ── Mock mode (no Firebase) ────────────────────────────────────────────
+  // ── Mock mode: read from template's own server API ─────────────────────
+  // The API reads .dev-configs/{slug}.json written by admin/CLI at launch time.
+  // No env var bloat — only APP_SLUG is needed.
   if (config.public.mockMode) {
-    onMounted(() => {
-      const slug = config.public.appSlug as string
-
-      // 1. Try APP_MOCK_CONFIG injected by dev launcher
-      if (config.public.mockConfig) {
-        try {
-          appConfig.value = JSON.parse(config.public.mockConfig as string)
-          isLoading.value = false
-          return
-        } catch {}
-      }
-
-      // 2. Try TOPIC_PRESETS
-      if (slug) {
-        const mock = buildMockConfig(slug)
-        if (mock) {
-          appConfig.value = mock
-          isLoading.value = false
-          return
-        }
-      }
-
-      error.value = slug ? `No preset found for slug "${slug}"` : 'APP_SLUG not set'
-      isLoading.value = false
+    const { data, error: fetchError, pending } = useFetch<AppConfig>('/api/app-config', {
+      // SSR-safe: fetches on server during hydration, cached on client
+      key: `app-config-${config.public.appSlug}`,
     })
 
-    return { appConfig, isLoading, error, loadBySlug: async () => {}, loadById: async () => {}, loadByDomain: async () => {} }
+    watchEffect(() => {
+      appConfig.value = data.value ?? null
+      error.value = fetchError.value?.message ?? null
+      isLoading.value = pending.value
+    })
+
+    return {
+      appConfig,
+      isLoading,
+      error,
+      loadBySlug: async () => {},
+      loadById: async () => {},
+      loadByDomain: async () => {},
+    }
   }
 
   // ── Firebase mode ──────────────────────────────────────────────────────
-  const { collection, query, where, getDocs, doc, getDoc } = await import('firebase/firestore').catch(() => ({} as any))
-  const { useFirestore } = await import('vuefire').catch(() => ({} as any))
-
-  const db = useFirestore()
-
   async function loadBySlug(slug: string) {
     isLoading.value = true
     error.value = null
     try {
-      const appsRef = collection(db, COLLECTIONS.APPS)
-      const snap = await getDocs(query(appsRef, where('slug', '==', slug)))
+      const { collection, query, where, getDocs } = await import('firebase/firestore')
+      const { useFirestore } = await import('vuefire')
+      const db = useFirestore()
+      const snap = await getDocs(query(collection(db, COLLECTIONS.APPS), where('slug', '==', slug)))
       if (!snap.empty) {
         const d = snap.docs[0]
         appConfig.value = { id: d.id, ...d.data() } as AppConfig
       } else {
         error.value = 'App not found'
       }
-    } catch (e) {
-      error.value = 'Failed to load config'
+    } catch (e: any) {
+      error.value = e.message ?? 'Failed to load config'
     } finally {
       isLoading.value = false
     }
@@ -95,11 +57,14 @@ export function useAppConfig() {
   async function loadById(id: string) {
     isLoading.value = true
     try {
+      const { doc, getDoc } = await import('firebase/firestore')
+      const { useFirestore } = await import('vuefire')
+      const db = useFirestore()
       const snap = await getDoc(doc(db, COLLECTIONS.APPS, id))
       if (snap.exists()) appConfig.value = { id: snap.id, ...snap.data() } as AppConfig
       else error.value = 'App not found'
-    } catch {
-      error.value = 'Failed to load config'
+    } catch (e: any) {
+      error.value = e.message ?? 'Failed to load config'
     } finally {
       isLoading.value = false
     }
@@ -108,8 +73,10 @@ export function useAppConfig() {
   async function loadByDomain(domain: string) {
     isLoading.value = true
     try {
-      const appsRef = collection(db, COLLECTIONS.APPS)
-      const snap = await getDocs(query(appsRef, where('domain', '==', domain)))
+      const { collection, query, where, getDocs } = await import('firebase/firestore')
+      const { useFirestore } = await import('vuefire')
+      const db = useFirestore()
+      const snap = await getDocs(query(collection(db, COLLECTIONS.APPS), where('domain', '==', domain)))
       if (!snap.empty) {
         const d = snap.docs[0]
         appConfig.value = { id: d.id, ...d.data() } as AppConfig
@@ -118,8 +85,8 @@ export function useAppConfig() {
       } else {
         error.value = 'App not found'
       }
-    } catch {
-      error.value = 'Failed to load config'
+    } catch (e: any) {
+      error.value = e.message ?? 'Failed to load config'
     } finally {
       isLoading.value = false
     }

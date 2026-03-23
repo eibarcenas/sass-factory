@@ -1,7 +1,8 @@
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const REGISTRY_PATH = resolve(process.cwd(), '../../.dev-ports.json')
+const CONFIGS_DIR = resolve(process.cwd(), '../../.dev-configs')
 const BASE_PORT = 3010
 
 export interface DevEntry {
@@ -45,6 +46,19 @@ export function isProcessRunning(pid: number): boolean {
   } catch {
     return false
   }
+}
+
+// ── Per-app config files (.dev-configs/{slug}.json) ─────────────────────────
+
+export function writeDevConfig(slug: string, config: unknown): void {
+  if (!existsSync(CONFIGS_DIR)) mkdirSync(CONFIGS_DIR, { recursive: true })
+  writeFileSync(resolve(CONFIGS_DIR, `${slug}.json`), JSON.stringify(config, null, 2))
+}
+
+export function readDevConfig(slug: string): unknown | null {
+  const path = resolve(CONFIGS_DIR, `${slug}.json`)
+  if (!existsSync(path)) return null
+  try { return JSON.parse(readFileSync(path, 'utf-8')) } catch { return null }
 }
 
 /** Prune entries where the process has died */
