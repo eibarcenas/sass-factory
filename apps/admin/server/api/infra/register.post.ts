@@ -1,4 +1,4 @@
-import { startProvisioning } from '~/server/utils/provisioning'
+import { startProvisioning } from '../../utils/provisioning'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)

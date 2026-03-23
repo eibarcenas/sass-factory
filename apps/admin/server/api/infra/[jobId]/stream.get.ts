@@ -1,5 +1,5 @@
 import { createEventStream } from 'h3'
-import { getJob } from '~/server/utils/job-store'
+import { getJob } from '../../../utils/job-store'
 
 export default defineEventHandler(async (event) => {
   const jobId = getRouterParam(event, 'jobId')!
