@@ -1,4 +1,4 @@
-import { createJob, updateJobStep, setJobResult, setJobError, type ProvisionJob, type ProvisionStep } from './job-store'
+import { createJob, updateJobStep, setJobResult, setJobError, type ProvisionJob } from './job-store'
 
 interface ProvisionOptions {
   appId: string
@@ -17,7 +17,7 @@ function sleep(ms: number) {
 
 async function runStep(
   jobId: string,
-  stepKey: ProvisionStep,
+  stepKey: string,
   fn: () => Promise<void>,
 ): Promise<boolean> {
   updateJobStep(jobId, stepKey, 'running')

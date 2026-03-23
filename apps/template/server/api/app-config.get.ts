@@ -38,8 +38,11 @@ export default defineEventHandler((): AppConfig => {
     throw createError({ statusCode: 400, message: 'APP_SLUG env var is not set' })
   }
 
-  // 1. Try .dev-configs/{slug}.json written by admin/CLI at launch
-  const configPath = resolve(process.cwd(), `../../.dev-configs/${slug}.json`)
+  // 1. Try .dev-configs/{slug}.json — path is:
+  //    - host: ../../.dev-configs  (relative to apps/template)
+  //    - Docker: /dev-configs      (mounted via -v, set by DEV_CONFIGS_DIR)
+  const configsDir = process.env.DEV_CONFIGS_DIR ?? resolve(process.cwd(), '../../.dev-configs')
+  const configPath = resolve(configsDir, `${slug}.json`)
   if (existsSync(configPath)) {
     try {
       return JSON.parse(readFileSync(configPath, 'utf-8')) as AppConfig
