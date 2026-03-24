@@ -8,6 +8,7 @@ definePageMeta({ layout: 'default' })
 
 const { createApp } = useApps()
 const toast = useToast()
+const { emit: notify } = useNotifications()
 const router = useRouter()
 
 const isSubmitting = ref(false)
@@ -146,7 +147,7 @@ async function handleSubmit() {
   if (!canProceed.value) return
   isSubmitting.value = true
   try {
-    await createApp({
+    const result = await createApp({
       topic: form.topic,
       name: form.name,
       slug: form.slug,
@@ -155,6 +156,13 @@ async function handleSubmit() {
       features: form.features,
       metadata: form.metadata,
       domain: form.domain,
+    })
+    const appId = (result as any)?.id ?? form.slug
+    await notify({
+      type: 'app_created',
+      title: `App created: ${form.name}`,
+      message: `${form.theme.emoji ?? '✨'} ${form.topic} · /${form.slug}`,
+      link: `/apps/${appId}`,
     })
     toast.success('App created successfully!')
     router.push('/')

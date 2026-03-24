@@ -7,6 +7,121 @@
 
 ---
 
+## Architecture
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          SASS FACTORY — SYSTEM OVERVIEW                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+  BROWSER / DEVELOPER
+  ┌─────────────────────────────────────────────────────┐
+  │  Admin Panel  ·  http://localhost:3000               │
+  │  ┌──────────┐  ┌──────────┐  ┌─────────────────┐   │
+  │  │Dashboard │  │ /apps/   │  │ /infra/         │   │
+  │  │(app grid)│  │ new  [id]│  │ new  deploy     │   │
+  │  └────┬─────┘  └────┬─────┘  └────────┬────────┘   │
+  └───────┼─────────────┼─────────────────┼────────────┘
+          │             │                 │
+          ▼             ▼                 ▼
+  ┌───────────────────────────────────────────────────────────────────────────┐
+  │  Nuxt 4 Server  (Nitro / H3)                                              │
+  │                                                                           │
+  │  composables/              server/api/                                    │
+  │  ├─ useApps.ts             ├─ infra/simulate.post.ts                      │
+  │  ├─ useProvision.ts        ├─ infra/register.post.ts                      │
+  │  ├─ useCloudBuildDeploy.ts ├─ infra/deploy.post.ts                        │
+  │  └─ useDevPorts.ts         ├─ infra/[jobId]/stream.get.ts  (SSE)          │
+  │                            ├─ infra/[buildId]/cloud-build-stream.get.ts   │
+  │                            └─ dev/{launch,stop,sync,ports}                │
+  └───────────────────────────────────┬───────────────────────────────────────┘
+                                      │
+          ┌───────────────────────────┼───────────────────────────┐
+          │                           │                           │
+          ▼                           ▼                           ▼
+  ┌───────────────┐         ┌──────────────────┐       ┌──────────────────────┐
+  │  MODE A       │         │  MODE B          │       │  MODE C              │
+  │  Mock / Dev   │         │  Local Docker    │       │  GCP Cloud Build     │
+  │               │         │                  │       │                      │
+  │  useState()   │         │  local-simulator │       │  cloud-build.ts      │
+  │  TOPIC_       │         │  ┌────────────┐  │       │  ┌────────────────┐  │
+  │  PRESETS seed │         │  │docker info │  │       │  │ Cloud Build API│  │
+  │               │         │  │docker build│  │       │  │ REST trigger   │  │
+  │  No Firebase  │         │  │docker run  │  │       │  └───────┬────────┘  │
+  │  No GCP       │         │  │health check│  │       │          │           │
+  │  needed       │         │  └─────┬──────┘  │       │  deploy-app.yaml    │
+  └───────────────┘         │        │         │       │  ┌────────────────┐  │
+                            │  .dev-configs/   │       │  │ tf-init        │  │
+                            │  {slug}.json     │       │  │ tf-apply       │  │
+                            └────────┬─────────┘       │  │ docker-build   │  │
+                                     │                 │  │ docker-push    │  │
+                                     ▼                 │  │ cloud-run-     │  │
+                            ┌──────────────────┐       │  │   deploy       │  │
+                            │ Template App     │       │  │ notify-complete│  │
+                            │ localhost:301x   │       │  └───────┬────────┘  │
+                            │                 │       │          │           │
+                            │ /api/app-config │       │  new GCP project     │
+                            │ reads .dev-     │       │  per themed app      │
+                            │ configs/        │       └──────────┼───────────┘
+                            └──────────────────┘                 │
+                                                                  ▼
+                                                       ┌──────────────────────┐
+                                                       │  Cloud Run           │
+                                                       │  sass-{slug}         │
+                                                       │  {region}.run.app    │
+                                                       │                      │
+                                                       │  Template App        │
+                                                       │  APP_SLUG env var    │
+                                                       │  → loads from        │
+                                                       │    Firestore         │
+                                                       └──────────────────────┘
+
+  SSE PROGRESS STREAM (all modes)
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │  POST /api/infra/simulate  ──► job created in memory                     │
+  │  POST /api/infra/deploy    ──► Cloud Build triggered                     │
+  │                                                                          │
+  │  GET  /api/infra/{jobId}/stream          ◄── EventSource (browser)       │
+  │       polls job-store every 800ms            fires: update / done / error│
+  │                                                                          │
+  │  GET  /api/infra/{buildId}/cloud-build-stream  ◄── EventSource (browser) │
+  │       polls Cloud Build API every 3s          fires: step / done / error │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+  DATA LAYER
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  Firestore                      In-memory (dev)                          │
+  │  ┌────────────────────┐         ┌────────────────────┐                  │
+  │  │ apps/{appId}       │         │ useState('mock:apps')                 │
+  │  │  name, slug, topic │         │ seeded from         │                  │
+  │  │  theme, features   │   or    │ TOPIC_PRESETS       │                  │
+  │  │  metadata, domain  │         │ (no Firebase needed)│                  │
+  │  │  deployment.*      │         └────────────────────┘                  │
+  │  │                    │                                                  │
+  │  │ apps/{id}/moments  │         File-based (local dev)                   │
+  │  └────────────────────┘         ┌────────────────────┐                  │
+  │                                 │ .dev-ports.json    │                  │
+  │  activated when                 │ .dev-configs/      │                  │
+  │  FIREBASE_API_KEY is set        │   {slug}.json      │                  │
+  └────────────────────────────────────────────────────────────────────────┘
+
+  MONOREPO
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  packages/core  ──────────────────────────────────────────────────────  │
+  │  (@sass-factory/core)   AppConfig · AppTheme · TOPIC_PRESETS             │
+  │         │                         │                                      │
+  │         ├──────────► apps/admin   │  (consumes types + Firestore utils)  │
+  │         └──────────► apps/template│  (consumes types + theme config)     │
+  │                                                                          │
+  │  packages/ui  ────────────────────────────────────────────────────────  │
+  │  (@sass-factory/ui)     AppCard · ThemePicker · FeatureToggle            │
+  │         └──────────► apps/admin   (shared Vue components)                │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+```
+
 ## How It Works
 
 ```
@@ -14,10 +129,10 @@ Admin Panel (Nuxt 4)
   │
   ├─ Create App        → topic + theme + features → saved to Firestore
   │
-  ├─ 🐳 Simulate       → Docker build + run locally → http://localhost:301x
+  ├─ Simulate (Docker) → Docker build + run locally → http://localhost:301x
   │   (no GCP needed)      SSE streams real-time progress
   │
-  ├─ ☁️ Deploy to GCP  → Cloud Build pipeline
+  ├─ Deploy to GCP     → Cloud Build pipeline
   │                         └─ Terraform: new GCP project
   │                         └─ Docker: build + push Artifact Registry
   │                         └─ Cloud Run: deploy with APP_SLUG env

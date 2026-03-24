@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useToast } from '~/composables/useToast'
+import { useNotifications } from '~/composables/useNotifications'
 
 const { toasts, remove } = useToast()
+const { notifications, unreadCount, isOpen, openAndMarkRead, close, timeAgo } = useNotifications()
 
 const route = useRoute()
 
 const navItems = [
   { label: 'Dashboard', to: '/', icon: '📱' },
+  { label: 'Generate', to: '/apps/generate', icon: '🤖' },
   { label: 'Apps', to: '/apps/new', icon: '✨' },
   { label: 'Infrastructure', to: '/infra', icon: '🏗️' },
   { label: 'Simulate', to: '/infra/new', icon: '🐳' },
@@ -96,6 +99,83 @@ const toastStyles: Record<string, string> = {
 
         <div class="flex-1" />
 
+        <!-- Notification bell -->
+        <div class="relative">
+          <button
+            class="relative p-2 rounded-xl hover:bg-gray-100 transition-colors"
+            @click="isOpen ? close() : openAndMarkRead()"
+          >
+            <svg class="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span
+              v-if="unreadCount > 0"
+              class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+            >
+              {{ unreadCount > 9 ? '9+' : unreadCount }}
+            </span>
+          </button>
+
+          <!-- Dropdown -->
+          <Transition name="dropdown">
+            <div
+              v-if="isOpen"
+              v-click-outside="close"
+              class="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+            >
+              <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <span class="text-sm font-semibold text-gray-900">Notifications</span>
+                <span v-if="notifications.length" class="text-xs text-gray-400">{{ notifications.length }} total</span>
+              </div>
+
+              <div class="max-h-96 overflow-y-auto divide-y divide-gray-50">
+                <div v-if="!notifications.length" class="px-4 py-8 text-center text-sm text-gray-400">
+                  No notifications yet
+                </div>
+
+                <NuxtLink
+                  v-for="n in notifications"
+                  :key="n.id"
+                  :to="n.link ?? '/'"
+                  class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                  :class="n.read ? 'opacity-70' : ''"
+                  @click="close"
+                >
+                  <!-- Type icon -->
+                  <div
+                    class="w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
+                    :class="{
+                      'bg-green-100': n.type === 'app_created',
+                      'bg-blue-100':  n.type === 'app_deployed',
+                      'bg-purple-100': n.type === 'app_simulated',
+                      'bg-red-100':   n.type === 'error',
+                      'bg-gray-100':  n.type === 'info',
+                    }"
+                  >
+                    <span v-if="n.type === 'app_created'">✨</span>
+                    <span v-else-if="n.type === 'app_deployed'">🚀</span>
+                    <span v-else-if="n.type === 'app_simulated'">🐳</span>
+                    <span v-else-if="n.type === 'error'">⚠️</span>
+                    <span v-else>ℹ️</span>
+                  </div>
+
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                      <p class="text-sm font-medium text-gray-900 truncate">{{ n.title }}</p>
+                      <span
+                        v-if="!n.read"
+                        class="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0"
+                      />
+                    </div>
+                    <p v-if="n.message" class="text-xs text-gray-500 mt-0.5 truncate">{{ n.message }}</p>
+                    <p class="text-xs text-gray-400 mt-1">{{ timeAgo(n.createdAt) }}</p>
+                  </div>
+                </NuxtLink>
+              </div>
+            </div>
+          </Transition>
+        </div>
+
         <NuxtLink
           to="/apps/new"
           class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
@@ -147,5 +227,15 @@ const toastStyles: Record<string, string> = {
 .toast-leave-to {
   opacity: 0;
   transform: translateX(100%);
+}
+
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.15s ease;
+}
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
 }
 </style>
