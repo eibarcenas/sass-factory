@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import type { AppFeature } from '@sass-factory/core'
+
 import { FEATURE_LABELS } from '@sass-factory/core'
 
 interface Props {
-  modelValue: AppFeature[]
+  modelValue: string[]
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  'update:modelValue': [features: AppFeature[]]
+  'update:modelValue': [features: string[]]
 }>()
 
-const allFeatures: AppFeature[] = [
+const allFeatures: string[] = [
   'hero',
   'timeline',
   'gallery',
@@ -35,11 +35,11 @@ const featureIcons: Record<AppFeature, string> = {
   closing: '🎬',
 }
 
-function isEnabled(feature: AppFeature) {
+function isEnabled(feature: string) {
   return props.modelValue.includes(feature)
 }
 
-function toggle(feature: AppFeature) {
+function toggle(feature: string) {
   if (isEnabled(feature)) {
     emit('update:modelValue', props.modelValue.filter((f) => f !== feature))
   } else {
