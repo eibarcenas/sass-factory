@@ -75,3 +75,4 @@ infrastructure/terraform/.terraform.lock.hcl
 infrastructure/gcp/service-account*.json
 apps/admin/server/service-account.json
 .mcp.json
+.claude/worktrees/
