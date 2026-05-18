@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AppConfig } from '@sass-factory/core'
+import type { Business } from '@sass-factory/core'
 import { useApps } from '~/composables/useApps'
 import { useToast } from '~/composables/useToast'
 
@@ -41,7 +41,7 @@ async function handleSave() {
     await notify({
       type: 'app_created',
       title: `App created: ${config.value.name}`,
-      message: `${config.value.theme.emoji} ${config.value.topic} · /${config.value.slug}`,
+      message: `${config.value.theme.emoji} ${config.value.type} · /${config.value.slug}`,
       link: `/apps/${appId}`,
     })
     toast('App created successfully', 'success')
@@ -54,7 +54,7 @@ async function handleSave() {
 }
 
 // Try to parse a partial config preview while streaming
-const partialConfig = computed<Partial<AppConfig> | null>(() => {
+const partialConfig = computed<Partial<Business> | null>(() => {
   if (config.value) return config.value
   if (!streamedText.value) return null
   try {
@@ -78,7 +78,7 @@ const themePreview = computed(() => {
     background: t.background ?? '#ffffff',
     font: t.font ?? 'sans-serif',
     emoji: t.emoji ?? '✨',
-    gradient: t.gradient ?? [t.primary, t.primary],
+    gradient: (t.gradient ?? [t.primary, t.primary]) as [string, string],
   }
 })
 </script>
@@ -181,24 +181,13 @@ const themePreview = computed(() => {
                   {{ partialConfig?.name ?? '…' }}
                 </h2>
                 <span class="text-xs px-2 py-0.5 rounded-full font-medium" :style="`background: ${themePreview.secondary}; color: ${themePreview.primary}`">
-                  {{ partialConfig?.topic ?? '…' }}
+                  {{ partialConfig?.type ?? '…' }}
                 </span>
               </div>
 
-              <p v-if="partialConfig?.metadata?.description" class="text-sm text-gray-600 line-clamp-2">
-                {{ partialConfig.metadata.description }}
+              <p v-if="partialConfig?.tagline" class="text-sm text-gray-600 line-clamp-2">
+                {{ partialConfig.tagline }}
               </p>
-
-              <!-- Feature chips -->
-              <div v-if="partialConfig?.features?.length" class="flex flex-wrap gap-1.5">
-                <span
-                  v-for="f in partialConfig.features"
-                  :key="f"
-                  class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"
-                >
-                  {{ f }}
-                </span>
-              </div>
 
               <!-- Color swatches -->
               <div class="flex items-center gap-2">

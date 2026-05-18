@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { doc, getDoc } from 'firebase/firestore'
 import { useFirestore } from 'vuefire'
-import type { AppConfig, AppFeature, AppTheme } from '@sass-factory/core'
-import { TOPIC_PRESETS, COLLECTIONS } from '@sass-factory/core'
+import type { Business, BusinessTheme, BusinessType } from '@sass-factory/core'
+import { COLLECTIONS } from '@sass-factory/core'
 import { useApps } from '~/composables/useApps'
 import { useToast } from '~/composables/useToast'
 
@@ -18,14 +18,15 @@ const appId = computed(() => route.params.id as string)
 const isLoading = ref(true)
 const isSaving = ref(false)
 
-const form = reactive<Partial<AppConfig>>({
-  topic: '',
+const form = reactive<Partial<Business>>({
+  type: 'otro',
   name: '',
   slug: '',
   status: 'draft',
-  theme: {} as AppTheme,
-  features: [],
-  metadata: { title: '', description: '' },
+  theme: {} as BusinessTheme,
+  whatsapp: '',
+  city: '',
+  plan: 'free',
 })
 
 onMounted(async () => {
@@ -33,7 +34,7 @@ onMounted(async () => {
     const docRef = doc(db, COLLECTIONS.APPS, appId.value)
     const snap = await getDoc(docRef)
     if (snap.exists()) {
-      const data = snap.data() as AppConfig
+      const data = snap.data() as Business
       Object.assign(form, data)
     } else {
       toast.error('App not found')
@@ -46,51 +47,31 @@ onMounted(async () => {
   }
 })
 
-const allFeatures: AppFeature[] = [
-  'hero',
-  'timeline',
-  'gallery',
-  'letter',
-  'feed',
-  'moments',
-  'music',
-  'countdown',
-  'closing',
+const businessTypes: { value: BusinessType; icon: string; label: string }[] = [
+  { value: 'heladeria', icon: '🍦', label: 'Heladería' },
+  { value: 'barberia', icon: '✂️', label: 'Barbería' },
+  { value: 'estetica', icon: '💅', label: 'Estética' },
+  { value: 'restaurante', icon: '🍽️', label: 'Restaurante' },
+  { value: 'panaderia', icon: '🥖', label: 'Panadería' },
+  { value: 'gym', icon: '💪', label: 'Gym' },
+  { value: 'mecanico', icon: '🔧', label: 'Mecánico' },
+  { value: 'otro', icon: '🏢', label: 'Otro' },
 ]
-
-const featureMeta: Record<AppFeature, { icon: string; label: string }> = {
-  hero: { icon: '🏠', label: 'Hero Section' },
-  timeline: { icon: '📅', label: 'Timeline' },
-  gallery: { icon: '🖼️', label: 'Photo Gallery' },
-  letter: { icon: '💌', label: 'Personal Letter' },
-  feed: { icon: '📱', label: 'Social Feed' },
-  moments: { icon: '✨', label: 'Moments' },
-  music: { icon: '🎵', label: 'Music Player' },
-  countdown: { icon: '⏱️', label: 'Countdown' },
-  closing: { icon: '🎬', label: 'Closing Section' },
-}
-
-function toggleFeature(f: AppFeature) {
-  if (!form.features) form.features = []
-  if (form.features.includes(f)) {
-    form.features = form.features.filter((x) => x !== f)
-  } else {
-    form.features = [...form.features, f]
-  }
-}
 
 async function handleSave() {
   isSaving.value = true
   try {
     await updateApp(appId.value, {
-      topic: form.topic,
+      type: form.type,
       name: form.name,
       slug: form.slug,
       status: form.status,
       theme: form.theme,
-      features: form.features,
-      metadata: form.metadata,
+      whatsapp: form.whatsapp,
+      city: form.city,
+      tagline: form.tagline,
       domain: form.domain,
+      plan: form.plan,
     })
     toast.success('App updated successfully!')
   } catch (e) {
@@ -100,20 +81,6 @@ async function handleSave() {
   }
 }
 
-function applyPreset(topicKey: string) {
-  const preset = TOPIC_PRESETS[topicKey]
-  if (!preset || !form.theme) return
-  form.theme = {
-    ...form.theme,
-    primary: preset.primary ?? form.theme.primary,
-    secondary: preset.secondary ?? form.theme.secondary,
-    accent: preset.accent ?? form.theme.accent,
-    background: preset.background ?? form.theme.background,
-    font: preset.font ?? form.theme.font,
-    emoji: preset.emoji ?? form.theme.emoji,
-    gradient: preset.gradient ?? form.theme.gradient,
-  }
-}
 </script>
 
 <template>
@@ -141,7 +108,7 @@ function applyPreset(topicKey: string) {
               background: `linear-gradient(135deg, ${form.theme?.gradient?.[0] ?? '#e2e8f0'}, ${form.theme?.gradient?.[1] ?? '#cbd5e1'})`,
             }"
           >
-            {{ form.theme?.emoji ?? '✨' }}
+            {{ form.theme?.emoji ?? '🏢' }}
           </div>
           <div>
             <h1 class="text-2xl font-bold text-gray-900">{{ form.name }}</h1>
@@ -192,20 +159,18 @@ function applyPreset(topicKey: string) {
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Topic</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">Business Type</label>
               <select
-                v-model="form.topic"
+                v-model="form.type"
                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-                @change="applyPreset(form.topic ?? '')"
               >
                 <option
-                  v-for="(preset, key) in TOPIC_PRESETS"
-                  :key="key"
-                  :value="key"
+                  v-for="bt in businessTypes"
+                  :key="bt.value"
+                  :value="bt.value"
                 >
-                  {{ preset.emoji }} {{ preset.name }}
+                  {{ bt.icon }} {{ bt.label }}
                 </option>
-                <option value="custom">🎨 Custom</option>
               </select>
             </div>
             <div>
@@ -215,9 +180,31 @@ function applyPreset(topicKey: string) {
                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
               >
                 <option value="draft">Draft</option>
+                <option value="demo">Demo</option>
+                <option value="sent">Sent</option>
+                <option value="accepted">Accepted</option>
                 <option value="active">Active</option>
+                <option value="suspended">Suspended</option>
                 <option value="archived">Archived</option>
               </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">WhatsApp</label>
+              <input
+                v-model="form.whatsapp"
+                type="text"
+                placeholder="+52 81 0000 0000"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">City</label>
+              <input
+                v-model="form.city"
+                type="text"
+                placeholder="Monterrey"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
             </div>
             <div class="sm:col-span-2">
               <label class="block text-sm font-medium text-gray-700 mb-1.5">
@@ -226,7 +213,7 @@ function applyPreset(topicKey: string) {
               <input
                 v-model="form.domain"
                 type="text"
-                placeholder="valentines.example.com"
+                placeholder="mi-negocio.example.com"
                 class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -244,7 +231,7 @@ function applyPreset(topicKey: string) {
               background: `linear-gradient(135deg, ${form.theme?.gradient?.[0] ?? '#e2e8f0'}, ${form.theme?.gradient?.[1] ?? '#cbd5e1'})`,
             }"
           >
-            {{ form.theme?.emoji ?? '✨' }}
+            {{ form.theme?.emoji ?? '🏢' }}
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -309,54 +296,15 @@ function applyPreset(topicKey: string) {
           </div>
         </div>
 
-        <!-- Features -->
+        <!-- Tagline -->
         <div class="bg-white rounded-2xl border border-gray-200 p-6">
-          <h2 class="text-base font-semibold text-gray-900 mb-5">
-            Features
-            <span class="text-sm font-normal text-gray-400 ml-2">
-              {{ form.features?.length ?? 0 }} enabled
-            </span>
-          </h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <button
-              v-for="feature in allFeatures"
-              :key="feature"
-              type="button"
-              class="flex items-center gap-2.5 p-3 rounded-xl border-2 transition-all text-left"
-              :class="
-                form.features?.includes(feature)
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-900'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
-              "
-              @click="toggleFeature(feature)"
-            >
-              <span class="text-lg">{{ featureMeta[feature].icon }}</span>
-              <span class="text-xs font-medium truncate">{{ featureMeta[feature].label }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Metadata -->
-        <div class="bg-white rounded-2xl border border-gray-200 p-6">
-          <h2 class="text-base font-semibold text-gray-900 mb-5">SEO & Metadata</h2>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Page Title</label>
-              <input
-                v-model="form.metadata!.title"
-                type="text"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
-              <textarea
-                v-model="form.metadata!.description"
-                rows="3"
-                class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-              />
-            </div>
-          </div>
+          <h2 class="text-base font-semibold text-gray-900 mb-5">Tagline</h2>
+          <input
+            v-model="form.tagline"
+            type="text"
+            placeholder="El mejor helado de la ciudad"
+            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
       </div>
     </template>

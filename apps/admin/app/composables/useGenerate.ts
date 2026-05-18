@@ -51,7 +51,7 @@ export function useGenerate() {
               if (currentEvent === 'delta') {
                 streamedText.value += parsed.text ?? ''
               } else if (currentEvent === 'done') {
-                config.value = parsed.config as AppConfig
+                config.value = parsed.config as Business
               } else if (currentEvent === 'error') {
                 throw new Error(parsed.error ?? 'Generation failed')
               }

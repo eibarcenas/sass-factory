@@ -1,7 +1,4 @@
 <script setup lang="ts">
-
-import { FEATURE_LABELS } from '@sass-factory/core'
-
 interface Props {
   modelValue: string[]
 }
@@ -23,7 +20,7 @@ const allFeatures: string[] = [
   'closing',
 ]
 
-const featureIcons: Record<AppFeature, string> = {
+const featureIcons: Record<string, string> = {
   hero: '🏠',
   timeline: '📅',
   gallery: '🖼️',
@@ -33,6 +30,18 @@ const featureIcons: Record<AppFeature, string> = {
   music: '🎵',
   countdown: '⏱️',
   closing: '🎬',
+}
+
+const featureLabels: Record<string, string> = {
+  hero: 'Hero Section',
+  timeline: 'Timeline',
+  gallery: 'Photo Gallery',
+  letter: 'Personal Letter',
+  feed: 'Social Feed',
+  moments: 'Moments',
+  music: 'Music Player',
+  countdown: 'Countdown',
+  closing: 'Closing Section',
 }
 
 function isEnabled(feature: string) {
@@ -63,7 +72,7 @@ function toggle(feature: string) {
       @click="toggle(feature)"
     >
       <span class="text-lg shrink-0">{{ featureIcons[feature] }}</span>
-      <span class="text-sm font-medium flex-1">{{ FEATURE_LABELS[feature] }}</span>
+      <span class="text-sm font-medium flex-1">{{ featureLabels[feature] ?? feature }}</span>
       <span
         class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
         :class="

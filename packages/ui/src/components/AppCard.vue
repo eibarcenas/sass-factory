@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { AppConfig } from '@sass-factory/core'
+import type { Business } from '@sass-factory/core'
 
 interface Props {
-  app: AppConfig
+  app: Business
 }
 
 const props = defineProps<Props>()
@@ -15,17 +15,15 @@ const emit = defineEmits<{
 
 const statusColors: Record<string, string> = {
   draft: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  demo: 'bg-blue-100 text-blue-800 border-blue-200',
+  sent: 'bg-purple-100 text-purple-800 border-purple-200',
+  accepted: 'bg-teal-100 text-teal-800 border-teal-200',
   active: 'bg-green-100 text-green-800 border-green-200',
+  suspended: 'bg-orange-100 text-orange-800 border-orange-200',
+  expired: 'bg-red-100 text-red-800 border-red-200',
+  rejected: 'bg-red-100 text-red-600 border-red-200',
   archived: 'bg-gray-100 text-gray-600 border-gray-200',
 }
-
-const statusLabels: Record<string, string> = {
-  draft: 'Draft',
-  active: 'Active',
-  archived: 'Archived',
-}
-
-const featureCount = computed(() => props.app.features?.length ?? 0)
 
 const formattedDate = computed(() => {
   if (!props.app.createdAt) return '—'
@@ -45,28 +43,28 @@ const formattedDate = computed(() => {
     <div
       class="h-24 w-full flex items-center justify-center text-5xl relative"
       :style="{
-        background: `linear-gradient(135deg, ${app.theme?.gradient?.[0] ?? '#e2e8f0'}, ${app.theme?.gradient?.[1] ?? '#cbd5e1'})`,
+        background: `linear-gradient(135deg, ${app.theme.gradient[0] ?? '#e2e8f0'}, ${app.theme.gradient[1] ?? '#cbd5e1'})`,
       }"
     >
-      <span class="drop-shadow-sm">{{ app.theme?.emoji ?? '✨' }}</span>
+      <span class="drop-shadow-sm">{{ app.theme.emoji ?? '✨' }}</span>
       <!-- Status badge -->
       <span
         class="absolute top-3 right-3 text-xs font-medium px-2 py-0.5 rounded-full border"
         :class="statusColors[app.status] ?? statusColors.draft"
       >
-        {{ statusLabels[app.status] ?? app.status }}
+        {{ app.status }}
       </span>
     </div>
 
     <!-- Content -->
     <div class="p-4">
       <h3 class="font-semibold text-gray-900 text-base truncate">{{ app.name }}</h3>
-      <p class="text-sm text-gray-500 mt-0.5 truncate">{{ app.slug }}</p>
+      <p class="text-sm text-gray-500 mt-0.5 truncate">{{ app.type }} · {{ app.city }}</p>
 
       <div class="flex items-center gap-3 mt-3 text-xs text-gray-500">
         <span class="flex items-center gap-1">
-          <span class="i-heroicons-puzzle-piece w-3.5 h-3.5" />
-          {{ featureCount }} features
+          <span class="i-heroicons-phone w-3.5 h-3.5" />
+          {{ app.whatsapp }}
         </span>
         <span class="flex items-center gap-1">
           <span class="i-heroicons-calendar w-3.5 h-3.5" />
@@ -78,22 +76,22 @@ const formattedDate = computed(() => {
       <div class="flex gap-1.5 mt-3">
         <div
           class="w-5 h-5 rounded-full border-2 border-white shadow-sm"
-          :style="{ backgroundColor: app.theme?.primary }"
+          :style="{ backgroundColor: app.theme.primary }"
           title="Primary"
         />
         <div
           class="w-5 h-5 rounded-full border-2 border-white shadow-sm"
-          :style="{ backgroundColor: app.theme?.secondary }"
+          :style="{ backgroundColor: app.theme.secondary }"
           title="Secondary"
         />
         <div
           class="w-5 h-5 rounded-full border-2 border-white shadow-sm"
-          :style="{ backgroundColor: app.theme?.accent }"
+          :style="{ backgroundColor: app.theme.accent }"
           title="Accent"
         />
         <div
           class="w-5 h-5 rounded-full border-2 border-white shadow-sm"
-          :style="{ backgroundColor: app.theme?.background }"
+          :style="{ backgroundColor: app.theme.background }"
           title="Background"
         />
       </div>

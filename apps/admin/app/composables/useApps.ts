@@ -7,32 +7,56 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { useFirestore, useCollection } from 'vuefire'
-import type { AppConfig } from '@sass-factory/core'
-import { TOPIC_PRESETS, COLLECTIONS } from '@sass-factory/core'
+import type { Business } from '@sass-factory/core'
+import { COLLECTIONS } from '@sass-factory/core'
 
 // ---------------------------------------------------------------------------
 // Mock data — used when FIREBASE_API_KEY is not set
 // ---------------------------------------------------------------------------
-const MOCK_APPS: AppConfig[] = Object.entries(TOPIC_PRESETS).map(([key, preset], i) => ({
-  id: `mock_${key}`,
-  topic: key,
-  name: preset.name,
-  slug: key,
-  status: i === 0 ? 'active' : 'draft',
-  theme: {
-    primary: preset.primary ?? '#6366f1',
-    secondary: preset.secondary ?? '#a5b4fc',
-    accent: preset.accent ?? '#f59e0b',
-    background: preset.background ?? '#ffffff',
-    font: preset.font ?? 'Inter',
-    emoji: preset.emoji ?? '✨',
-    gradient: preset.gradient ?? ['#6366f1', '#8b5cf6'],
+const MOCK_APPS: Business[] = [
+  {
+    id: 'mock_heladeria',
+    slug: 'heladeria-demo',
+    name: 'Heladería El Pingüino',
+    type: 'heladeria',
+    whatsapp: '+52 81 0000 0001',
+    city: 'Monterrey',
+    tagline: 'El mejor helado de la ciudad',
+    theme: { primary: '#06b6d4', secondary: '#a5f3fc', accent: '#f59e0b', background: '#ffffff', font: 'Poppins', emoji: '🍦', gradient: ['#06b6d4', '#0ea5e9'] },
+    status: 'active',
+    plan: 'free',
+    createdAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    updatedAt: new Date().toISOString(),
   },
-  features: ['hero', 'gallery', 'closing'],
-  metadata: { title: preset.name, description: `${preset.emoji} Themed experience for ${preset.name}` },
-  createdAt: new Date(Date.now() - i * 86_400_000).toISOString(),
-  updatedAt: new Date().toISOString(),
-}))
+  {
+    id: 'mock_barberia',
+    slug: 'barberia-demo',
+    name: 'Barbería El Cortex',
+    type: 'barberia',
+    whatsapp: '+52 81 0000 0002',
+    city: 'Monterrey',
+    tagline: 'Cortes de alta precisión',
+    theme: { primary: '#1e293b', secondary: '#334155', accent: '#f59e0b', background: '#f8fafc', font: 'Inter', emoji: '✂️', gradient: ['#1e293b', '#334155'] },
+    status: 'draft',
+    plan: 'free',
+    createdAt: new Date(Date.now() - 1 * 86_400_000).toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'mock_restaurante',
+    slug: 'restaurante-demo',
+    name: 'Restaurante La Familia',
+    type: 'restaurante',
+    whatsapp: '+52 81 0000 0003',
+    city: 'Guadalajara',
+    tagline: 'Sabores de casa',
+    theme: { primary: '#b45309', secondary: '#fef3c7', accent: '#dc2626', background: '#fffbeb', font: 'Merriweather', emoji: '🍽️', gradient: ['#b45309', '#d97706'] },
+    status: 'draft',
+    plan: 'free',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+]
 
 // ---------------------------------------------------------------------------
 // Composable
@@ -42,16 +66,16 @@ export function useApps() {
 
   // ── Mock mode (no Firebase config) ──────────────────────────────────────
   if (config.public.mockMode) {
-    const apps = useState<AppConfig[]>('mock:apps', () => [...MOCK_APPS])
+    const apps = useState<Business[]>('mock:apps', () => [...MOCK_APPS])
 
-    async function createApp(data: Omit<AppConfig, 'id' | 'createdAt' | 'updatedAt'>) {
+    async function createApp(data: Omit<Business, 'id' | 'createdAt' | 'updatedAt'>) {
       const id = `mock_${Date.now()}`
       const now = new Date().toISOString()
       apps.value = [...apps.value, { ...data, id, createdAt: now, updatedAt: now }]
       return { id }
     }
 
-    async function updateApp(id: string, data: Partial<AppConfig>) {
+    async function updateApp(id: string, data: Partial<Business>) {
       apps.value = apps.value.map((a) =>
         a.id === id ? { ...a, ...data, updatedAt: new Date().toISOString() } : a,
       )
@@ -67,9 +91,9 @@ export function useApps() {
   // ── Firebase mode ────────────────────────────────────────────────────────
   const db = useFirestore()
   const appsRef = collection(db, COLLECTIONS.APPS)
-  const apps = useCollection<AppConfig>(appsRef)
+  const apps = useCollection<Business>(appsRef)
 
-  async function createApp(data: Omit<AppConfig, 'id' | 'createdAt' | 'updatedAt'>) {
+  async function createApp(data: Omit<Business, 'id' | 'createdAt' | 'updatedAt'>) {
     return addDoc(appsRef, {
       ...data,
       createdAt: serverTimestamp(),
@@ -77,7 +101,7 @@ export function useApps() {
     })
   }
 
-  async function updateApp(id: string, data: Partial<AppConfig>) {
+  async function updateApp(id: string, data: Partial<Business>) {
     return updateDoc(doc(appsRef, id), {
       ...data,
       updatedAt: serverTimestamp(),
