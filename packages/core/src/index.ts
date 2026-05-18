@@ -1,5 +1,5 @@
 // Types
-export * from './types/app'
+export * from './types/index'
 
 // Utils
 export * from './utils/firestore'

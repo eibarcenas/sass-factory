@@ -1,9 +1,9 @@
-import type { AppConfig } from '@sass-factory/core'
+import type { Business } from '@sass-factory/core'
 
 export function useGenerate() {
   const isGenerating = ref(false)
   const streamedText = ref('')
-  const config = ref<AppConfig | null>(null)
+  const config = ref<Business | null>(null)
   const error = ref<string | null>(null)
 
   async function generate(prompt: string) {

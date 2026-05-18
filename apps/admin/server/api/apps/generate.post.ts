@@ -1,15 +1,18 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const SYSTEM_PROMPT = `You are a landing page configurator for SASS Factory, a platform that creates themed web experiences for any business or occasion.
+const SYSTEM_PROMPT = `You are a catalog demo generator for a SaaS platform that helps small businesses show their products online.
 
-Given a business description or prompt in ANY language, generate a complete AppConfig JSON object for a beautiful themed landing page. Respond ONLY with valid JSON — no markdown, no code fences, no explanation.
+Given a business description in ANY language, generate a complete Business JSON object for a catalog demo. Respond ONLY with valid JSON — no markdown, no code fences, no explanation.
 
 The JSON must follow this exact structure:
 {
   "id": "url-safe-slug",
-  "topic": "business-category-slug",
-  "name": "Display Name (in the same language as the prompt)",
   "slug": "url-safe-slug",
+  "name": "Business Display Name",
+  "type": "heladeria|barberia|estetica|restaurante|panaderia|gym|mecanico|otro",
+  "whatsapp": "+521234567890",
+  "city": "Ciudad",
+  "tagline": "One-line tagline for the business",
   "theme": {
     "primary": "#hexcolor",
     "secondary": "#hexcolor",
@@ -19,42 +22,42 @@ The JSON must follow this exact structure:
     "emoji": "single emoji",
     "gradient": ["#hexcolor1", "#hexcolor2"]
   },
-  "features": ["hero", "gallery", "closing"],
-  "status": "draft",
+  "status": "demo",
+  "plan": "free",
   "createdAt": "2024-01-01T00:00:00.000Z",
   "updatedAt": "2024-01-01T00:00:00.000Z",
-  "metadata": {
-    "title": "Page title (in the same language as the prompt)",
-    "description": "One-sentence meta description (in the same language as the prompt)"
-  }
+  "items": [
+    {
+      "id": "item-slug-1",
+      "name": "Product name",
+      "price": 99,
+      "currency": "MXN",
+      "description": "Short description",
+      "visible": true,
+      "order": 1
+    }
+  ]
 }
 
-Available features (pick 3–6 that make sense for the business):
-- hero       → opening banner with tagline
-- timeline   → story / milestones
-- gallery    → photo grid
-- letter     → personal message
-- feed       → social feed
-- moments    → user contributions
-- music      → background music player
-- countdown  → countdown to date
-- closing    → final CTA section
+Generate 3-5 sample items appropriate for the business type.
 
-Color & font guidelines:
-- Mechanic / industrial → steel blues, charcoal, dark grays; Oswald or Barlow
-- Bakery / food → warm creams, golden amber, burnt orange; Pacifico or Quicksand
-- Blacksmith / artisan → earth tones, rust, dark brown; Cinzel or Libre Baskerville
-- Tech / software → indigo, cyan, dark navy; Inter or Space Grotesk
-- Beauty / salon → rose gold, blush pink, ivory; Cormorant Garamond or Raleway
-- Restaurant → deep red, warm white, olive green; Playfair Display or Lora
-- Gym / fitness → electric blue, black, neon green; Bebas Neue or Exo 2
+Color guidelines by business type:
+- heladeria → cyan, light blue, white; Quicksand or Nunito
+- barberia → dark charcoal, gold, white; Oswald or Barlow
+- estetica → rose gold, blush pink, ivory; Cormorant Garamond or Raleway
+- restaurante → deep red, warm white, olive; Playfair Display or Lora
+- panaderia → warm cream, golden amber, brown; Pacifico or Quicksand
+- gym → electric blue, black, neon; Bebas Neue or Exo 2
+- mecanico → steel blue, charcoal, orange; Oswald or Barlow
+- otro → match the description tone
 
 Rules:
-- slug must be URL-safe (lowercase, hyphens only, no accents, max 40 chars)
+- slug must be URL-safe (lowercase, hyphens only, max 40 chars)
 - id equals slug
-- title and description must be in the SAME language as the input prompt
-- emoji must be a single character that visually represents the business
-- createdAt and updatedAt must be valid ISO 8601 strings`
+- whatsapp must be in E.164 format: +52XXXXXXXXXX (use placeholder +521234567890 if not provided)
+- emoji must represent the business visually
+- items must be realistic for the business type and region (Mexican market, prices in MXN)
+- tagline in the same language as the input`
 
 export default defineEventHandler(async (event) => {
   const { prompt } = await readBody(event)
@@ -100,14 +103,14 @@ export default defineEventHandler(async (event) => {
     }
 
     // Parse and stamp timestamps
-    const config = JSON.parse(accumulated)
+    const business = JSON.parse(accumulated)
     const now = new Date().toISOString()
-    config.createdAt = now
-    config.updatedAt = now
+    business.createdAt = now
+    business.updatedAt = now
     // Ensure id === slug
-    config.id = config.slug
+    business.id = business.slug
 
-    send('done', { config })
+    send('done', { config: business })
   } catch (err: any) {
     // JSON parse failure or API error
     const msg = err.message ?? 'Generation failed'
