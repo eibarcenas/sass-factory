@@ -7,14 +7,11 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    # Skip if GCP credentials not configured yet
+    if: ${{ secrets.GCP_PROJECT_ID_DEV != '' }}
     permissions:
       contents: read
       id-token: write
-
-    env:
-      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID_DEV }}
-      REGION: us-central1
-      IMAGE_TAG: ${{ github.sha }}
 
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +19,9 @@ jobs:
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: pnpm }
+        with:
+          node-version: 20
+          cache: pnpm
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -34,6 +33,7 @@ jobs:
 
       - name: Auth GCP
         uses: google-github-actions/auth@v2
+        with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SA_EMAIL }}
 
@@ -41,6 +41,7 @@ jobs:
         env:
           IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_DEV }}/storefront:${{ github.sha }}
           SERVICE: catalog-mx-storefront-dev
+          REGION: us-central1
         run: |
           docker build -t "$IMAGE" apps/storefront/
           docker push "$IMAGE"
@@ -50,6 +51,7 @@ jobs:
         env:
           IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_DEV }}/admin:${{ github.sha }}
           SERVICE: catalog-mx-admin-dev
+          REGION: us-central1
         run: |
           docker build -t "$IMAGE" apps/admin/
           docker push "$IMAGE"

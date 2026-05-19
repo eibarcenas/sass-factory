@@ -19,17 +19,20 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - name: Install dependencies
+      - name: Install JS dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Python dependencies
+        run: pip3 install fastapi uvicorn pytest httpx
 
       - name: Typecheck core
         run: pnpm -F @catalog-mx/core typecheck
 
-      - name: Unit tests (core + API)
-        run: |
-          pnpm -F @catalog-mx/core test
-          cd apps/api && python3 -m pytest tests/ -q
-        continue-on-error: false
+      - name: Core unit tests
+        run: pnpm -F @catalog-mx/core test
+
+      - name: API tests (pytest)
+        run: cd apps/api && python3 -m pytest tests/ -q
 
       - name: Lint
         run: pnpm lint --if-present
