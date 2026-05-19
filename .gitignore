@@ -82,3 +82,7 @@ __pycache__/
 *.pyc
 .venv/
 *.egg-info/
+
+# Python bytecode
+**/__pycache__/
+**/*.pyc
