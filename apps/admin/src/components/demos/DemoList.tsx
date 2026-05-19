@@ -39,7 +39,7 @@ function DemoCard({ business }: { business: Business }) {
         <div className="flex items-center gap-3 min-w-0">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-            style={{ backgroundColor: business.theme?.primary + '20' ?? '#f3f4f6' }}
+            style={{ backgroundColor: (business.theme?.primary ?? '#6366f1') + '20' }}
           >
             {business.theme?.emoji ?? '🏪'}
           </div>
