@@ -76,3 +76,9 @@ infrastructure/gcp/service-account*.json
 apps/admin/server/service-account.json
 .mcp.json
 .claude/worktrees/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
