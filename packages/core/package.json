@@ -18,6 +18,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@types/node": "^25.9.0",
     "@vitest/ui": "^4.1.6",
     "typescript": "^5.4.0",
     "vitest": "^4.1.6"
