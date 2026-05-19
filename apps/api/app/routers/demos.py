@@ -2,10 +2,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from datetime import datetime, timezone
 import re
+from app.db import get_db
 
 router = APIRouter(tags=["demos"])
-
-from app.routers.businesses import _businesses
 
 THEMES = {
     "heladeria":   {"primary": "#06b6d4", "secondary": "#cffafe", "accent": "#f59e0b", "background": "#f0fdfe", "font": "Quicksand", "emoji": "🍦"},
@@ -32,7 +31,7 @@ SAMPLE_ITEMS: dict[str, list[dict]] = {
         {"name": "Corte degradado",      "price": 150, "description": "Modern fade haircut"},
     ],
     "estetica": [
-        {"name": "Corte de cabello",     "price": 150, "description": "Haircut and styling for women"},
+        {"name": "Corte de cabello",     "price": 150, "description": "Haircut and styling"},
         {"name": "Tinte completo",       "price": 450, "description": "Full color treatment"},
         {"name": "Manicure",             "price": 120, "description": "Classic manicure with polish"},
         {"name": "Pedicure",             "price": 150, "description": "Relaxing pedicure treatment"},
@@ -41,10 +40,10 @@ SAMPLE_ITEMS: dict[str, list[dict]] = {
         {"name": "Tacos de bistec",      "price": 65,  "description": "3 beef tacos with onion, cilantro and salsa"},
         {"name": "Quesadilla",           "price": 55,  "description": "Large flour tortilla with melted cheese"},
         {"name": "Enchiladas verdes",    "price": 85,  "description": "3 green enchiladas with chicken and cream"},
-        {"name": "Agua fresca",          "price": 25,  "description": "Seasonal fresh water (jamaica, tamarindo, horchata)"},
+        {"name": "Agua fresca",          "price": 25,  "description": "Seasonal fresh water"},
     ],
     "panaderia": [
-        {"name": "Concha",               "price": 18,  "description": "Traditional Mexican sweet bread with sugar topping"},
+        {"name": "Concha",               "price": 18,  "description": "Traditional Mexican sweet bread"},
         {"name": "Croissant de mantequilla", "price": 35, "description": "Buttery flaky croissant"},
         {"name": "Pay de queso",         "price": 45,  "description": "Slice of homemade cheesecake"},
         {"name": "Bolillo",              "price": 8,   "description": "Fresh baked white bread roll"},
@@ -52,8 +51,8 @@ SAMPLE_ITEMS: dict[str, list[dict]] = {
     "gym": [
         {"name": "Mensualidad",          "price": 450, "description": "Full access monthly membership"},
         {"name": "Clase de spinning",    "price": 80,  "description": "1-hour spinning session"},
-        {"name": "Personal training",    "price": 350, "description": "1-hour session with certified trainer"},
-        {"name": "Plan trimestral",      "price": 1200,"description": "3-month membership with discount"},
+        {"name": "Personal training",    "price": 350, "description": "1-hour with certified trainer"},
+        {"name": "Plan trimestral",      "price": 1200,"description": "3-month membership"},
     ],
     "mecanico": [
         {"name": "Cambio de aceite",     "price": 350, "description": "Oil change including filter"},
@@ -68,24 +67,12 @@ SAMPLE_ITEMS: dict[str, list[dict]] = {
     ],
 }
 
-def build_items(business_id: str, business_type: str) -> list[dict]:
-    templates = SAMPLE_ITEMS.get(business_type, SAMPLE_ITEMS["otro"])
-    now = datetime.now(timezone.utc).isoformat()
-    return [
-        {
-            "id": f"item-{i+1}",
-            "businessId": business_id,
-            "name": t["name"],
-            "price": t["price"],
-            "currency": "MXN",
-            "description": t["description"],
-            "visible": True,
-            "order": i + 1,
-            "createdAt": now,
-            "updatedAt": now,
-        }
-        for i, t in enumerate(templates)
-    ]
+def slugify(text: str) -> str:
+    t = text.lower()
+    for a, b in [("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u"),("ñ","n"),("ü","u")]:
+        t = t.replace(a, b)
+    t = re.sub(r"[^a-z0-9\s-]", "", t)
+    return re.sub(r"\s+", "-", t.strip())[:40]
 
 class CreateDemoRequest(BaseModel):
     name: str
@@ -94,22 +81,18 @@ class CreateDemoRequest(BaseModel):
     city: str
     tagline: str | None = None
 
-def slugify(text: str) -> str:
-    t = text.lower()
-    for a, b in [("á","a"),("é","e"),("í","i"),("ó","o"),("ú","u"),("ñ","n"),("ü","u")]:
-        t = t.replace(a, b)
-    t = re.sub(r"[^a-z0-9\s-]", "", t)
-    return re.sub(r"\s+", "-", t.strip())[:40]
-
 @router.post("/admin/demos")
 def create_demo(body: CreateDemoRequest):
+    db = get_db()
     slug = slugify(body.name)
-    if any(b["id"] == slug for b in _businesses):
+
+    # Ensure uniqueness
+    existing = db.collection("businesses").document(slug).get()
+    if existing.exists:
         slug = f"{slug}-{int(datetime.now(timezone.utc).timestamp()) % 10000}"
 
     now = datetime.now(timezone.utc).isoformat()
-    business = {
-        "id": slug,
+    business_data = {
         "slug": slug,
         "name": body.name,
         "type": body.type,
@@ -121,7 +104,29 @@ def create_demo(body: CreateDemoRequest):
         "plan": "free",
         "createdAt": now,
         "updatedAt": now,
-        "items": build_items(slug, body.type),
     }
-    _businesses.append(business)
-    return business
+
+    # Write business document
+    biz_ref = db.collection("businesses").document(slug)
+    biz_ref.set(business_data)
+
+    # Write items as subcollection
+    templates = SAMPLE_ITEMS.get(body.type, SAMPLE_ITEMS["otro"])
+    items = []
+    for i, t in enumerate(templates):
+        item_data = {
+            "businessId": slug,
+            "name": t["name"],
+            "price": float(t["price"]),
+            "currency": "MXN",
+            "description": t["description"],
+            "visible": True,
+            "order": i + 1,
+            "createdAt": now,
+            "updatedAt": now,
+        }
+        item_ref = biz_ref.collection("items").document()
+        item_ref.set(item_data)
+        items.append({**item_data, "id": item_ref.id})
+
+    return {**business_data, "id": slug, "items": items}
