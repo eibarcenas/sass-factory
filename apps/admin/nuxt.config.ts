@@ -30,9 +30,15 @@ export default defineNuxtConfig({
       }
     : {}),
   runtimeConfig: {
+    // Server-only
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
+    // Public (exposed to client)
     public: {
       appName: 'SASS Factory Admin',
       mockMode: !hasFirebase,
+      firebaseApiKey: process.env.FIREBASE_API_KEY ?? '',
+      firebaseAuthDomain: process.env.FIREBASE_AUTH_DOMAIN ?? '',
+      firebaseProjectId: process.env.FIREBASE_PROJECT_ID ?? '',
     },
   },
   vite: {
