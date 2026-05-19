@@ -18,6 +18,75 @@ THEMES = {
     "otro":        {"primary": "#6366f1", "secondary": "#a5b4fc", "accent": "#f59e0b", "background": "#f0f1ff", "font": "Inter", "emoji": "🏪"},
 }
 
+SAMPLE_ITEMS: dict[str, list[dict]] = {
+    "heladeria": [
+        {"name": "Sundae de chocolate",  "price": 85,  "description": "3 scoops of artisan chocolate ice cream with whipped cream and cherry"},
+        {"name": "Nieve de vainilla",    "price": 40,  "description": "Classic artisan vanilla ice cream"},
+        {"name": "Malteada de fresa",    "price": 65,  "description": "Creamy strawberry milkshake with real fruit"},
+        {"name": "Paleta de mango",      "price": 30,  "description": "Natural mango popsicle with chili"},
+    ],
+    "barberia": [
+        {"name": "Corte clásico",        "price": 120, "description": "Classic haircut with styling"},
+        {"name": "Corte + barba",        "price": 180, "description": "Haircut and beard trim"},
+        {"name": "Arreglo de barba",     "price": 80,  "description": "Beard shaping and styling"},
+        {"name": "Corte degradado",      "price": 150, "description": "Modern fade haircut"},
+    ],
+    "estetica": [
+        {"name": "Corte de cabello",     "price": 150, "description": "Haircut and styling for women"},
+        {"name": "Tinte completo",       "price": 450, "description": "Full color treatment"},
+        {"name": "Manicure",             "price": 120, "description": "Classic manicure with polish"},
+        {"name": "Pedicure",             "price": 150, "description": "Relaxing pedicure treatment"},
+    ],
+    "restaurante": [
+        {"name": "Tacos de bistec",      "price": 65,  "description": "3 beef tacos with onion, cilantro and salsa"},
+        {"name": "Quesadilla",           "price": 55,  "description": "Large flour tortilla with melted cheese"},
+        {"name": "Enchiladas verdes",    "price": 85,  "description": "3 green enchiladas with chicken and cream"},
+        {"name": "Agua fresca",          "price": 25,  "description": "Seasonal fresh water (jamaica, tamarindo, horchata)"},
+    ],
+    "panaderia": [
+        {"name": "Concha",               "price": 18,  "description": "Traditional Mexican sweet bread with sugar topping"},
+        {"name": "Croissant de mantequilla", "price": 35, "description": "Buttery flaky croissant"},
+        {"name": "Pay de queso",         "price": 45,  "description": "Slice of homemade cheesecake"},
+        {"name": "Bolillo",              "price": 8,   "description": "Fresh baked white bread roll"},
+    ],
+    "gym": [
+        {"name": "Mensualidad",          "price": 450, "description": "Full access monthly membership"},
+        {"name": "Clase de spinning",    "price": 80,  "description": "1-hour spinning session"},
+        {"name": "Personal training",    "price": 350, "description": "1-hour session with certified trainer"},
+        {"name": "Plan trimestral",      "price": 1200,"description": "3-month membership with discount"},
+    ],
+    "mecanico": [
+        {"name": "Cambio de aceite",     "price": 350, "description": "Oil change including filter"},
+        {"name": "Revisión de frenos",   "price": 200, "description": "Complete brake inspection"},
+        {"name": "Alineación y balanceo","price": 300, "description": "Wheel alignment and balancing"},
+        {"name": "Diagnóstico general",  "price": 150, "description": "Full vehicle diagnostic scan"},
+    ],
+    "otro": [
+        {"name": "Servicio básico",      "price": 200, "description": "Basic service package"},
+        {"name": "Servicio estándar",    "price": 350, "description": "Standard service package"},
+        {"name": "Servicio premium",     "price": 500, "description": "Premium service package"},
+    ],
+}
+
+def build_items(business_id: str, business_type: str) -> list[dict]:
+    templates = SAMPLE_ITEMS.get(business_type, SAMPLE_ITEMS["otro"])
+    now = datetime.now(timezone.utc).isoformat()
+    return [
+        {
+            "id": f"item-{i+1}",
+            "businessId": business_id,
+            "name": t["name"],
+            "price": t["price"],
+            "currency": "MXN",
+            "description": t["description"],
+            "visible": True,
+            "order": i + 1,
+            "createdAt": now,
+            "updatedAt": now,
+        }
+        for i, t in enumerate(templates)
+    ]
+
 class CreateDemoRequest(BaseModel):
     name: str
     type: str
@@ -40,10 +109,19 @@ def create_demo(body: CreateDemoRequest):
 
     now = datetime.now(timezone.utc).isoformat()
     business = {
-        "id": slug, "slug": slug, "name": body.name, "type": body.type,
-        "whatsapp": body.whatsapp, "city": body.city, "tagline": body.tagline,
+        "id": slug,
+        "slug": slug,
+        "name": body.name,
+        "type": body.type,
+        "whatsapp": body.whatsapp,
+        "city": body.city,
+        "tagline": body.tagline,
         "theme": THEMES.get(body.type, THEMES["otro"]),
-        "status": "demo", "plan": "free", "createdAt": now, "updatedAt": now,
+        "status": "demo",
+        "plan": "free",
+        "createdAt": now,
+        "updatedAt": now,
+        "items": build_items(slug, body.type),
     }
     _businesses.append(business)
     return business
