@@ -75,7 +75,11 @@ export default defineEventHandler(async (event) => {
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    throw createError({ statusCode: 500, message: 'ANTHROPIC_API_KEY is not configured' })
+    throw createError({
+      statusCode: 503,
+      message: 'AI generation not available — ANTHROPIC_API_KEY not configured. Use manual creation instead.',
+      data: { code: 'AI_UNAVAILABLE' },
+    })
   }
 
   // Set SSE headers manually — we're streaming a POST response
