@@ -6,13 +6,12 @@ build-backend = "hatchling.build"
 name = "catalog-mx-api"
 version = "0.1.0"
 description = "catalog.mx FastAPI backend"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.7.0",
-    "firebase-admin>=6.7.0",
     "google-cloud-firestore>=2.19.0",
     "python-dotenv>=1.0.0",
     "python-multipart>=0.0.20",
@@ -28,3 +27,5 @@ dev = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+# Python version pinned via apps/api/.python-version = 3.13

@@ -10,10 +10,11 @@ help: ## Show available targets (run from repo root)
 
 ## ─── Install ─────────────────────────────────────────────────────────────────
 
-install: ## Install all dependencies (JS + Python venv)
+install: ## Install all dependencies (JS + Python 3.13 via uv)
 	pnpm install
-	python3 -m venv apps/api/.venv
-	apps/api/.venv/bin/pip install -q google-cloud-firestore python-dotenv fastapi "uvicorn[standard]" pydantic pytest httpx
+	cd apps/api && uv venv --python 3.13
+	cd apps/api && uv pip install fastapi "uvicorn[standard]" pydantic pydantic-settings \
+	  google-cloud-firestore python-dotenv python-multipart pytest pytest-asyncio httpx
 
 ## ─── Local development ───────────────────────────────────────────────────────
 
@@ -40,15 +41,15 @@ dev-storefront: ## Start only storefront (Next.js, localhost:3010)
 	@fuser -k 3010/tcp 2>/dev/null || true
 	cd apps/storefront && pnpm dev
 
-dev-api: ## Start only FastAPI (localhost:8000)
+dev-api: ## Start only FastAPI (localhost:8000, Python 3.13)
 	@fuser -k 8000/tcp 2>/dev/null || true
-	cd apps/api && .venv/bin/uvicorn main:app --reload --port 8000 2>/dev/null || uvicorn main:app --reload --port 8000
+	cd apps/api && .venv/bin/uvicorn main:app --reload --port 8000
 
 ## ─── Quality ─────────────────────────────────────────────────────────────────
 
 test: ## Run all tests
 	pnpm -F @catalog-mx/core test
-	@[ -d apps/api ] && (cd apps/api && pytest) || true
+	cd apps/api && .venv/bin/pytest -q
 
 typecheck: ## Type-check all JS/TS packages
 	pnpm -F @catalog-mx/core typecheck
