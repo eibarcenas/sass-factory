@@ -1,10 +1,15 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  // Skip auth page
   if (to.path === '/login') return
+
+  const config = useRuntimeConfig()
+
+  // Mock mode: no Firebase configured — bypass auth for local dev
+  if (config.public.mockMode) {
+    return
+  }
 
   const { user, initAuth } = useFirebaseAuth()
 
-  // On client, wait for Firebase to resolve auth state
   if (import.meta.client && !user.value) {
     await initAuth()
   }
