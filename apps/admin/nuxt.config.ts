@@ -1,3 +1,5 @@
+import { federation } from '@module-federation/vite'
+
 const hasFirebase = !!(process.env.FIREBASE_API_KEY && process.env.FIREBASE_PROJECT_ID)
 
 export default defineNuxtConfig({
@@ -32,5 +34,18 @@ export default defineNuxtConfig({
       appName: 'SASS Factory Admin',
       mockMode: !hasFirebase,
     },
+  },
+  vite: {
+    plugins: [
+      federation({
+        name: 'admin_shell',
+        remotes: {
+          demo_mf: process.env.DEMO_MF_URL
+            ? `${process.env.DEMO_MF_URL}/assets/remoteEntry.js`
+            : 'http://localhost:3001/assets/remoteEntry.js',
+        },
+        shared: ['vue'],
+      }),
+    ],
   },
 })

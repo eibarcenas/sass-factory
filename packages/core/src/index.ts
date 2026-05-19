@@ -2,4 +2,4 @@
 export * from './types/index'
 
 // Utils
-export * from './utils/firestore'
+export * from './utils/index'
