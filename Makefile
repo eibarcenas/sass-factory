@@ -23,20 +23,20 @@ dev: ## Start admin + storefront locally
 	@echo "  │  Storefront   → http://localhost:3010                    │"
 	@echo "  └──────────────────────────────────────────────────────────┘"
 	@echo ""
-	@cd apps/admin && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3000 &
-	@cd apps/storefront && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3010 &
+	@cd apps/admin && NUXT_TELEMETRY_DISABLED=1 pnpm dev &
+	@cd apps/storefront && NUXT_TELEMETRY_DISABLED=1 pnpm dev &
 	@wait
 
 dev-admin: ## Start only admin panel (localhost:3000)
-	cd apps/admin && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3000
+	cd apps/admin && NUXT_TELEMETRY_DISABLED=1 pnpm dev
 
 dev-storefront: ## Start only storefront (localhost:3010)
-	cd apps/storefront && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3010
+	cd apps/storefront && NUXT_TELEMETRY_DISABLED=1 pnpm dev
 
 dev-emulator: ## Start admin + Firestore emulator
 	@firebase emulators:start --only firestore &
 	@sleep 3
-	@cd apps/admin && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3000
+	@cd apps/admin && NUXT_TELEMETRY_DISABLED=1 pnpm dev
 
 ## ─── Quality ─────────────────────────────────────────────────────────────────
 
