@@ -13,7 +13,7 @@ K8S_DIR      = infrastructure/k8s
 
 ## ─── Local development ───────────────────────────────────────────────────────
 
-dev: ## Start admin + storefront locally
+dev: ## Start admin + storefront locally (run in separate terminals if preferred)
 	@echo ""
 	@echo "  ┌──────────────────────────────────────────────────────────┐"
 	@echo "  │  catalog.mx — Dev local                                  │"
@@ -21,19 +21,20 @@ dev: ## Start admin + storefront locally
 	@echo "  │  Storefront   → http://localhost:3010                    │"
 	@echo "  └──────────────────────────────────────────────────────────┘"
 	@echo ""
-	@pnpm --filter admin dev --port 3000 &
-	@pnpm --filter @sass-factory/storefront dev --port 3010 &
+	@cd apps/admin && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3000 &
+	@cd apps/storefront && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3010 &
 	@wait
 
 dev-admin: ## Start only admin panel (localhost:3000)
-	pnpm --filter admin dev --port 3000
+	cd apps/admin && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3000
 
 dev-storefront: ## Start only storefront (localhost:3010)
-	pnpm --filter @sass-factory/storefront dev --port 3010
+	cd apps/storefront && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3010
 
 dev-emulator: ## Start admin + Firestore emulator
-	firebase emulators:start --only firestore & \
-	sleep 3 && pnpm --filter admin dev --port 3000
+	@firebase emulators:start --only firestore &
+	@sleep 3
+	@cd apps/admin && NUXT_TELEMETRY_DISABLED=1 npx nuxt dev --port 3000
 
 ## ─── Quality ─────────────────────────────────────────────────────────────────
 
