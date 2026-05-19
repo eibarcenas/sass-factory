@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AppConfig } from '@sass-factory/core'
+import type { Business } from '@sass-factory/core'
 import { useApps } from '~/composables/useApps'
 import { useToast } from '~/composables/useToast'
 import { useDevPorts } from '~/composables/useDevPorts'
@@ -59,7 +59,7 @@ function handleView(id: string) {
   }
 }
 
-async function handlePreview(app: AppConfig) {
+async function handlePreview(app: Business) {
   const existing = getDevUrl(app.slug)
   if (existing) {
     window.open(existing, '_blank')
@@ -246,9 +246,9 @@ const statCards = computed(() => [
           </p>
 
           <div class="flex items-center gap-3 mt-3 text-xs text-gray-500">
-            <span>{{ app.features?.length ?? 0 }} features</span>
+            <span>{{ app.type }}</span>
             <span class="w-1 h-1 rounded-full bg-gray-300" />
-            <span>{{ app.topic }}</span>
+            <span>{{ app.city }}</span>
           </div>
 
           <!-- Color swatches -->

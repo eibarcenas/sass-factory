@@ -1,8 +1,10 @@
-import { GoogleAuth } from 'google-auth-library'
-
-const auth = new GoogleAuth({
-  scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-})
+async function getAuthToken(): Promise<string> {
+  const { GoogleAuth } = await import('google-auth-library')
+  const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] })
+  const client = await auth.getClient()
+  const token = await client.getAccessToken()
+  return token.token!
+}
 
 export interface BuildSubstitutions {
   _SLUG: string
@@ -38,21 +40,14 @@ export async function triggerBuild(
   factoryProjectId: string,
   substitutions: BuildSubstitutions,
 ): Promise<CloudBuild> {
-  const client = await auth.getClient()
-  const token = await client.getAccessToken()
-
-  // Read cloudbuild yaml content
-  const { readFileSync } = await import('node:fs')
-  const { resolve } = await import('node:path')
-  const yamlPath = resolve(process.cwd(), '../../infrastructure/cloudbuild/deploy-app.yaml')
-  // Cloud Build API accepts inline build config
+  const token = await getAuthToken()
 
   const res = await fetch(
     `https://cloudbuild.googleapis.com/v1/projects/${factoryProjectId}/builds`,
     {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token.token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -85,12 +80,11 @@ export async function getBuild(
   factoryProjectId: string,
   buildId: string,
 ): Promise<CloudBuild> {
-  const client = await auth.getClient()
-  const token = await client.getAccessToken()
+  const token = await getAuthToken()
 
   const res = await fetch(
     `https://cloudbuild.googleapis.com/v1/projects/${factoryProjectId}/builds/${buildId}`,
-    { headers: { Authorization: `Bearer ${token.token}` } },
+    { headers: { Authorization: `Bearer ${token}` } },
   )
 
   if (!res.ok) throw new Error(`Cloud Build GET error: ${res.status}`)

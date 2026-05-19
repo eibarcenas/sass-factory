@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { doc, getDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 import { useFirestore } from 'vuefire'
-import type { AppConfig } from '@sass-factory/core'
+import type { Business } from '@sass-factory/core'
 import { COLLECTIONS } from '@sass-factory/core'
 import { useToast } from '~/composables/useToast'
 
@@ -12,7 +12,7 @@ const db = useFirestore()
 const toast = useToast()
 
 const appId = computed(() => route.params.id as string)
-const app = ref<AppConfig | null>(null)
+const app = ref<Business | null>(null)
 const isLoading = ref(true)
 const analyticsData = ref<any[]>([])
 
@@ -20,7 +20,7 @@ onMounted(async () => {
   try {
     const appDoc = await getDoc(doc(db, COLLECTIONS.APPS, appId.value))
     if (appDoc.exists()) {
-      app.value = { id: appDoc.id, ...appDoc.data() } as AppConfig
+      app.value = { id: appDoc.id, ...appDoc.data() } as Business
     }
 
     // Fetch analytics subcollection
@@ -74,10 +74,10 @@ const mockStats = computed(() => ({
         <div
           class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0"
           :style="{
-            background: `linear-gradient(135deg, ${app?.theme?.gradient?.[0] ?? '#e2e8f0'}, ${app?.theme?.gradient?.[1] ?? '#cbd5e1'})`,
+            background: `linear-gradient(135deg, ${app?.theme?.gradient[0] ?? '#e2e8f0'}, ${app?.theme?.gradient[1] ?? '#cbd5e1'})`,
           }"
         >
-          {{ app?.theme?.emoji ?? '✨' }}
+          {{ app?.theme.emoji ?? '✨' }}
         </div>
         <div>
           <h1 class="text-2xl font-bold text-gray-900">{{ app?.name ?? 'Analytics' }}</h1>
@@ -109,18 +109,19 @@ const mockStats = computed(() => ({
         </div>
       </div>
 
-      <!-- Features enabled -->
+      <!-- Business info -->
       <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-        <h2 class="text-base font-semibold text-gray-900 mb-4">Enabled Features</h2>
+        <h2 class="text-base font-semibold text-gray-900 mb-4">Business Info</h2>
         <div class="flex flex-wrap gap-2">
-          <span
-            v-for="feature in app?.features"
-            :key="feature"
-            class="px-3 py-1 bg-indigo-50 text-indigo-700 text-sm rounded-full font-medium"
-          >
-            {{ feature }}
+          <span v-if="app?.type" class="px-3 py-1 bg-indigo-50 text-indigo-700 text-sm rounded-full font-medium">
+            {{ app.type }}
           </span>
-          <span v-if="!app?.features?.length" class="text-sm text-gray-400">No features enabled</span>
+          <span v-if="app?.city" class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full font-medium">
+            {{ app.city }}
+          </span>
+          <span v-if="app?.whatsapp" class="px-3 py-1 bg-green-50 text-green-700 text-sm rounded-full font-medium">
+            {{ app.whatsapp }}
+          </span>
         </div>
       </div>
 

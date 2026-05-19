@@ -1,9 +1,9 @@
-import type { AppConfig } from '@sass-factory/core'
+import type { Business } from '@sass-factory/core'
 import { COLLECTIONS } from '@sass-factory/core'
 
 export function useAppConfig() {
   const config = useRuntimeConfig()
-  const appConfig = ref<AppConfig | null>(null)
+  const appConfig = ref<Business | null>(null)
   const isLoading = ref(true)
   const error = ref<string | null>(null)
 
@@ -11,7 +11,7 @@ export function useAppConfig() {
   // The API reads .dev-configs/{slug}.json written by admin/CLI at launch time.
   // No env var bloat — only APP_SLUG is needed.
   if (config.public.mockMode) {
-    const { data, error: fetchError, pending } = useFetch<AppConfig>('/api/app-config', {
+    const { data, error: fetchError, pending } = useFetch<Business>('/api/app-config', {
       // SSR-safe: fetches on server during hydration, cached on client
       key: `app-config-${config.public.appSlug}`,
     })
@@ -43,7 +43,7 @@ export function useAppConfig() {
       const snap = await getDocs(query(collection(db, COLLECTIONS.APPS), where('slug', '==', slug)))
       if (!snap.empty) {
         const d = snap.docs[0]
-        appConfig.value = { id: d.id, ...d.data() } as AppConfig
+        appConfig.value = { id: d.id, ...d.data() } as Business
       } else {
         error.value = 'App not found'
       }
@@ -61,7 +61,7 @@ export function useAppConfig() {
       const { useFirestore } = await import('vuefire')
       const db = useFirestore()
       const snap = await getDoc(doc(db, COLLECTIONS.APPS, id))
-      if (snap.exists()) appConfig.value = { id: snap.id, ...snap.data() } as AppConfig
+      if (snap.exists()) appConfig.value = { id: snap.id, ...snap.data() } as Business
       else error.value = 'App not found'
     } catch (e: any) {
       error.value = e.message ?? 'Failed to load config'
@@ -79,7 +79,7 @@ export function useAppConfig() {
       const snap = await getDocs(query(collection(db, COLLECTIONS.APPS), where('domain', '==', domain)))
       if (!snap.empty) {
         const d = snap.docs[0]
-        appConfig.value = { id: d.id, ...d.data() } as AppConfig
+        appConfig.value = { id: d.id, ...d.data() } as Business
       } else if (config.public.appSlug) {
         await loadBySlug(config.public.appSlug as string)
       } else {

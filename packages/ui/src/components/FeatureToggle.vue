@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import type { AppFeature } from '@sass-factory/core'
-import { FEATURE_LABELS } from '@sass-factory/core'
-
 interface Props {
-  modelValue: AppFeature[]
+  modelValue: string[]
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  'update:modelValue': [features: AppFeature[]]
+  'update:modelValue': [features: string[]]
 }>()
 
-const allFeatures: AppFeature[] = [
+const allFeatures: string[] = [
   'hero',
   'timeline',
   'gallery',
@@ -23,7 +20,7 @@ const allFeatures: AppFeature[] = [
   'closing',
 ]
 
-const featureIcons: Record<AppFeature, string> = {
+const featureIcons: Record<string, string> = {
   hero: '🏠',
   timeline: '📅',
   gallery: '🖼️',
@@ -35,11 +32,23 @@ const featureIcons: Record<AppFeature, string> = {
   closing: '🎬',
 }
 
-function isEnabled(feature: AppFeature) {
+const featureLabels: Record<string, string> = {
+  hero: 'Hero Section',
+  timeline: 'Timeline',
+  gallery: 'Photo Gallery',
+  letter: 'Personal Letter',
+  feed: 'Social Feed',
+  moments: 'Moments',
+  music: 'Music Player',
+  countdown: 'Countdown',
+  closing: 'Closing Section',
+}
+
+function isEnabled(feature: string) {
   return props.modelValue.includes(feature)
 }
 
-function toggle(feature: AppFeature) {
+function toggle(feature: string) {
   if (isEnabled(feature)) {
     emit('update:modelValue', props.modelValue.filter((f) => f !== feature))
   } else {
@@ -63,7 +72,7 @@ function toggle(feature: AppFeature) {
       @click="toggle(feature)"
     >
       <span class="text-lg shrink-0">{{ featureIcons[feature] }}</span>
-      <span class="text-sm font-medium flex-1">{{ FEATURE_LABELS[feature] }}</span>
+      <span class="text-sm font-medium flex-1">{{ featureLabels[feature] ?? feature }}</span>
       <span
         class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
         :class="
