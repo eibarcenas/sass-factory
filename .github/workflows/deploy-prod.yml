@@ -1,0 +1,68 @@
+name: Deploy — Production
+
+on:
+  push:
+    branches: [production]
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    environment: production  # requires manual approval in GitHub
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - name: Install + Test
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm -F @sass-factory/core typecheck
+          pnpm -F @sass-factory/core test
+      - name: Auth GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER_PROD }}
+          service_account: ${{ secrets.GCP_SA_EMAIL_PROD }}
+      - name: Build images
+        env:
+          SHA: ${{ github.sha }}
+          PROJECT: ${{ secrets.GCP_PROJECT_ID_PROD }}
+        run: |
+          for svc in storefront admin ops; do
+            IMAGE="gcr.io/${PROJECT}/${svc}:${SHA}"
+            docker build -t "$IMAGE" "apps/${svc}/"
+            docker push "$IMAGE"
+          done
+      - name: Canary deploy storefront (10%)
+        env:
+          IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_PROD }}/storefront:${{ github.sha }}
+          REGION: us-central1
+        run: |
+          gcloud run deploy sass-factory-storefront \
+            --image "$IMAGE" --region "$REGION" \
+            --tag canary --no-traffic --quiet
+          gcloud run services update-traffic sass-factory-storefront \
+            --region "$REGION" \
+            --to-tags canary=10 --quiet
+      - name: Wait 10 minutes + check error rate
+        run: sleep 600
+      - name: Promote to 100%
+        env:
+          REGION: us-central1
+        run: |
+          gcloud run services update-traffic sass-factory-storefront \
+            --region "$REGION" --to-latest --quiet
+          for svc in admin ops; do
+            IMAGE="gcr.io/${{ secrets.GCP_PROJECT_ID_PROD }}/${svc}:${{ github.sha }}"
+            gcloud run deploy "sass-factory-${svc}" \
+              --image "$IMAGE" --region "$REGION" --quiet
+          done
+      - name: Tag release
+        env:
+          SHA: ${{ github.sha }}
+        run: git tag "release-${SHA:0:8}" && git push origin --tags

@@ -1,0 +1,55 @@
+name: Deploy — Staging
+
+on:
+  push:
+    branches: ['release/**']
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Tests
+        run: |
+          pnpm -F @sass-factory/core typecheck
+          pnpm -F @sass-factory/core test
+      - name: Auth GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL_STG }}
+      - name: Build and deploy storefront
+        env:
+          IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_STG }}/storefront:${{ github.sha }}
+          SERVICE: sass-factory-storefront-stg
+          REGION: us-central1
+        run: |
+          docker build -t "$IMAGE" apps/storefront/
+          docker push "$IMAGE"
+          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
+      - name: Build and deploy admin
+        env:
+          IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_STG }}/admin:${{ github.sha }}
+          SERVICE: sass-factory-admin-stg
+          REGION: us-central1
+        run: |
+          docker build -t "$IMAGE" apps/admin/
+          docker push "$IMAGE"
+          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
+      - name: Smoke test
+        env:
+          REGION: us-central1
+          SERVICE: sass-factory-storefront-stg
+        run: |
+          URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')
+          curl -f "${URL}/api/health"
