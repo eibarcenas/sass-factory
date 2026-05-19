@@ -43,6 +43,9 @@ export default defineNuxtConfig({
     },
   },
   vite: {
+    optimizeDeps: {
+      include: [], // suppress MF DTS unresolvable warning
+    },
     plugins: [
       federation({
         name: 'admin_shell',
@@ -52,6 +55,8 @@ export default defineNuxtConfig({
             : 'http://localhost:3001/assets/remoteEntry.js',
         },
         shared: ['vue'],
+        // Disable DTS in dev — remote not always running
+        dts: process.env.NODE_ENV === 'production',
       }),
     ],
   },

@@ -25,6 +25,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@vitest/ui": "^4.1.6",
     "happy-dom": "^20.9.0",
     "typescript": "^5.4.0",

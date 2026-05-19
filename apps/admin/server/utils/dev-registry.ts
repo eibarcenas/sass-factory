@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { spawn } from 'node:child_process'
 
 const REGISTRY_PATH = resolve(process.cwd(), '../../.dev-ports.json')
 const CONFIGS_DIR = resolve(process.cwd(), '../../.dev-configs')
@@ -8,10 +9,20 @@ const BASE_PORT = 3010
 export interface DevEntry {
   port: number
   pid?: number
+  docker?: boolean
   startedAt: number
 }
 
 export type DevRegistry = Record<string, DevEntry>
+
+function exec(cmd: string): Promise<string> {
+  return new Promise((res, rej) => {
+    const child = spawn('sh', ['-c', cmd], { stdio: ['ignore', 'pipe', 'pipe'] })
+    let out = ''
+    child.stdout.on('data', (d: Buffer) => (out += d.toString()))
+    child.on('exit', (code) => (code === 0 ? res(out.trim()) : rej(new Error(`exit ${code}`))))
+  })
+}
 
 export function readRegistry(): DevRegistry {
   if (!existsSync(REGISTRY_PATH)) return {}
@@ -61,12 +72,17 @@ export function readDevConfig(slug: string): unknown | null {
   try { return JSON.parse(readFileSync(path, 'utf-8')) } catch { return null }
 }
 
-/** Prune entries where the process has died */
-export function pruneDeadProcesses(): DevRegistry {
+/** Prune entries where the process/container has stopped */
+export async function pruneDeadProcesses(): Promise<DevRegistry> {
   const registry = readRegistry()
   let changed = false
   for (const [slug, entry] of Object.entries(registry)) {
-    if (entry.pid && !isProcessRunning(entry.pid)) {
+    if (entry.docker) {
+      try {
+        const out = await exec(`docker ps --filter name=sass-${slug} --filter status=running -q`)
+        if (!out.trim()) { delete registry[slug]; changed = true }
+      } catch { delete registry[slug]; changed = true }
+    } else if (entry.pid && !isProcessRunning(entry.pid)) {
       delete registry[slug]
       changed = true
     }

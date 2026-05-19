@@ -1,5 +1,5 @@
 import { defineEventHandler, createError, readMultipartFormData } from 'h3'
-import { requireAuth } from '~/server/middleware/auth'
+import { requireAuth } from '~~/server/middleware/auth'
 
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_BYTES = 2 * 1024 * 1024

@@ -1,6 +1,6 @@
 import { defineEventHandler, readBody, createError } from 'h3'
-import { requireAuth } from '~/server/middleware/auth'
-import { initAdmin } from '~/server/utils/firebase-admin'
+import { requireAuth } from '~~/server/middleware/auth'
+import { initAdmin } from '~~/server/utils/firebase-admin'
 import { logger } from '@sass-factory/core'
 import type { Business } from '@sass-factory/core'
 

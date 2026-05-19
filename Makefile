@@ -13,7 +13,9 @@ K8S_DIR      = infrastructure/k8s
 
 ## ─── Local development ───────────────────────────────────────────────────────
 
-dev: ## Start admin + storefront locally (run in separate terminals if preferred)
+dev: ## Start admin + storefront locally
+	@fuser -k 3000/tcp 2>/dev/null || true
+	@fuser -k 3010/tcp 2>/dev/null || true
 	@echo ""
 	@echo "  ┌──────────────────────────────────────────────────────────┐"
 	@echo "  │  catalog.mx — Dev local                                  │"

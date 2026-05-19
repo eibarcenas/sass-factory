@@ -1,8 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { requireAuth } from '~/server/middleware/auth'
-import { checkAiGenerateLimit } from '~/server/middleware/rate-limit'
+import { requireAuth } from '~~/server/middleware/auth'
+import { checkAiGenerateLimit } from '~~/server/middleware/rate-limit'
 import { logger } from '@sass-factory/core'
-import { initAdmin } from '~/server/utils/firebase-admin'
+import { initAdmin } from '~~/server/utils/firebase-admin'
 
 const SYSTEM_PROMPT = `You are a catalog demo generator for a SaaS platform that helps small businesses show their products online.
 

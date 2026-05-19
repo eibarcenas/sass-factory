@@ -1,5 +1,5 @@
 import { defineEventHandler, createError, getRouterParam } from 'h3'
-import { requireAuth } from '~/server/middleware/auth'
+import { requireAuth } from '~~/server/middleware/auth'
 import { validateTransition } from '@sass-factory/core'
 
 export default defineEventHandler(async (event) => {

@@ -1,0 +1,41 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: sass-factory
+nodes:
+- role: control-plane
+  extraPortMappings:
+  # Admin panel
+  - containerPort: 30042
+    hostPort: 4200
+    protocol: TCP
+  # Template apps (10 slots: ports 3010-3019)
+  - containerPort: 30010
+    hostPort: 3010
+    protocol: TCP
+  - containerPort: 30011
+    hostPort: 3011
+    protocol: TCP
+  - containerPort: 30012
+    hostPort: 3012
+    protocol: TCP
+  - containerPort: 30013
+    hostPort: 3013
+    protocol: TCP
+  - containerPort: 30014
+    hostPort: 3014
+    protocol: TCP
+  - containerPort: 30015
+    hostPort: 3015
+    protocol: TCP
+  - containerPort: 30016
+    hostPort: 3016
+    protocol: TCP
+  - containerPort: 30017
+    hostPort: 3017
+    protocol: TCP
+  - containerPort: 30018
+    hostPort: 3018
+    protocol: TCP
+  - containerPort: 30019
+    hostPort: 3019
+    protocol: TCP

@@ -1,5 +1,5 @@
 import { defineEventHandler, getQuery } from 'h3'
-import { requireAuth } from '~/server/middleware/auth'
+import { requireAuth } from '~~/server/middleware/auth'
 import type { Business } from '@sass-factory/core'
 
 const ALL_BUSINESSES: Business[] = [
