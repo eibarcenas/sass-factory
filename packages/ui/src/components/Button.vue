@@ -1,0 +1,47 @@
+<script setup lang="ts">
+defineProps<{
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  loading?: boolean
+  type?: 'button' | 'submit' | 'reset'
+}>()
+
+defineEmits<{ click: [event: MouseEvent] }>()
+
+const variantClasses = {
+  primary:   'bg-indigo-600 hover:bg-indigo-700 text-white border-transparent',
+  secondary: 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300',
+  ghost:     'bg-transparent hover:bg-gray-100 text-gray-700 border-transparent',
+  danger:    'bg-red-600 hover:bg-red-700 text-white border-transparent',
+}
+
+const sizeClasses = {
+  sm: 'px-3 py-1.5 text-sm',
+  md: 'px-4 py-2 text-sm',
+  lg: 'px-6 py-3 text-base',
+}
+</script>
+
+<template>
+  <button
+    :type="type ?? 'button'"
+    :disabled="disabled || loading"
+    class="inline-flex items-center justify-center gap-2 font-medium rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+    :class="[variantClasses[variant ?? 'primary'], sizeClasses[size ?? 'md']]"
+    v-bind="$attrs"
+    @click="!disabled && !loading && $emit('click', $event)"
+  >
+    <svg
+      v-if="loading"
+      data-testid="spinner"
+      class="animate-spin w-4 h-4"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+    </svg>
+    <slot />
+  </button>
+</template>
