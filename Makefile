@@ -28,12 +28,15 @@ dev: ## Start all services locally
 	@wait
 
 dev-admin: ## Start only admin panel (React, localhost:3000)
+	@fuser -k 3000/tcp 2>/dev/null || true
 	cd apps/admin && pnpm dev
 
 dev-storefront: ## Start only storefront (Next.js, localhost:3010)
+	@fuser -k 3010/tcp 2>/dev/null || true
 	cd apps/storefront && pnpm dev
 
 dev-api: ## Start only FastAPI (localhost:8000)
+	@fuser -k 8000/tcp 2>/dev/null || true
 	cd apps/api && uvicorn main:app --reload --port 8000
 
 ## ─── Quality ─────────────────────────────────────────────────────────────────

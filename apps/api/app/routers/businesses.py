@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 
 router = APIRouter(tags=["businesses"])
 
-# In-memory store for demo purposes — replaced by Firestore in Sprint 6
 _businesses: list[dict] = [
     {
         "id": "heladeria-pinguino",
@@ -19,6 +18,14 @@ _businesses: list[dict] = [
         "plan": "free",
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "updatedAt": datetime.now(timezone.utc).isoformat(),
+        "items": [
+            {"id": "item-1", "name": "Sundae de chocolate", "price": 85, "currency": "MXN",
+             "description": "Con 3 bolas de helado artesanal", "visible": True, "order": 1},
+            {"id": "item-2", "name": "Nieve de vainilla", "price": 40, "currency": "MXN",
+             "visible": True, "order": 2},
+            {"id": "item-3", "name": "Malteada de fresa", "price": 65, "currency": "MXN",
+             "description": "Malteada cremosa con fresas naturales", "visible": True, "order": 3},
+        ],
     }
 ]
 
@@ -35,13 +42,9 @@ VALID_TRANSITIONS: dict[str, list[str]] = {
 }
 
 ACTION_TO_STATUS = {
-    "publish": "demo",
-    "send": "sent",
-    "accept": "accepted",
-    "activate": "active",
-    "suspend": "suspended",
-    "reactivate": "active",
-    "archive": "archived",
+    "publish": "demo", "send": "sent", "accept": "accepted",
+    "activate": "active", "suspend": "suspended",
+    "reactivate": "active", "archive": "archived",
 }
 
 def _find(id: str) -> dict | None:
@@ -57,18 +60,13 @@ def business_action(id: str, action: str):
     business = _find(id)
     if not business:
         raise HTTPException(status_code=404, detail=f"Business '{id}' not found")
-
     new_status = ACTION_TO_STATUS.get(action)
     if not new_status:
         raise HTTPException(status_code=400, detail=f"Unknown action '{action}'")
-
     allowed = VALID_TRANSITIONS.get(business["status"], [])
     if new_status not in allowed:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Cannot transition from '{business['status']}' to '{new_status}'"
-        )
-
+        raise HTTPException(status_code=422,
+            detail=f"Cannot transition from '{business['status']}' to '{new_status}'")
     business["status"] = new_status
     business["updatedAt"] = datetime.now(timezone.utc).isoformat()
     return business
