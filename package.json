@@ -16,12 +16,18 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "docker:build": "docker build -t sass-factory/template:latest apps/template",
-    "docker:stop-all": "node infrastructure/scripts/docker-stop-all.mjs"
+    "docker:stop-all": "node infrastructure/scripts/docker-stop-all.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
-    "typescript": "^5.4.0"
+    "@vitest/ui": "^4.1.6",
+    "happy-dom": "^20.9.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.6"
   }
 }
