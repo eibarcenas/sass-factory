@@ -86,3 +86,11 @@ __pycache__/
 # Python bytecode
 **/__pycache__/
 **/*.pyc
+apps/api/service-account.json
+apps/api/*.json
+
+# Python venv
+apps/api/.venv/
+apps/api/.env
+apps/api/service-account.json
+apps/api/*.json

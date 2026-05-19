@@ -10,9 +10,10 @@ help: ## Show available targets (run from repo root)
 
 ## ─── Install ─────────────────────────────────────────────────────────────────
 
-install: ## Install all dependencies (JS + Python)
+install: ## Install all dependencies (JS + Python venv)
 	pnpm install
-	@[ -d apps/api ] && (cd apps/api && pip install -e ".[dev]") || true
+	python3 -m venv apps/api/.venv
+	apps/api/.venv/bin/pip install -q google-cloud-firestore python-dotenv fastapi "uvicorn[standard]" pydantic pytest httpx
 
 ## ─── Local development ───────────────────────────────────────────────────────
 
@@ -41,7 +42,7 @@ dev-storefront: ## Start only storefront (Next.js, localhost:3010)
 
 dev-api: ## Start only FastAPI (localhost:8000)
 	@fuser -k 8000/tcp 2>/dev/null || true
-	cd apps/api && uvicorn main:app --reload --port 8000
+	cd apps/api && .venv/bin/uvicorn main:app --reload --port 8000 2>/dev/null || uvicorn main:app --reload --port 8000
 
 ## ─── Quality ─────────────────────────────────────────────────────────────────
 
