@@ -1,4 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { requireAuth } from '~/server/middleware/auth'
+import { checkAiGenerateLimit } from '~/server/middleware/rate-limit'
 
 const SYSTEM_PROMPT = `You are a catalog demo generator for a SaaS platform that helps small businesses show their products online.
 
@@ -60,6 +62,9 @@ Rules:
 - tagline in the same language as the input`
 
 export default defineEventHandler(async (event) => {
+  await requireAuth(event, { requiredRole: 'admin' })
+  checkAiGenerateLimit(event.context.user!.uid)
+
   const { prompt } = await readBody(event)
 
   if (!prompt?.trim()) {

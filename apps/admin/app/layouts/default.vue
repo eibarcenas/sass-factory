@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useToast } from '~/composables/useToast'
 import { useNotifications } from '~/composables/useNotifications'
+import MfeErrorBoundary from '~/components/MfeErrorBoundary.vue'
 
 const { toasts, remove } = useToast()
 const { notifications, unreadCount, isOpen, openAndMarkRead, close, timeAgo } = useNotifications()
@@ -189,7 +190,9 @@ const toastStyles: Record<string, string> = {
 
       <!-- Page content -->
       <main class="flex-1 p-6">
-        <slot />
+        <MfeErrorBoundary>
+          <slot />
+        </MfeErrorBoundary>
       </main>
     </div>
 
