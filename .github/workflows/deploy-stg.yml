@@ -14,15 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Tests
         run: |
-          pnpm -F @sass-factory/core typecheck
-          pnpm -F @sass-factory/core test
+          pnpm -F @catalog-mx/core typecheck
+          pnpm -F @catalog-mx/core test
       - name: Auth GCP
         uses: google-github-actions/auth@v2
         with:
@@ -31,7 +30,7 @@ jobs:
       - name: Build and deploy storefront
         env:
           IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_STG }}/storefront:${{ github.sha }}
-          SERVICE: sass-factory-storefront-stg
+          SERVICE: catalog-mx-storefront-stg
           REGION: us-central1
         run: |
           docker build -t "$IMAGE" apps/storefront/
@@ -40,7 +39,7 @@ jobs:
       - name: Build and deploy admin
         env:
           IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_STG }}/admin:${{ github.sha }}
-          SERVICE: sass-factory-admin-stg
+          SERVICE: catalog-mx-admin-stg
           REGION: us-central1
         run: |
           docker build -t "$IMAGE" apps/admin/
@@ -49,7 +48,7 @@ jobs:
       - name: Smoke test
         env:
           REGION: us-central1
-          SERVICE: sass-factory-storefront-stg
+          SERVICE: catalog-mx-storefront-stg
         run: |
           URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')
           curl -f "${URL}/api/health"
