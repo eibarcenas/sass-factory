@@ -13,8 +13,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
@@ -24,12 +22,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
-        run: pnpm -F @sass-factory/core typecheck
+      - name: Typecheck core
+        run: pnpm -F @catalog-mx/core typecheck
+
+      - name: Unit tests (core + API)
+        run: |
+          pnpm -F @catalog-mx/core test
+          cd apps/api && python3 -m pytest tests/ -q
+        continue-on-error: false
 
       - name: Lint
         run: pnpm lint --if-present
         continue-on-error: true
-
-      - name: Unit tests
-        run: pnpm -F @sass-factory/core test

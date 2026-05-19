@@ -15,14 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - name: Install + Test
         run: |
           pnpm install --frozen-lockfile
-          pnpm -F @sass-factory/core typecheck
-          pnpm -F @sass-factory/core test
+          pnpm -F @catalog-mx/core typecheck
+          pnpm -F @catalog-mx/core test
       - name: Auth GCP
         uses: google-github-actions/auth@v2
         with:
@@ -43,10 +42,10 @@ jobs:
           IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_PROD }}/storefront:${{ github.sha }}
           REGION: us-central1
         run: |
-          gcloud run deploy sass-factory-storefront \
+          gcloud run deploy catalog-mx-storefront \
             --image "$IMAGE" --region "$REGION" \
             --tag canary --no-traffic --quiet
-          gcloud run services update-traffic sass-factory-storefront \
+          gcloud run services update-traffic catalog-mx-storefront \
             --region "$REGION" \
             --to-tags canary=10 --quiet
       - name: Wait 10 minutes + check error rate
@@ -55,11 +54,11 @@ jobs:
         env:
           REGION: us-central1
         run: |
-          gcloud run services update-traffic sass-factory-storefront \
+          gcloud run services update-traffic catalog-mx-storefront \
             --region "$REGION" --to-latest --quiet
           for svc in admin ops; do
             IMAGE="gcr.io/${{ secrets.GCP_PROJECT_ID_PROD }}/${svc}:${{ github.sha }}"
-            gcloud run deploy "sass-factory-${svc}" \
+            gcloud run deploy "catalog-mx-${svc}" \
               --image "$IMAGE" --region "$REGION" --quiet
           done
       - name: Tag release
