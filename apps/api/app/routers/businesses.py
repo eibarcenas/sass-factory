@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from datetime import datetime, timezone
 
 router = APIRouter(tags=["businesses"])
@@ -54,6 +55,67 @@ def _find(id: str) -> dict | None:
 def list_businesses(status: str | None = None):
     results = _businesses if not status else [b for b in _businesses if b["status"] == status]
     return {"businesses": results, "total": len(results)}
+
+# ── Item CRUD (specific routes BEFORE /{action}) ───────────────────────────────
+
+@router.get("/admin/businesses/{id}/items")
+def list_items(id: str):
+    business = _find(id)
+    if not business:
+        raise HTTPException(status_code=404, detail=f"Business '{id}' not found")
+    return {"items": business.get("items", [])}
+
+@router.post("/admin/businesses/{id}/items")
+def add_item(id: str, item: dict):
+    business = _find(id)
+    if not business:
+        raise HTTPException(status_code=404, detail=f"Business '{id}' not found")
+    items = business.setdefault("items", [])
+    new_item = {
+        "id": f"item-new-{int(datetime.now(timezone.utc).timestamp()) % 100000}",
+        "businessId": id,
+        "name": item.get("name", ""),
+        "price": float(item.get("price", 0)),
+        "currency": "MXN",
+        "description": item.get("description"),
+        "visible": item.get("visible", True),
+        "order": len(items) + 1,
+        "createdAt": datetime.now(timezone.utc).isoformat(),
+        "updatedAt": datetime.now(timezone.utc).isoformat(),
+    }
+    items.append(new_item)
+    business["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    return new_item
+
+@router.patch("/admin/businesses/{id}/items/{item_id}")
+def update_item(id: str, item_id: str, patch: dict):
+    business = _find(id)
+    if not business:
+        raise HTTPException(status_code=404, detail=f"Business '{id}' not found")
+    item = next((i for i in business.get("items", []) if i["id"] == item_id), None)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
+    for key in ("name", "price", "description", "visible", "order"):
+        if key in patch:
+            item[key] = patch[key]
+    item["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    business["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    return item
+
+@router.delete("/admin/businesses/{id}/items/{item_id}")
+def delete_item(id: str, item_id: str):
+    business = _find(id)
+    if not business:
+        raise HTTPException(status_code=404, detail=f"Business '{id}' not found")
+    items = business.get("items", [])
+    idx = next((i for i, item in enumerate(items) if item["id"] == item_id), None)
+    if idx is None:
+        raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
+    removed = items.pop(idx)
+    business["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    return {"deleted": removed["id"]}
+
+# ── Business lifecycle action (generic — AFTER specific routes) ────────────────
 
 @router.post("/admin/businesses/{id}/{action}")
 def business_action(id: str, action: str):
