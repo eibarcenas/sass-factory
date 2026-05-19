@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import health, businesses, demos, storefront
+from app.routers import health, businesses, demos, storefront, prospects
 
 app = FastAPI(
     title="catalog.mx API",
@@ -21,3 +21,4 @@ app.include_router(health.router)
 app.include_router(businesses.router, prefix="/api/v1")
 app.include_router(demos.router, prefix="/api/v1")
 app.include_router(storefront.router, prefix="/api/v1")
+app.include_router(prospects.router, prefix="/api/v1")
