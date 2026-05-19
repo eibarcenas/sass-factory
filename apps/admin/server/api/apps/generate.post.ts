@@ -1,6 +1,4 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { requireAuth } from '~~/server/middleware/auth'
-import { checkAiGenerateLimit } from '~~/server/middleware/rate-limit'
 import { logger } from '@sass-factory/core'
 import { initAdmin } from '~~/server/utils/firebase-admin'
 

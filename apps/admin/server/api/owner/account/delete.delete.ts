@@ -1,5 +1,4 @@
 import { defineEventHandler, createError } from 'h3'
-import { requireAuth } from '~~/server/middleware/auth'
 import { logger } from '@sass-factory/core'
 
 export default defineEventHandler(async (event) => {

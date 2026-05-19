@@ -1,5 +1,4 @@
 import { defineEventHandler } from 'h3'
-import { requireAuth } from '~~/server/middleware/auth'
 import type { Business } from '@sass-factory/core'
 
 const MOCK: Business = {
