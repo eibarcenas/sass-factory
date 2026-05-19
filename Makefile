@@ -1,8 +1,12 @@
-.PHONY: dev dev-admin dev-storefront dev-api \
+.PHONY: help dev dev-admin dev-storefront dev-api \
         test typecheck lint \
         install \
         deploy-storefront deploy-api \
         up down status logs clean
+
+help: ## Show available targets (run from repo root)
+	@echo "Run all targets from the repo root: ~/Desktop/erickbarcenas/sass-factory/"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-20s\033[0m %s\n",$$1,$$2}'
 
 ## ─── Install ─────────────────────────────────────────────────────────────────
 
