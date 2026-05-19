@@ -1,0 +1,58 @@
+name: Deploy — Dev
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID_DEV }}
+      REGION: us-central1
+      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck + Tests
+        run: |
+          pnpm -F @sass-factory/core typecheck
+          pnpm -F @sass-factory/core test
+
+      - name: Auth GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+      - name: Build and deploy storefront
+        env:
+          IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_DEV }}/storefront:${{ github.sha }}
+          SERVICE: sass-factory-storefront-dev
+        run: |
+          docker build -t "$IMAGE" apps/storefront/
+          docker push "$IMAGE"
+          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
+
+      - name: Build and deploy admin
+        env:
+          IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_DEV }}/admin:${{ github.sha }}
+          SERVICE: sass-factory-admin-dev
+        run: |
+          docker build -t "$IMAGE" apps/admin/
+          docker push "$IMAGE"
+          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
