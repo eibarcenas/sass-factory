@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { requireAuth } from '~/server/middleware/auth'
 import { checkAiGenerateLimit } from '~/server/middleware/rate-limit'
+import { writeDevConfig } from '~/server/utils/dev-registry'
+import { logger } from '@sass-factory/core'
 
 const SYSTEM_PROMPT = `You are a catalog demo generator for a SaaS platform that helps small businesses show their products online.
 
@@ -114,6 +116,10 @@ export default defineEventHandler(async (event) => {
     business.updatedAt = now
     // Ensure id === slug
     business.id = business.slug
+
+    // Persist to .dev-configs/{slug}.json so the storefront can serve it
+    writeDevConfig(business.slug, business)
+    logger.info('demo generated and persisted', { slug: business.slug })
 
     send('done', { config: business })
   } catch (err: any) {
