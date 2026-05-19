@@ -1,7 +1,8 @@
 import { spawn } from 'node:child_process'
 import { resolve } from 'node:path'
 import { createJob, updateJobStep, setJobResult, setJobError, type ProvisionJob } from './job-store'
-import { writeDevConfig, assignPort } from './dev-registry'
+import { writeDevConfig, assignPort, readRegistry, writeRegistry } from './dev-registry'
+import { startK8sSimulation } from './k8s-simulator'
 
 const ROOT = resolve(process.cwd(), '../..')
 const TEMPLATE_DIR = resolve(ROOT, 'apps/template')
@@ -73,6 +74,11 @@ export async function startLocalSimulation(options: {
   slug: string
   appConfig?: unknown
 }): Promise<ProvisionJob> {
+  // When running inside the kind cluster, delegate to k8s-based simulation
+  if (process.env.KUBERNETES_SERVICE_HOST) {
+    return startK8sSimulation(options)
+  }
+
   const job = createJob(options.appId, options.appName, STEPS, 'simulate')
 
   setImmediate(async () => {
@@ -126,6 +132,10 @@ export async function startLocalSimulation(options: {
       return `Container ${containerName} → port ${port}`
     })
     if (!ok4) return
+
+    // Mark registry entry as docker so pruning checks container status
+    const reg = readRegistry()
+    if (reg[options.slug]) { reg[options.slug].docker = true; writeRegistry(reg) }
 
     // 5 ── Health check
     const localUrl = `http://localhost:${port}`

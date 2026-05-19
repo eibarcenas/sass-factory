@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { requireAuth } from '~/server/middleware/auth'
-import { checkAiGenerateLimit } from '~/server/middleware/rate-limit'
+import { logger } from '@sass-factory/core'
+import { initAdmin } from '~~/server/utils/firebase-admin'
 
 const SYSTEM_PROMPT = `You are a catalog demo generator for a SaaS platform that helps small businesses show their products online.
 
@@ -73,7 +73,11 @@ export default defineEventHandler(async (event) => {
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    throw createError({ statusCode: 500, message: 'ANTHROPIC_API_KEY is not configured' })
+    throw createError({
+      statusCode: 503,
+      message: 'AI generation not available — ANTHROPIC_API_KEY not configured. Use manual creation instead.',
+      data: { code: 'AI_UNAVAILABLE' },
+    })
   }
 
   // Set SSE headers manually — we're streaming a POST response
@@ -114,6 +118,20 @@ export default defineEventHandler(async (event) => {
     business.updatedAt = now
     // Ensure id === slug
     business.id = business.slug
+
+    // Persist to Firestore demos/{slug} — readable by storefront on Cloud Run
+    try {
+      initAdmin()
+      const { getFirestore } = await import('firebase-admin/firestore')
+      await getFirestore().collection('demos').doc(business.slug).set({
+        ...business,
+        _savedAt: new Date().toISOString(),
+      })
+      logger.info('demo persisted to Firestore', { slug: business.slug })
+    } catch (firestoreErr: any) {
+      // Non-fatal — demo still returned via SSE even if Firestore write fails
+      logger.warn('Firestore write failed (no credentials?)', { error: firestoreErr.message })
+    }
 
     send('done', { config: business })
   } catch (err: any) {

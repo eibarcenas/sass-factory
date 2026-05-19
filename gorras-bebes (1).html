@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gorras Bebé & Kids ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F8F4FF;
+  --surface:#FFFFFF;
+  --pink:#FF6B9D;
+  --pink-lt:#FFB3D1;
+  --pink-pale:#FFF0F6;
+  --blue:#4F8EF7;
+  --blue-lt:#A8C8FF;
+  --blue-pale:#EEF4FF;
+  --purple:#7C3AED;
+  --purple-lt:#C4B5FD;
+  --purple-pale:#F0EBFF;
+  --deep:#1A1025;
+  --deep-2:#2D1B4E;
+  --neutral:#6B6475;
+  --neutral-lt:#9B8AB5;
+  --mint:#6ECFB5;
+  --gold:#F7C948;
+  --wapp:#25D366;
+  --wapp-dark:#128C7E;
+  /* género activo */
+  --active-girl:var(--pink);
+  --active-boy:var(--blue);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:var(--deep);overflow-x:hidden;}
+
+/* ── BLOBS ── */
+.blobs{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.35;animation:drift 14s ease-in-out infinite alternate;}
+.b1{width:550px;height:550px;background:#FFB3D1;top:-120px;left:-120px;animation-delay:0s;}
+.b2{width:420px;height:420px;background:#C4B5FD;top:20%;right:-90px;animation-delay:4s;}
+.b3{width:360px;height:360px;background:#A8C8FF;bottom:10%;left:10%;animation-delay:7s;}
+.b4{width:300px;height:300px;background:#FDE68A;bottom:-60px;right:20%;animation-delay:2s;}
+@keyframes drift{0%{transform:translate(0,0)scale(1);}100%{transform:translate(35px,22px)scale(1.07);}}
+.wrapper{position:relative;z-index:1;}
+
+/* ══ HEADER ══ */
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 48px;position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(20px) saturate(1.6);
+  background:rgba(248,244,255,0.82);
+  border-bottom:1px solid rgba(124,58,237,0.08);
+}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--pink),var(--purple));display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.logo-text{font-family:'Fraunces',serif;font-size:1.45rem;font-weight:900;letter-spacing:-0.5px;color:var(--deep);}
+.logo-text span{color:var(--pink);font-style:italic;}
+.nav-links{display:flex;align-items:center;gap:26px;}
+.nav-links a{font-size:0.84rem;font-weight:500;color:var(--neutral);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--purple);}
+.header-cta{display:inline-flex;align-items:center;gap:8px;background:var(--wapp);color:#fff;padding:10px 22px;border-radius:100px;font-size:0.84rem;font-weight:600;text-decoration:none;transition:all .3s;box-shadow:0 4px 20px rgba(37,211,102,.3);}
+.header-cta:hover{background:var(--wapp-dark);transform:scale(1.04);}
+.header-cta svg{width:16px;height:16px;}
+
+/* ══════════════════════════════════
+   HERO — fondo con gradiente vivo
+══════════════════════════════════ */
+.hero{
+  min-height:95vh;
+  display:grid;grid-template-columns:1fr 1fr;
+  align-items:center;gap:48px;
+  padding:90px 48px 70px;
+  position:relative;overflow:hidden;
+  /* Gradiente de fondo vibrante — ya no gris */
+  background:linear-gradient(135deg,
+    #FFF0F6 0%,
+    #F0EBFF 35%,
+    #EEF4FF 65%,
+    #E8FBF5 100%);
+}
+/* Círculos decorativos de colores en el hero */
+.hero::before{
+  content:'';position:absolute;
+  width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,107,157,0.18) 0%,transparent 70%);
+  top:-100px;right:-50px;pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,58,237,0.12) 0%,transparent 70%);
+  bottom:-80px;left:-60px;pointer-events:none;
+}
+/* Puntos decorativos flotantes */
+.hero-dots{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.hero-dot{
+  position:absolute;border-radius:50%;
+  animation:floatDot ease-in-out infinite alternate;
+}
+@keyframes floatDot{0%{transform:translateY(0);}100%{transform:translateY(-18px);}}
+
+.hero-left{display:flex;flex-direction:column;align-items:flex-start;position:relative;z-index:1;}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.85);
+  border:1.5px solid rgba(255,107,157,0.3);
+  color:var(--pink);backdrop-filter:blur(8px);
+  padding:8px 20px;border-radius:100px;
+  font-size:0.74rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;
+  margin-bottom:26px;animation:fadeUp .8s ease both;
+  box-shadow:0 4px 16px rgba(255,107,157,0.15);
+}
+.dot-live{width:7px;height:7px;border-radius:50%;background:var(--pink);animation:blink 1.4s ease infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.15;}}
+
+.hero h1{
+  font-family:'Fraunces',serif;
+  font-size:clamp(2.8rem,5vw,5rem);font-weight:900;
+  line-height:1.0;letter-spacing:-2px;color:var(--deep);
+  margin-bottom:22px;animation:fadeUp .8s .1s ease both;
+}
+.hero h1 em{
+  font-style:italic;
+  background:linear-gradient(135deg,var(--pink) 0%,var(--purple) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  position:relative;
+}
+/* Subrayado animado bajo el texto em */
+.hero h1 em::after{
+  content:'';position:absolute;bottom:-5px;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--pink),var(--purple));
+  border-radius:2px;transform:scaleX(0);transform-origin:left;
+  animation:underline 1s .9s ease forwards;
+}
+@keyframes underline{to{transform:scaleX(1);}}
+
+.hero-sub{
+  font-size:1rem;color:var(--neutral);font-weight:400;
+  max-width:400px;line-height:1.8;margin-bottom:36px;
+  animation:fadeUp .8s .2s ease both;
+}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;animation:fadeUp .8s .3s ease both;}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--wapp);color:#fff;
+  padding:15px 34px;border-radius:100px;font-size:0.95rem;font-weight:600;
+  text-decoration:none;box-shadow:0 12px 36px rgba(37,211,102,.35);transition:all .3s;
+}
+.btn-primary:hover{transform:translateY(-4px);box-shadow:0 20px 48px rgba(37,211,102,.45);}
+.btn-primary svg{width:20px;height:20px;}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.7);color:var(--deep);
+  padding:15px 26px;border-radius:100px;font-size:0.95rem;font-weight:500;
+  text-decoration:none;border:1.5px solid rgba(124,58,237,0.22);
+  transition:all .3s;backdrop-filter:blur(8px);
+}
+.btn-secondary:hover{background:var(--deep);color:#fff;border-color:var(--deep);}
+
+/* STATS */
+.hero-stats{display:flex;gap:36px;margin-top:44px;animation:fadeUp .8s .4s ease both;}
+.stat{display:flex;flex-direction:column;gap:2px;}
+.stat-num{font-family:'Fraunces',serif;font-size:1.75rem;font-weight:900;letter-spacing:-1px;color:var(--deep);}
+.stat-label{font-size:0.76rem;color:var(--neutral);font-weight:400;}
+
+/* HERO VISUAL */
+.hero-right{display:flex;align-items:center;justify-content:center;position:relative;z-index:1;animation:fadeUp .8s .15s ease both;}
+.hero-visual{position:relative;width:440px;height:440px;display:flex;align-items:center;justify-content:center;}
+
+/* Círculo de fondo con gradiente */
+.hero-circle{
+  position:absolute;inset:20px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(255,107,157,0.12),rgba(124,58,237,0.1));
+  animation:rotateSlow 20s linear infinite;
+}
+.hero-ring{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(255,107,157,0.3);animation:spin 30s linear infinite;}
+.hero-ring-2{position:absolute;inset:36px;border-radius:50%;border:1.5px solid rgba(124,58,237,0.2);animation:spin 20s linear infinite reverse;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes rotateSlow{to{transform:rotate(360deg);}}
+
+.hero-cap{font-size:150px;filter:drop-shadow(0 18px 36px rgba(124,58,237,0.22));animation:float 4s ease-in-out infinite;z-index:2;}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-14px) rotate(3deg);}}
+
+.hero-badge{
+  position:absolute;background:rgba(255,255,255,0.95);border-radius:18px;
+  padding:11px 16px;box-shadow:0 8px 28px rgba(124,58,237,0.14);
+  font-size:0.8rem;font-weight:600;display:flex;align-items:center;gap:8px;
+  color:var(--deep);animation:float 4s ease-in-out infinite;
+  backdrop-filter:blur(8px);
+}
+.hero-badge-1{top:55px;right:15px;animation-delay:.5s;}
+.hero-badge-2{bottom:65px;left:8px;animation-delay:1.2s;}
+.hero-badge-3{top:175px;left:-8px;animation-delay:.8s;}
+.badge-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+.badge-sub{font-size:.68rem;color:var(--neutral);font-weight:400;margin-top:1px;}
+
+/* ══════════════════════════════════
+   CÓMO COMPRAR — fondo degradado vivo
+══════════════════════════════════ */
+.how{
+  padding:86px 0 86px;
+  background:linear-gradient(135deg,var(--deep) 0%,var(--deep-2) 60%,#3D1A6E 100%);
+  color:#fff;position:relative;overflow:hidden;
+}
+.how::before{content:'';position:absolute;top:-80px;right:-80px;width:380px;height:380px;background:rgba(255,107,157,0.09);border-radius:50%;filter:blur(60px);}
+.how::after{content:'';position:absolute;bottom:-60px;left:-60px;width:320px;height:320px;background:rgba(79,142,247,0.08);border-radius:50%;filter:blur(60px);}
+.how .sh{text-align:center;margin-bottom:52px;position:relative;z-index:1;padding:0 48px;}
+.how .sh .ey{display:block;font-size:0.72rem;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,179,209,0.8);margin-bottom:14px;}
+.how .sh h2{font-family:'Fraunces',serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;color:#fff;letter-spacing:-1px;}
+
+/* Scroll horizontal SIEMPRE — desktop queda en fila centrada, mobile scrollea */
+.steps-scroll{
+  display:flex;
+  gap:0;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  padding:0 48px 8px;
+  position:relative;z-index:1;
+}
+.steps-scroll::-webkit-scrollbar{display:none;}
+
+/* Línea conectora entre pasos */
+.steps-scroll::before{
+  content:'';position:absolute;
+  top:50px;left:80px;right:80px;height:1px;
+  background:linear-gradient(to right,transparent,rgba(255,255,255,0.12),transparent);
+  pointer-events:none;
+}
+
+.step{
+  text-align:center;
+  padding:20px 28px;
+  flex:1 0 220px;           /* desktop: se reparten el espacio | mobile: ancho fijo scrolleable */
+  max-width:280px;
+  position:relative;
+}
+
+/* Separador flecha entre pasos */
+.step:not(:last-child)::after{
+  content:'→';
+  position:absolute;right:-14px;top:30px;
+  font-size:1.2rem;color:rgba(255,255,255,0.2);
+  font-weight:300;
+}
+
+.step-num{
+  width:68px;height:68px;border-radius:18px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.7rem;margin:0 auto 18px;transition:all .3s;
+}
+.step:hover .step-num{background:var(--pink);border-color:var(--pink);transform:scale(1.1) rotate(-4deg);}
+.step-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;margin-bottom:8px;color:#fff;}
+.step-desc{font-size:0.81rem;color:rgba(255,255,255,0.55);line-height:1.7;font-weight:300;}
+
+/* Hint de scroll visible solo en mobile */
+.steps-hint{
+  display:none;
+  text-align:center;padding:4px 0 16px;
+  font-size:0.72rem;color:rgba(255,255,255,0.35);letter-spacing:1px;
+  position:relative;z-index:1;
+}
+
+/* ══════════════════════════════════
+   CATÁLOGO — filtros por género
+══════════════════════════════════ */
+.catalogue{padding:90px 48px;max-width:1440px;margin:0 auto;border-radius:32px;transition:background 0.5s ease;}
+.section-header{text-align:center;margin-bottom:52px;}
+.eyebrow{display:inline-block;font-size:0.72rem;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--pink);margin-bottom:14px;}
+.section-header h2{font-family:'Fraunces',serif;font-size:clamp(1.9rem,3.5vw,2.9rem);font-weight:900;letter-spacing:-1px;line-height:1.1;color:var(--deep);}
+
+/* GENDER TABS — grandes, visuales */
+.gender-tabs{
+  display:flex;gap:14px;justify-content:center;margin-bottom:28px;
+}
+.gtab{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 32px;border-radius:20px;
+  border:2px solid transparent;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:1rem;font-weight:700;
+  cursor:pointer;transition:all .3s cubic-bezier(.175,.885,.32,1.275);
+  background:var(--surface);
+  box-shadow:0 2px 12px rgba(124,58,237,0.08);
+}
+.gtab .gtab-icon{font-size:1.5rem;transition:transform .3s;}
+.gtab:hover .gtab-icon{transform:scale(1.2) rotate(-5deg);}
+.gtab-all{border-color:rgba(124,58,237,0.2);color:var(--neutral);}
+.gtab-all.active{background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;border-color:transparent;box-shadow:0 8px 24px rgba(124,58,237,0.3);}
+.gtab-girl{border-color:rgba(255,107,157,0.2);color:var(--pink);}
+.gtab-girl.active{background:linear-gradient(135deg,#FF6B9D,#FF3D7F);color:#fff;border-color:transparent;box-shadow:0 8px 24px rgba(255,107,157,0.4);}
+.gtab-boy{border-color:rgba(79,142,247,0.2);color:var(--blue);}
+.gtab-boy.active{background:linear-gradient(135deg,#4F8EF7,#2563EB);color:#fff;border-color:transparent;box-shadow:0 8px 24px rgba(79,142,247,0.4);}
+.gtab-unisex{border-color:rgba(110,207,181,0.3);color:var(--mint);}
+.gtab-unisex.active{background:linear-gradient(135deg,#6ECFB5,#2BA98B);color:#fff;border-color:transparent;box-shadow:0 8px 24px rgba(110,207,181,0.4);}
+
+/* SUB-FILTROS de edad */
+.age-filters{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:48px;min-height:44px;
+}
+.age-pill{
+  padding:9px 20px;border-radius:100px;
+  /* Inactivo: fondo blanco sólido, borde coloreado, texto legible */
+  background:#fff;
+  border:2px solid rgba(124,58,237,0.22);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:0.82rem;font-weight:600;
+  color:var(--neutral);
+  cursor:pointer;
+  transition:all .25s cubic-bezier(.175,.885,.32,1.275);
+  box-shadow:0 2px 8px rgba(124,58,237,0.08);
+}
+.age-pill:hover{
+  border-color:var(--purple);
+  color:var(--purple);
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(124,58,237,0.15);
+}
+/* Activo: gradiente rosa→violeta llamativo */
+.age-pill.active{
+  background:linear-gradient(135deg,var(--pink) 0%,var(--purple) 100%);
+  border-color:transparent;
+  color:#fff;
+  box-shadow:0 6px 20px rgba(124,58,237,0.35);
+  transform:translateY(-2px) scale(1.04);
+}
+
+/* Cuando el género activo es niña → activo en rosa */
+.catalogue.theme-nina .age-pill.active{
+  background:linear-gradient(135deg,#FF6B9D,#FF3D7F);
+  box-shadow:0 6px 20px rgba(255,107,157,0.4);
+}
+.catalogue.theme-nina .age-pill:hover{
+  border-color:var(--pink);color:var(--pink);
+}
+/* Cuando el género activo es niño → activo en azul */
+.catalogue.theme-nino .age-pill.active{
+  background:linear-gradient(135deg,#4F8EF7,#2563EB);
+  box-shadow:0 6px 20px rgba(79,142,247,0.4);
+}
+.catalogue.theme-nino .age-pill:hover{
+  border-color:var(--blue);color:var(--blue);
+}
+/* Cuando el género activo es unisex → activo en verde */
+.catalogue.theme-unisex .age-pill.active{
+  background:linear-gradient(135deg,#6ECFB5,#2BA98B);
+  box-shadow:0 6px 20px rgba(110,207,181,0.4);
+}
+.catalogue.theme-unisex .age-pill:hover{
+  border-color:var(--mint);color:var(--mint);
+}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;}
+
+/* ── CARD BASE ── */
+.card{
+  border-radius:26px;overflow:hidden;background:var(--surface);
+  box-shadow:0 2px 14px rgba(124,58,237,0.07);
+  transition:all .4s cubic-bezier(.175,.885,.32,1.275);
+  cursor:pointer;
+  border:2px solid transparent;
+}
+.card:hover{transform:translateY(-11px);}
+
+/* ── CARD TEMA NIÑA (rosa) ── */
+.card[data-gen="nina"]{
+  border-color:rgba(255,107,157,0.15);
+}
+.card[data-gen="nina"]:hover{
+  box-shadow:0 22px 56px rgba(255,107,157,0.22);
+  border-color:rgba(255,107,157,0.35);
+}
+.card[data-gen="nina"] .card-body{
+  background:linear-gradient(180deg,#fff 60%,#FFF5F8 100%);
+}
+.card[data-gen="nina"] .card-title{color:#C4005A;}
+.card[data-gen="nina"] .card-cat{color:var(--pink);}
+.card[data-gen="nina"] .size-chip{background:#FFE8F1;color:#D4005E;}
+.card[data-gen="nina"] .card-btn{
+  background:linear-gradient(135deg,#FF6B9D,#FF3D7F);
+  box-shadow:0 4px 16px rgba(255,107,157,0.4);
+}
+.card[data-gen="nina"] .card-btn:hover{background:linear-gradient(135deg,#FF3D7F,#CC0055);}
+.card[data-gen="nina"] .price-tag{color:#C4005A;border:1px solid rgba(255,107,157,0.2);}
+
+/* ── CARD TEMA NIÑO (azul) ── */
+.card[data-gen="nino"]{
+  border-color:rgba(79,142,247,0.15);
+}
+.card[data-gen="nino"]:hover{
+  box-shadow:0 22px 56px rgba(79,142,247,0.22);
+  border-color:rgba(79,142,247,0.35);
+}
+.card[data-gen="nino"] .card-body{
+  background:linear-gradient(180deg,#fff 60%,#F0F6FF 100%);
+}
+.card[data-gen="nino"] .card-title{color:#1240A0;}
+.card[data-gen="nino"] .card-cat{color:var(--blue);}
+.card[data-gen="nino"] .size-chip{background:#DDEEFF;color:#1240A0;}
+.card[data-gen="nino"] .card-btn{
+  background:linear-gradient(135deg,#4F8EF7,#2563EB);
+  box-shadow:0 4px 16px rgba(79,142,247,0.4);
+}
+.card[data-gen="nino"] .card-btn:hover{background:linear-gradient(135deg,#2563EB,#1240A0);}
+.card[data-gen="nino"] .price-tag{color:#1240A0;border:1px solid rgba(79,142,247,0.2);}
+
+/* ── CARD TEMA UNISEX (verde menta) ── */
+.card[data-gen="unisex"]{
+  border-color:rgba(110,207,181,0.2);
+}
+.card[data-gen="unisex"]:hover{
+  box-shadow:0 22px 56px rgba(110,207,181,0.25);
+  border-color:rgba(110,207,181,0.4);
+}
+.card[data-gen="unisex"] .card-body{
+  background:linear-gradient(180deg,#fff 60%,#F0FBF8 100%);
+}
+.card[data-gen="unisex"] .card-title{color:#0E6B50;}
+.card[data-gen="unisex"] .card-cat{color:#2BA98B;}
+.card[data-gen="unisex"] .size-chip{background:#D4F2EA;color:#0E6B50;}
+.card[data-gen="unisex"] .card-btn{
+  background:linear-gradient(135deg,#6ECFB5,#2BA98B);
+  box-shadow:0 4px 16px rgba(110,207,181,0.45);
+}
+.card[data-gen="unisex"] .card-btn:hover{background:linear-gradient(135deg,#2BA98B,#0E6B50);}
+.card[data-gen="unisex"] .price-tag{color:#0E6B50;border:1px solid rgba(110,207,181,0.25);}
+.card-image{height:255px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.card-img-bg{position:absolute;inset:0;transition:transform .5s ease;}
+.card:hover .card-img-bg{transform:scale(1.06);}
+.card-img-bg::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 80%,rgba(255,255,255,0.28) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(255,255,255,0.18) 0%,transparent 40%);}
+.card-badge{position:absolute;top:13px;left:13px;padding:5px 12px;border-radius:100px;font-size:0.67rem;font-weight:700;letter-spacing:0.4px;z-index:2;backdrop-filter:blur(8px);}
+.badge-new{background:rgba(26,16,37,0.78);color:#fff;}
+.badge-hot{background:rgba(255,107,157,0.92);color:#fff;}
+.badge-fav{background:rgba(247,201,72,0.95);color:var(--deep);}
+.price-tag{position:absolute;top:13px;right:13px;z-index:2;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-radius:11px;padding:5px 12px;font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;color:var(--deep);box-shadow:0 2px 10px rgba(124,58,237,0.1);}
+.card-emoji{position:relative;z-index:1;font-size:86px;filter:drop-shadow(0 10px 22px rgba(124,58,237,0.16));transition:transform .5s cubic-bezier(.175,.885,.32,1.275);}
+.card:hover .card-emoji{transform:scale(1.14) rotate(-5deg);}
+.card-body{padding:20px 22px 22px;}
+.card-cat{font-size:0.68rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--pink);margin-bottom:5px;}
+.card-cat.boy{color:var(--blue);}
+.card-cat.unisex{color:var(--mint);}
+.card-title{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;margin-bottom:7px;letter-spacing:-0.3px;color:var(--deep);}
+.card-desc{font-size:0.81rem;color:var(--neutral);line-height:1.65;margin-bottom:13px;font-weight:400;}
+.card-sizes{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap;}
+.size-chip{padding:3px 9px;border-radius:6px;font-size:0.68rem;font-weight:600;background:var(--purple-pale);color:var(--purple);}
+.size-chip.boy{background:var(--blue-pale);color:var(--blue);}
+.size-chip.unisex{background:#E8FBF5;color:#2BA98B;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;}
+.colors{display:flex;gap:5px;align-items:center;}
+.color-label{font-size:0.68rem;color:var(--neutral-lt);margin-right:2px;}
+.dot{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,0.9);box-shadow:0 0 0 1.5px rgba(124,58,237,0.15);transition:transform .2s;cursor:pointer;}
+.dot:hover{transform:scale(1.35);}
+.card-btn{display:inline-flex;align-items:center;gap:6px;background:var(--wapp);color:#fff;padding:9px 18px;border-radius:100px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:all .25s;border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 4px 14px rgba(37,211,102,.3);}
+.card-btn:hover{background:var(--wapp-dark);transform:scale(1.06);}
+.card-btn svg{width:13px;height:13px;}
+
+/* ══════════════════════════════════
+   TRUST STRIP — horizontal con scroll en mobile
+══════════════════════════════════ */
+.trust-wrap{
+  background:linear-gradient(135deg,var(--deep) 0%,var(--deep-2) 60%,#3D1A6E 100%);
+  padding:0;position:relative;overflow:hidden;
+}
+.trust-wrap::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:rgba(255,107,157,0.08);border-radius:50%;filter:blur(50px);}
+/* SCROLL HORIZONTAL en mobile */
+.trust{
+  display:flex;
+  gap:0;
+  padding:52px 48px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.trust::-webkit-scrollbar{display:none;}
+.trust-item{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:16px 48px;text-align:center;
+  position:relative;flex-shrink:0;
+}
+.trust-item+.trust-item::before{content:'';position:absolute;left:0;top:15%;bottom:15%;width:1px;background:rgba(255,255,255,0.1);}
+.trust-icon{width:50px;height:50px;border-radius:15px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:all .3s;}
+.trust-item:hover .trust-icon{background:var(--pink);border-color:var(--pink);transform:scale(1.1) rotate(-5deg);}
+.trust-val{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:700;color:#fff;margin-top:4px;}
+.trust-label{font-size:0.73rem;color:rgba(255,255,255,0.55);letter-spacing:0.5px;}
+
+/* Indicador de scroll en mobile */
+.trust-scroll-hint{
+  display:none;
+  text-align:center;padding:8px 0 16px;
+  font-size:0.72rem;color:rgba(255,255,255,0.4);letter-spacing:1px;
+}
+
+/* ══ TESTIMONIOS ══ */
+.testimonials{padding:90px 48px;max-width:1200px;margin:0 auto;}
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:52px;}
+.testi-card{
+  background:var(--surface);border-radius:22px;padding:28px;
+  box-shadow:0 2px 14px rgba(124,58,237,0.07);
+  transition:transform .3s;position:relative;overflow:hidden;
+}
+.testi-card::before{content:'"';font-family:'Fraunces',serif;font-size:7rem;font-weight:900;color:var(--pink-lt);opacity:0.28;position:absolute;top:-18px;left:14px;line-height:1;pointer-events:none;}
+.testi-card:hover{transform:translateY(-6px);}
+.stars{color:var(--gold);font-size:0.88rem;letter-spacing:3px;margin-bottom:14px;}
+.testi-text{font-size:0.9rem;line-height:1.75;color:var(--neutral);font-weight:400;margin-bottom:22px;position:relative;z-index:1;}
+.testi-author{display:flex;align-items:center;gap:11px;}
+.testi-avatar{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.testi-name{font-weight:600;font-size:0.86rem;color:var(--deep);}
+.testi-sub{font-size:0.72rem;color:var(--neutral-lt);margin-top:1px;}
+
+/* ══ CTA BANNER ══ */
+.cta-wrap{padding:0 48px 90px;}
+.cta-banner{
+  border-radius:30px;overflow:hidden;position:relative;
+  /* Default: rosa→fucsia→violeta */
+  background:linear-gradient(135deg,#FFB3D1 0%,#FF6B9D 40%,#C026D3 80%,#7C3AED 100%);
+  padding:80px 60px;display:flex;flex-direction:column;align-items:center;text-align:center;
+  transition:background 0.55s ease;
+}
+
+/* Tema niña: rosa chicle vibrante */
+.cta-banner.theme-nina{
+  background:linear-gradient(135deg,#FFD6E8 0%,#FF6B9D 35%,#FF3D7F 65%,#C8005A 100%);
+}
+/* Tema niño: cielo→azul rey→marino */
+.cta-banner.theme-nino{
+  background:linear-gradient(135deg,#B8D8FF 0%,#4F8EF7 35%,#2563EB 65%,#1240A0 100%);
+}
+/* Tema unisex: sol→verde menta→turquesa */
+.cta-banner.theme-unisex{
+  background:linear-gradient(135deg,#FDE68A 0%,#6ECFB5 40%,#2BA98B 70%,#0D7A60 100%);
+}
+
+/* El emoji decorativo y el texto del CTA cambia con el género */
+.cta-banner.theme-nina .cta-deco::after{ content:'🎀'; }
+.cta-banner.theme-nino .cta-deco::after{ content:'🚀'; }
+.cta-banner.theme-unisex .cta-deco::after{ content:'🌈'; }
+.cta-deco{position:absolute;right:-50px;top:-50px;font-size:200px;opacity:0.1;animation:drift 8s ease-in-out infinite alternate;line-height:1;}
+.cta-deco-2{position:absolute;left:-30px;bottom:-30px;font-size:160px;opacity:0.08;animation:drift 10s ease-in-out infinite alternate-reverse;line-height:1;}
+.cta-banner h2{font-family:'Fraunces',serif;font-size:clamp(1.9rem,3.8vw,3rem);font-weight:900;color:#fff;letter-spacing:-1.5px;margin-bottom:12px;position:relative;z-index:1;}
+.cta-banner p{color:rgba(255,255,255,0.88);font-size:0.98rem;margin-bottom:36px;max-width:420px;line-height:1.7;position:relative;z-index:1;}
+.cta-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;position:relative;z-index:1;}
+.big-btn{display:inline-flex;align-items:center;gap:12px;background:var(--wapp);color:#fff;padding:18px 44px;border-radius:100px;font-size:0.98rem;font-weight:600;text-decoration:none;box-shadow:0 14px 44px rgba(37,211,102,.4);transition:all .3s;}
+.big-btn:hover{background:var(--wapp-dark);transform:translateY(-5px);box-shadow:0 22px 56px rgba(37,211,102,.5);}
+.big-btn svg{width:22px;height:22px;}
+.big-btn-alt{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.2);color:#fff;padding:18px 32px;border-radius:100px;font-size:0.98rem;font-weight:600;text-decoration:none;transition:all .3s;border:1.5px solid rgba(255,255,255,0.35);}
+.big-btn-alt:hover{background:rgba(255,255,255,0.32);}
+
+.confetti-wrap{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.confetti-piece{position:absolute;animation:confettiFall linear infinite;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(500px) rotate(720deg);opacity:0;}}
+
+/* ══ FOOTER ══ */
+footer{background:var(--deep);color:rgba(255,255,255,0.42);text-align:center;padding:32px 24px;font-size:0.78rem;}
+footer span{color:var(--pink);}
+
+/* ══ WAPP FLOTANTE ══ */
+.wapp-float{position:fixed;bottom:26px;right:26px;width:56px;height:56px;background:var(--wapp);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 7px 28px rgba(37,211,102,.5);z-index:500;text-decoration:none;transition:all .3s;}
+.wapp-float:hover{transform:scale(1.15);}
+.wapp-float svg{width:27px;height:27px;fill:#fff;}
+.wapp-float::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(37,211,102,.4);animation:wappPulse 2s ease-in-out infinite;}
+@keyframes wappPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.22);opacity:0;}}
+.wapp-tooltip{position:absolute;right:68px;top:50%;transform:translateY(-50%);background:var(--deep);color:#fff;padding:7px 13px;border-radius:9px;font-size:0.76rem;font-weight:500;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .25s;}
+.wapp-tooltip::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right:none;border-left-color:var(--deep);}
+.wapp-float:hover .wapp-tooltip{opacity:1;}
+
+/* ANIMACIONES */
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ══════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════ */
+@media(max-width:960px){
+  header{padding:15px 20px;}
+  .nav-links{display:none;}
+  .hero{grid-template-columns:1fr;padding:90px 24px 60px;text-align:center;}
+  .hero-left{align-items:center;}
+  .hero-right{display:none;}
+  .hero-stats{justify-content:center;}
+  .catalogue{padding:60px 20px;}
+  .testimonials{padding:60px 20px;}
+  .how{padding:60px 0;}
+  .how .sh{padding:0 24px;}
+  .trust{padding:40px 24px;}
+  .trust-item{padding:14px 32px;}
+  .trust-scroll-hint{display:block;}
+  .cta-wrap{padding:0 20px 60px;}
+  .cta-banner{padding:56px 28px;}
+  .gender-tabs{gap:8px;}
+  .gtab{padding:11px 20px;font-size:0.88rem;}
+}
+@media(max-width:560px){
+  .grid{grid-template-columns:1fr;}
+  .hero-btns{flex-direction:column;align-items:center;width:100%;}
+  .btn-primary,.btn-secondary{width:100%;justify-content:center;}
+  .cta-btns{flex-direction:column;align-items:center;width:100%;}
+  .big-btn,.big-btn-alt{width:100%;justify-content:center;}
+  .hero-stats{gap:24px;}
+
+  /* Steps — scroll horizontal en mobile */
+  .steps-scroll{padding:0 20px 12px;}
+  .step{flex:0 0 200px;max-width:200px;padding:16px 16px;}
+  .steps-hint{display:block;}
+
+  /* Trust: scroll horizontal en mobile */
+  .trust{padding:32px 16px;gap:0;}
+  .trust-item{padding:12px 28px;min-width:140px;}
+
+  /* Gender tabs en mobile */
+  .gender-tabs{
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    justify-content:flex-start;padding:0 20px;
+    scrollbar-width:none;gap:10px;
+  }
+  .gender-tabs::-webkit-scrollbar{display:none;}
+  .gtab{flex-shrink:0;}
+}
+
+/* ══ BANNER URGENCIA ══ */
+.urgency-bar{
+  background:linear-gradient(90deg,#FF6B9D,#7C3AED,#FF6B9D);
+  background-size:200% 100%;animation:shimmer 4s ease infinite;
+  color:#fff;text-align:center;padding:10px 40px 10px 20px;
+  font-size:0.82rem;font-weight:600;letter-spacing:0.3px;
+  position:relative;z-index:201;
+  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+}
+@keyframes shimmer{0%{background-position:0%;}100%{background-position:200%;}}
+.urgency-bar .u-countdown{
+  background:rgba(255,255,255,0.25);border-radius:8px;
+  padding:2px 10px;font-family:'Fraunces',serif;
+  font-size:1rem;font-weight:900;letter-spacing:2px;min-width:74px;text-align:center;
+}
+.urgency-bar .u-close{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:rgba(255,255,255,0.65);
+  font-size:1.1rem;cursor:pointer;padding:4px;line-height:1;
+}
+.urgency-bar .u-close:hover{color:#fff;}
+
+/* ══ TICKER SOCIAL ══ */
+.social-ticker{
+  background:var(--surface);border-bottom:1px solid rgba(124,58,237,0.07);
+  overflow:hidden;padding:10px 0;position:relative;
+}
+.social-ticker::before,.social-ticker::after{
+  content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none;
+}
+.social-ticker::before{left:0;background:linear-gradient(to right,#fff,transparent);}
+.social-ticker::after{right:0;background:linear-gradient(to left,#fff,transparent);}
+.ticker-track{display:flex;animation:tickerScroll 30s linear infinite;width:max-content;}
+.ticker-track:hover{animation-play-state:paused;}
+@keyframes tickerScroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.ticker-item{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:4px 24px;font-size:0.79rem;color:var(--neutral);white-space:nowrap;
+}
+.ticker-item strong{color:var(--deep);font-weight:600;}
+.ticker-dot{color:var(--neutral-lt);font-size:0.55rem;margin:0 4px;}
+
+/* ══ SECCIÓN REGALO ══ */
+.regalo{
+  padding:90px 48px;
+  background:linear-gradient(135deg,#FFF5F8 0%,#F0EBFF 50%,#EEF4FF 100%);
+  position:relative;overflow:hidden;
+}
+.regalo::before{content:'🎁';position:absolute;right:-10px;top:-10px;font-size:160px;opacity:0.05;line-height:1;}
+.regalo .section-header{margin-bottom:48px;}
+.regalo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;max-width:1100px;margin:0 auto;}
+.regalo-card{
+  background:#fff;border-radius:22px;padding:26px 20px;text-align:center;
+  box-shadow:0 2px 12px rgba(124,58,237,0.07);
+  transition:all .3s cubic-bezier(.175,.885,.32,1.275);
+  text-decoration:none;display:block;border:2px solid transparent;
+}
+.regalo-card:hover{transform:translateY(-8px);box-shadow:0 18px 40px rgba(124,58,237,0.14);border-color:rgba(255,107,157,0.3);}
+.regalo-icon{font-size:2.6rem;margin-bottom:12px;display:block;}
+.regalo-title{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:700;color:var(--deep);margin-bottom:6px;}
+.regalo-desc{font-size:0.79rem;color:var(--neutral);line-height:1.6;}
+.regalo-tag{display:inline-block;margin-top:12px;background:var(--pink-pale);color:var(--pink);padding:3px 11px;border-radius:100px;font-size:0.7rem;font-weight:700;}
+
+/* ══ FAQs ══ */
+.faqs{padding:90px 48px;max-width:820px;margin:0 auto;}
+.faq-list{margin-top:44px;display:flex;flex-direction:column;gap:10px;}
+.faq-item{
+  background:var(--surface);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 2px 10px rgba(124,58,237,0.06);
+  border:1.5px solid rgba(124,58,237,0.08);
+  transition:border-color .25s, box-shadow .25s;
+}
+.faq-item.open{
+  border-color:rgba(255,107,157,0.35);
+  box-shadow:0 6px 24px rgba(255,107,157,0.1);
+}
+.faq-q{
+  width:100%;
+  text-align:left;
+  background:none;
+  border:none;
+  padding:20px 22px;
+  cursor:pointer;
+  /* Flex para alinear texto y flecha en extremos */
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;  /* flex-start para preguntas largas que rompen línea */
+  gap:16px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:0.93rem;
+  font-weight:600;
+  color:var(--deep);
+  line-height:1.5;
+  transition:color .2s;
+}
+.faq-q:hover{ color:var(--pink); }
+.faq-item.open .faq-q{ color:var(--pink); }
+
+/* Flecha — elemento independiente, nunca colapsa */
+.faq-arrow{
+  width:28px; height:28px;
+  border-radius:50%;
+  flex-shrink:0;          /* nunca se encoge aunque el texto sea largo */
+  margin-top:1px;         /* alineación visual con primera línea del texto */
+  background:var(--purple-pale);
+  color:var(--purple);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+  font-weight:400;
+  line-height:1;
+  transition:all .3s cubic-bezier(.175,.885,.32,1.275);
+  pointer-events:none;    /* no captura clicks, el button padre los recibe */
+}
+.faq-item.open .faq-arrow{
+  background:var(--pink);
+  color:#fff;
+  transform:rotate(45deg);
+}
+
+/* Respuesta — acordeón suave */
+.faq-a{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .4s cubic-bezier(.4,0,.2,1), padding .4s cubic-bezier(.4,0,.2,1);
+  font-size:0.88rem;
+  color:var(--neutral);
+  line-height:1.8;
+  /* Sin padding por defecto — se aplica en .open para no ocupar espacio */
+  padding:0 22px;
+}
+.faq-item.open .faq-a{
+  /* 400px cubre cualquier respuesta larga sin cortar */
+  max-height:400px;
+  padding:4px 22px 22px;  /* pequeño padding-top para respirar tras el botón */
+}
+
+@media(max-width:768px){
+  .regalo{padding:60px 20px;}
+  .faqs{padding:60px 20px;}
+  .regalo-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="blobs">
+  <div class="blob b1"></div><div class="blob b2"></div>
+  <div class="blob b3"></div><div class="blob b4"></div>
+</div>
+
+<div class="wrapper">
+
+<!-- ══ BARRA URGENCIA ══ -->
+<div class="urgency-bar" id="urgencyBar">
+  <span>🔥 ¡Oferta limitada! Envío gratis en pedidos de 2 gorras o más · Solo República Mexicana 🇲🇽</span>
+  <span class="u-countdown" id="countdown">23:47</span>
+  <span>⏰ Solo hoy</span>
+  <button class="u-close" onclick="document.getElementById('urgencyBar').style.display='none'">✕</button>
+</div>
+
+<!-- ══ TICKER SOCIAL ══ -->
+<div class="social-ticker">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧢</div>
+    <div class="logo-text">gorras <span>baby</span></div>
+  </div>
+  <nav class="nav-links">
+    <a href="#catalogo">Catálogo</a>
+    <a href="#como">Cómo comprar</a>
+    <a href="#reviews">Reseñas</a>
+  </nav>
+  <a class="header-cta" href="https://wa.me/5215544712575?text=Hola!%20Quiero%20ver%20el%20catálogo%20🎀" target="_blank">
+    <svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg>
+    Escribir ahora
+  </a>
+</header>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <!-- Puntos decorativos generados por JS -->
+  <div class="hero-dots" id="heroDots"></div>
+
+  <div class="hero-left">
+    <div class="hero-tag"><span class="dot-live"></span>✨ Colección 2025 disponible</div>
+    <h1>Las gorras más<br><em>adorables</em><br>para tu bebé</h1>
+    <p class="hero-sub">Diseños únicos, algodón premium y mucho amor. Enviamos a toda la República Mexicana. Atendemos por WhatsApp <strong>Lun–Sáb 8am–9pm</strong> 🇲🇽</p>
+    <div class="hero-btns">
+      <a class="btn-primary" href="https://wa.me/5215544712575?text=Hola!%20Vi%20la%20página%20y%20quiero%20ver%20las%20gorras%20🎀" target="_blank">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg>
+        Pedir por WhatsApp
+      </a>
+      <a class="btn-secondary" href="#catalogo">Ver catálogo ↓</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">500+</div><div class="stat-label">Familias felices</div></div>
+      <div class="stat"><div class="stat-num">30+</div><div class="stat-label">Modelos únicos</div></div>
+      <div class="stat"><div class="stat-num">⭐ 5.0</div><div class="stat-label">Calificación</div></div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-visual">
+      <div class="hero-circle"></div>
+      <div class="hero-ring"></div>
+      <div class="hero-ring-2"></div>
+      <div class="hero-cap">🧢</div>
+      <div class="hero-badge hero-badge-1">
+        <div class="badge-icon" style="background:#FFF0F6;">🌿</div>
+        <div><div style="font-size:.8rem;font-weight:700;">100% Algodón</div><div class="badge-sub">Suave & seguro</div></div>
+      </div>
+      <div class="hero-badge hero-badge-2">
+        <div class="badge-icon" style="background:#F0EBFF;">🚚</div>
+        <div><div style="font-size:.8rem;font-weight:700;">Envío express</div><div class="badge-sub">Todo el país</div></div>
+      </div>
+      <div class="hero-badge hero-badge-3">
+        <div class="badge-icon" style="background:#FFFBEA;">⭐</div>
+        <div><div style="font-size:.8rem;font-weight:700;">Más vendida</div><div class="badge-sub">Gorrita Pollito</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CÓMO COMPRAR ══ -->
+<section class="how" id="como">
+  <div class="sh reveal">
+    <span class="ey">✦ Sin complicaciones</span>
+    <h2>Comprar es muy fácil</h2>
+  </div>
+  <div class="steps-scroll">
+    <div class="step reveal"><div class="step-num">👀</div><div class="step-title">Explorá el catálogo</div><div class="step-desc">Navegá todos nuestros modelos, colores y tallas disponibles acá mismo.</div></div>
+    <div class="step reveal"><div class="step-num">💛</div><div class="step-title">Elegí tu favorita</div><div class="step-desc">Filtrá por niño, niña o unisex y encontrá la gorra perfecta.</div></div>
+    <div class="step reveal"><div class="step-num">💬</div><div class="step-title">Escribinos</div><div class="step-desc">WhatsApp directo. Confirmamos stock, talla y pago al instante.</div></div>
+    <div class="step reveal"><div class="step-num">🎁</div><div class="step-title">¡Lo recibís!</div><div class="step-desc">Enviamos en 24–48hs a toda la República Mexicana 🇲🇽</div></div>
+  </div>
+  <div class="steps-hint">← deslizá →</div>
+</section>
+
+<!-- ══ CATÁLOGO ══ -->
+<section class="catalogue" id="catalogo">
+  <div class="section-header reveal">
+    <div class="eyebrow">🎀 Nuestros modelos</div>
+    <h2>Elegí la gorra perfecta</h2>
+  </div>
+
+  <!-- TABS DE GÉNERO — grandes y visuales -->
+  <div class="gender-tabs reveal" id="genderTabs">
+    <button class="gtab gtab-all active" onclick="filterGender('all',this)">
+      <span class="gtab-icon">🌟</span> Todos
+    </button>
+    <button class="gtab gtab-girl" onclick="filterGender('nina',this)">
+      <span class="gtab-icon">👧</span> Para niñas
+    </button>
+    <button class="gtab gtab-boy" onclick="filterGender('nino',this)">
+      <span class="gtab-icon">🧒</span> Para niños
+    </button>
+    <button class="gtab gtab-unisex" onclick="filterGender('unisex',this)">
+      <span class="gtab-icon">🌈</span> Unisex
+    </button>
+  </div>
+
+  <!-- SUB-FILTROS DE EDAD -->
+  <div class="age-filters" id="ageFilters">
+    <button class="age-pill active" onclick="filterAge('all',this)">Todas las edades</button>
+    <button class="age-pill" onclick="filterAge('bebe',this)">👶 Bebés 0–18m</button>
+    <button class="age-pill" onclick="filterAge('kids',this)">🧒 Niños 1–6 años</button>
+    <button class="age-pill" onclick="filterAge('big',this)">🧑 Mayores 6–12 años</button>
+  </div>
+
+  <div class="grid" id="productGrid">
+
+    <!-- NIÑA -->
+    <div class="card" data-gen="nina" data-age="bebe">
+      <div class="card-image"><div class="card-img-bg" style="background:linear-gradient(145deg,#FDEBD0,#FAC98A);"></div><span class="card-badge badge-hot">🔥 Más vendida</span><span class="price-tag">$2.500</span><span class="card-emoji">🐣</span></div>
+      <div class="card-body">
+        <div class="card-cat">Niñas & Bebés · 0–6 meses</div><div class="card-title">Gorrita Pollito</div>
+        <div class="card-desc">Suave algodón orgánico con orejitas y piquito bordado. Cierre ajustable para máximo comfort.</div>
+        <div class="card-sizes"><span class="size-chip">Talla única</span><span class="size-chip">0–6m</span></div>
+        <div class="card-footer">
+          <div class="colors"><span class="color-label">Colores:</span><div class="dot" style="background:#FAC98A"></div><div class="dot" style="background:#C8E8D0"></div><div class="dot" style="background:#FAD4E8"></div></div>
+          <a class="card-btn" href="https://wa.me/5215544712575?text=Hola!%20Me%20interesa%20la%20Gorrita%20Pollito%20🐣%20¿tienen%20stock?" target="_blank"><svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg> Pedir</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" data-gen="nina" data-age="kids">
+      <div class="card-image"><div class="card-img-bg" style="background:linear-gradient(145deg,#FAD4E8,#F5A8CC);"></div><span class="card-badge badge-new">✨ Nuevo</span><span class="price-tag">$2.800</span><span class="card-emoji">🦋</span></div>
+      <div class="card-body">
+        <div class="card-cat">Niñas · 1–4 años</div><div class="card-title">Mariposa Rosa</div>
+        <div class="card-desc">Bordado de mariposa con brillantina. Visera flexible, velcro regulable. Ideal para fiestas y fotos.</div>
+        <div class="card-sizes"><span class="size-chip">S · 1–2 años</span><span class="size-chip">M · 3–4 años</span></div>
+        <div class="card-footer">
+          <div class="colors"><span class="color-label">Colores:</span><div class="dot" style="background:#F5A8CC"></div><div class="dot" style="background:#C8A8F5"></div><div class="dot" style="background:#F5C8A8"></div></div>
+          <a class="card-btn" href="https://wa.me/5215544712575?text=Hola!%20Me%20interesa%20la%20Gorra%20Mariposa%20Rosa%20🦋%20¿tienen%20stock?" target="_blank"><svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg> Pedir</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" data-gen="nina" data-age="big">
+      <div class="card-image"><div class="card-img-bg" style="background:linear-gradient(145deg,#FFD6E7,#FF8FAB);"></div><span class="card-badge badge-fav">⭐ Favorita</span><span class="price-tag">$3.200</span><span class="card-emoji">🌸</span></div>
+      <div class="card-body">
+        <div class="card-cat">Niñas · 6–12 años</div><div class="card-title">Sakura Girl</div>
+        <div class="card-desc">Estampado floral japonés bordado a mano. Visera plana, tela premium anti-UV. La más pedida por las chicas grandes.</div>
+        <div class="card-sizes"><span class="size-chip">M · 6–8 años</span><span class="size-chip">L · 9–12 años</span></div>
+        <div class="card-footer">
+          <div class="colors"><span class="color-label">Colores:</span><div class="dot" style="background:#FF8FAB"></div><div class="dot" style="background:#FFB3C6"></div><div class="dot" style="background:#FFF0F6"></div></div>
+          <a class="card-btn" href="https://wa.me/5215544712575?text=Hola!%20Me%20interesa%20la%20Gorra%20Sakura%20Girl%20🌸%20¿tienen%20stock?" target="_blank"><svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg> Pedir</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- NIÑO -->
+    <div class="card" data-gen="nino" data-age="kids">
+      <div class="card-image"><div class="card-img-bg" style="background:linear-gradient(145deg,#C8E0F5,#8ABEDE);"></div><span class="card-badge badge-new">✨ Nuevo</span><span class="price-tag">$2.900</span><span class="card-emoji">🦕</span></div>
+      <div class="card-body">
+        <div class="card-cat boy">Niños · 2–8 años</div><div class="card-title">Dino Explorer</div>
+        <div class="card-desc">Para el pequeño aventurero. Bordado 3D de dinosaurio, tela antibacterial y protección solar UV50.</div>
+        <div class="card-sizes"><span class="size-chip boy">S · 2–4 años</span><span class="size-chip boy">M · 5–8 años</span></div>
+        <div class="card-footer">
+          <div class="colors"><span class="color-label">Colores:</span><div class="dot" style="background:#8ABEDE"></div><div class="dot" style="background:#8AD0A0"></div><div class="dot" style="background:#E0C880"></div></div>
+          <a class="card-btn" href="https://wa.me/5215544712575?text=Hola!%20Me%20interesa%20la%20Gorra%20Dino%20Explorer%20🦕%20¿tienen%20stock?" target="_blank"><svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg> Pedir</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" data-gen="nino" data-age="big">
+      <div class="card-image"><div class="card-img-bg" style="background:linear-gradient(145deg,#C8D0F0,#7080C0);"></div><span class="card-badge badge-new">✨ Nuevo</span><span class="price-tag">$3.100</span><span class="card-emoji">🚀</span></div>
+      <div class="card-body">
+        <div class="card-cat boy">Niños · 3–10 años</div><div class="card-title">Space Kiddo</div>
+        <div class="card-desc">Visera plana, estampado galaxia con pintura reflectante. Para el niño que sueña con las estrellas.</div>
+        <div class="card-sizes"><span class="size-chip boy">M · 3–6 años</span><span class="size-chip boy">L · 7–10 años</span></div>
+        <div class="card-footer">
+          <div class="colors"><span class="color-label">Colores:</span><div class="dot" style="background:#7080C0"></div><div class="dot" style="background:#1A1A3A"></div><div class="dot" style="background:#C0A8E0"></div></div>
+          <a class="card-btn" href="https://wa.me/5215544712575?text=Hola!%20Me%20interesa%20la%20Gorra%20Space%20Kiddo%20🚀%20¿tienen%20stock?" target="_blank"><svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg> Pedir</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" data-gen="nino" data-age="bebe">
+      <div class="card-image"><div class="card-img-bg" style="background:linear-gradient(145deg,#B8E0FF,#6AB4F5);"></div><span class="price-tag">$2.600</span><span class="card-emoji">🐳</span></div>
+      <div class="card-body">
+        <div class="card-cat boy">Niños bebés · 6–18 meses</div><div class="card-title">Ballena Azul</div>
+        <div class="card-desc">Gorrita de bebé con ballena bordada. Algodón suave, costuras planas sin rozaduras. Protección solar UPF 40.</div>
+        <div class="card-sizes"><span class="size-chip boy">S · 6–12m</span><span class="size-chip boy">M · 12–18m</span></div>
+        <div class="card-footer">
+          <div class="colors"><span class="color-label">Colores:</span><div class="dot" style="background:#6AB4F5"></div><div class="dot" style="background:#A8D5FF"></div><div class="dot" style="background:#FFF0F6"></div></div>
+          <a class="card-btn" href="https://wa.me/5215544712575?text=Hola!%20Me%20interesa%20la%20Gorra%20Ballena%20Azul%20🐳%20¿tienen%20stock?" target="_blank"><svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg> Pedir</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNISEX -->
+    <div class="card" data-gen="unisex" data-age="kids">
+      <div class="card-image"><div class="card-img-bg" style="background:linear-gradient(145deg,#D0F0D8,#90D8A0);"></div><span class="card-badge badge-fav">⭐ Favorita</span><span class="price-tag">$2.600</span><span class="card-emoji">🌈</span></div>
+      <div class="card-body">
+        <div class="card-cat unisex">Unisex · 1–6 años</div><div class="card-title">Arcoiris Happy</div>
+        <div class="card-desc">Colores vibrantes que no destiñen. Tejido transpirable, cierre velcro. El regalo perfecto para cualquier niño.</div>
+        <div class="card-sizes"><span class="size-chip unisex">Talla ajustable</span></div>
+        <div class="card-footer">
+          <div class="colors"><span class="color-label">Colores:</span><div class="dot" style="background:#FF8A80"></div><div class="dot" style="background:#FFD54F"></div><div class="dot" style="background:#80DEEA"></div><div class="dot" style="background:#A5D6A7"></div></div>
+          <a class="card-btn" href="https://wa.me/5215544712575?text=Hola!%20Me%20interesa%20la%20Gorra%20Arcoiris%20Happy%20🌈%20¿tienen%20stock?" target="_blank"><svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg> Pedir</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" data-gen="unisex" data-age="bebe">
+      <div class="card-image"><div class="card-img-bg" style="background:linear-gradient(145deg,#FFF0D0,#FFD88A);"></div><span class="price-tag">$2.700</span><span class="card-emoji">🐻</span></div>
+      <div class="card-body">
+        <div class="card-cat unisex">Unisex · 6–18 meses</div><div class="card-title">Osito Dorado</div>
+        <div class="card-desc">Orejitas de oso en 3D, algodón 100% orgánico. Viene en cajita regalo. Ideal para baby shower.</div>
+        <div class="card-sizes"><span class="size-chip unisex">S · 6–12m</span><span class="size-chip unisex">M · 12–18m</span></div>
+        <div class="card-footer">
+          <div class="colors"><span class="color-label">Colores:</span><div class="dot" style="background:#FFD88A"></div><div class="dot" style="background:#E8C8B0"></div><div class="dot" style="background:#D0E0C8"></div></div>
+          <a class="card-btn" href="https://wa.me/5215544712575?text=Hola!%20Me%20interesa%20la%20Gorra%20Osito%20Dorado%20🐻%20¿tienen%20stock?" target="_blank"><svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg> Pedir</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ TRUST — horizontal scroll en mobile ══ -->
+<div class="trust-wrap">
+  <div class="trust reveal">
+    <div class="trust-item"><div class="trust-icon">🌿</div><div class="trust-val">100%</div><div class="trust-label">Algodón orgánico</div></div>
+    <div class="trust-item"><div class="trust-icon">🚚</div><div class="trust-val">24–48h</div><div class="trust-label">Envío a todo México</div></div>
+    <div class="trust-item"><div class="trust-icon">🕐</div><div class="trust-val">Lun–Sáb</div><div class="trust-label">8am – 9pm</div></div>
+    <div class="trust-item"><div class="trust-icon">💬</div><div class="trust-val">WhatsApp</div><div class="trust-label">Atención personal</div></div>
+    <div class="trust-item"><div class="trust-icon">❤️</div><div class="trust-val">+500</div><div class="trust-label">Familias felices</div></div>
+    <div class="trust-item"><div class="trust-icon">🎁</div><div class="trust-val">Cajita</div><div class="trust-label">Regalo incluida</div></div>
+  </div>
+  <div class="trust-scroll-hint">← deslizá →</div>
+</div>
+
+<!-- ══ TESTIMONIOS ══ -->
+<section class="testimonials" id="reviews">
+  <div class="section-header reveal">
+    <div class="eyebrow">💬 Reseñas reales</div>
+    <h2>Lo que dicen las mamás</h2>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card reveal">
+      <div class="stars">★★★★★</div>
+      <div class="testi-text">La gorrita del pollito es lo más tierno que vi en mi vida. Mi bebé la usa todos los días y todo el mundo me pregunta dónde la compré. ¡Ya pedí 2 más de regalo!</div>
+      <div class="testi-author"><div class="testi-avatar" style="background:#FFF0F6;">👩</div><div><div class="testi-name">Valentina M.</div><div class="testi-sub">Mamá de Lucía · 3 meses · Ciudad de México</div></div></div>
+    </div>
+    <div class="testi-card reveal">
+      <div class="stars">★★★★★</div>
+      <div class="testi-text">Compré la Dino Explorer para mi hijo y quedó encantado. Ya la lavé 20 veces y sigue perfecta. El bordado no se cae para nada. ¡Calidad increíble!</div>
+      <div class="testi-author"><div class="testi-avatar" style="background:#EEF4FF;">👩‍🦱</div><div><div class="testi-name">Carolina R.</div><div class="testi-sub">Mamá de Mateo · 4 años · Guadalajara</div></div></div>
+    </div>
+    <div class="testi-card reveal">
+      <div class="stars">★★★★★</div>
+      <div class="testi-text">La atención por WhatsApp fue rapidísima. Me asesoraron sobre la talla y llegó en 2 días. La cajita de regalo es un detalle hermoso. ¡Recomiendo al 100%!</div>
+      <div class="testi-author"><div class="testi-avatar" style="background:#E8FBF5;">🧑‍🦰</div><div><div class="testi-name">Daniela P.</div><div class="testi-sub">Regalo de baby shower · Monterrey</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PARA REGALAR ══ -->
+<section class="regalo reveal">
+  <div class="section-header">
+    <div class="eyebrow">🎁 Ideas de regalo</div>
+    <h2>Perfecta para cada ocasión</h2>
+  </div>
+  <div class="regalo-grid">
+    <a class="regalo-card" href="https://wa.me/5215544712575?text=Hola!%20Busco%20una%20gorra%20de%20regalo%20para%20un%20baby%20shower%20🍼" target="_blank">
+      <span class="regalo-icon">🍼</span>
+      <div class="regalo-title">Baby Shower</div>
+      <div class="regalo-desc">El regalo que más sorprende. Viene en cajita lista para entregar.</div>
+      <span class="regalo-tag">Más pedido</span>
+    </a>
+    <a class="regalo-card" href="https://wa.me/5215544712575?text=Hola!%20Busco%20una%20gorra%20de%20regalo%20para%20un%20cumpleaños%20🎂" target="_blank">
+      <span class="regalo-icon">🎂</span>
+      <div class="regalo-title">Cumpleaños</div>
+      <div class="regalo-desc">Personalizamos el moño y el mensaje. Llegamos el día del festejo.</div>
+      <span class="regalo-tag">Con envío express</span>
+    </a>
+    <a class="regalo-card" href="https://wa.me/5215544712575?text=Hola!%20Busco%20una%20gorra%20para%20el%20nacimiento%20de%20un%20bebé%20👶" target="_blank">
+      <span class="regalo-icon">👶</span>
+      <div class="regalo-title">Nacimiento</div>
+      <div class="regalo-desc">El primer accesorio del bebé. Algodón suavísimo apto para recién nacidos.</div>
+      <span class="regalo-tag">Recién nacidos</span>
+    </a>
+    <a class="regalo-card" href="https://wa.me/5215544712575?text=Hola!%20Busco%20gorras%20para%20regalar%20en%20cantidad%20🎀" target="_blank">
+      <span class="regalo-icon">🎀</span>
+      <div class="regalo-title">Al por mayor</div>
+      <div class="regalo-desc">¿Necesitás varias? Consultanos por descuentos en pedidos de 5 o más.</div>
+      <span class="regalo-tag">Precio especial</span>
+    </a>
+  </div>
+</section>
+
+<!-- ══ FAQs ══ -->
+<section class="faqs">
+  <div class="section-header reveal">
+    <div class="eyebrow">❓ Preguntas frecuentes</div>
+    <h2>Todo lo que querés saber</h2>
+  </div>
+  <div class="faq-list">
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+        <span>¿Cómo sé qué talla elegir para mi bebé?</span>
+        <span class="faq-arrow">+</span>
+      </button>
+      <div class="faq-a">Tenemos una guía de tallas muy fácil: medís la circunferencia de la cabecita con una cinta y te decimos exactamente cuál pedir. Escribinos por WhatsApp y te asesoramos en menos de 5 minutos. ¡Nunca fallamos!</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+        <span>¿Cuánto tarda en llegar y cuánto cuesta el envío?</span>
+        <span class="faq-arrow">+</span>
+      </button>
+      <div class="faq-a">Enviamos por paquetería a toda la República Mexicana en 24–48hs hábiles. El costo varía según tu estado. Si pedís 2 gorras o más ¡el envío es gratis! Escríbenos por WhatsApp de Lun–Sáb 8am–9pm para confirmar el costo a tu zona.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+        <span>¿Qué medios de pago aceptan?</span>
+        <span class="faq-arrow">+</span>
+      </button>
+      <div class="faq-a">Aceptamos transferencia bancaria, Mercado Pago (tarjeta de crédito, débito o dinero en cuenta) y efectivo si retirás en persona. Una vez que confirmás el pedido por WhatsApp te mandamos los datos de pago al instante.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+        <span>¿Puedo cambiar o devolver si no me queda bien la talla?</span>
+        <span class="faq-arrow">+</span>
+      </button>
+      <div class="faq-a">¡Sí! Si la talla no es la correcta hacemos el cambio sin drama. Solo te pedimos que la gorra esté sin usar y en su empaque original. Escribinos y coordinamos la devolución, simple y rápido.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)" aria-expanded="false">
+        <span>¿Las gorras son seguras para recién nacidos?</span>
+        <span class="faq-arrow">+</span>
+      </button>
+      <div class="faq-a">Totalmente. Usamos algodón 100% orgánico certificado, sin tinturas tóxicas ni piezas que se puedan soltar. Las costuras son planas para no rozar la piel sensible del bebé. Son aptas desde el primer día de vida.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ CTA ══ -->
+<div class="cta-wrap">
+  <div class="cta-banner reveal">
+    <div class="confetti-wrap" id="confetti"></div>
+    <div class="cta-deco">🎀</div>
+    <div class="cta-deco-2">🌸</div>
+    <h2>¿Lista para consentir<br>a tu pequeño?</h2>
+    <p>Escríbenos por WhatsApp y te mostramos todo el catálogo con precios y disponibilidad. Atendemos <strong>Lun–Sáb 8am–9pm</strong> en toda la República Mexicana 🇲🇽</p>
+    <div class="cta-btns">
+      <a class="big-btn" href="https://wa.me/5215544712575?text=Hola!%20Quiero%20ver%20el%20catálogo%20completo%20🎀" target="_blank">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg>
+        Escribir por WhatsApp
+      </a>
+      <a class="big-btn-alt" href="#catalogo">Ver más modelos ↑</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div style="max-width:900px;margin:0 auto;">
+    <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem;margin-bottom:4px;">🇲🇽</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.5);">Solo República Mexicana</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:0.9rem;font-weight:600;color:#fff;margin-bottom:4px;">Lun – Sáb &nbsp; 8:00am – 9:00pm</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.5);">Horario de atención</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:0.9rem;font-weight:600;color:#fff;margin-bottom:4px;">Precios en MXN 🇲🇽</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.5);">Pesos mexicanos</div>
+      </div>
+      <div style="text-align:center;">
+        <button onclick="compartirPagina()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 18px;border-radius:100px;font-size:0.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+          📤 Compartir página
+        </button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:16px;">
+      <a href="https://wa.me/5215544712575" target="_blank" style="color:var(--pink);text-decoration:none;font-size:0.8rem;font-weight:500;">💬 WhatsApp</a>
+      <span style="color:rgba(255,255,255,0.15);">·</span>
+      <a href="#catalogo" style="color:rgba(255,255,255,0.4);text-decoration:none;font-size:0.8rem;">📦 Envíos</a>
+      <span style="color:rgba(255,255,255,0.15);">·</span>
+      <a href="#" onclick="abrirPoliticas();return false;" style="color:rgba(255,255,255,0.4);text-decoration:none;font-size:0.8rem;">📋 Cambios y devoluciones</a>
+      <span style="color:rgba(255,255,255,0.15);">·</span>
+      <a href="#reviews" style="color:rgba(255,255,255,0.4);text-decoration:none;font-size:0.8rem;">⭐ Reseñas</a>
+    </div>
+    <p style="font-size:0.75rem;">Hecho con <span>💕</span> para las familias · <span>Gorras Baby & Kids</span> · México 2025</p>
+  </div>
+</footer>
+
+</div>
+
+<!-- MODAL POLÍTICAS -->
+<div id="politicasModal" style="display:none;position:fixed;inset:0;background:rgba(26,16,37,0.7);z-index:9000;backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:24px;padding:36px;max-width:480px;width:100%;position:relative;max-height:80vh;overflow-y:auto;">
+    <button onclick="cerrarPoliticas()" style="position:absolute;top:16px;right:16px;background:var(--purple-pale);border:none;width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;color:var(--purple);">✕</button>
+    <h3 style="font-family:'Fraunces',serif;font-size:1.4rem;margin-bottom:20px;color:var(--deep);">📋 Cambios y devoluciones</h3>
+    <div style="font-size:0.88rem;color:var(--neutral);line-height:1.8;display:flex;flex-direction:column;gap:14px;">
+      <div><strong style="color:var(--deep);">⏱ Plazo</strong><br>Aceptamos cambios hasta 7 días después de recibir tu pedido.</div>
+      <div><strong style="color:var(--deep);">📦 Condición</strong><br>La gorra debe estar sin usar, con etiquetas y en su empaque original.</div>
+      <div><strong style="color:var(--deep);">🔄 Proceso</strong><br>Escríbenos por WhatsApp con tu nombre y número de pedido. Te guiamos en todo el proceso.</div>
+      <div><strong style="color:var(--deep);">🚚 Costo de envío</strong><br>El cambio por talla incorrecta no tiene costo adicional. Si es por cambio de modelo, el envío corre por cuenta del cliente.</div>
+      <div><strong style="color:var(--deep);">💸 Reembolsos</strong><br>Si el producto tiene defecto de fábrica, hacemos el reembolso completo en 3–5 días hábiles.</div>
+    </div>
+    <a href="https://wa.me/5215544712575?text=Hola!%20Quiero%20hacer%20un%20cambio%20o%20devolución" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--wapp);color:#fff;padding:14px 24px;border-radius:100px;font-size:0.88rem;font-weight:600;text-decoration:none;margin-top:20px;">
+      💬 Iniciar cambio por WhatsApp
+    </a>
+  </div>
+</div>
+
+<!-- WAPP FLOTANTE -->
+<a class="wapp-float" href="https://wa.me/5215544712575?text=Hola!%20Vi%20el%20catálogo%20🎀" target="_blank">
+  <div class="wapp-tooltip">¡Escribinos ahora!</div>
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.118.549 4.107 1.51 5.836L0 24l6.335-1.652A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.807 9.807 0 01-5.032-1.383l-.36-.213-3.762.983 1.008-3.67-.234-.377A9.818 9.818 0 012.182 12c0-5.418 4.4-9.818 9.818-9.818 5.419 0 9.818 4.4 9.818 9.818 0 5.419-4.399 9.818-9.818 9.818z"/></svg>
+</a>
+
+<script>
+/* ── SCROLL REVEAL ── */
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){e.target.style.transitionDelay=`${(i%4)*0.09}s`;e.target.classList.add('visible');}
+  });
+},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(r=>obs.observe(r));
+
+/* ── PUNTOS DECORATIVOS HERO ── */
+const dotsEl=document.getElementById('heroDots');
+const dotColors=['rgba(255,107,157,0.4)','rgba(124,58,237,0.35)','rgba(79,142,247,0.4)','rgba(110,207,181,0.45)','rgba(247,201,72,0.5)'];
+for(let i=0;i<14;i++){
+  const d=document.createElement('div');d.className='hero-dot';
+  const size=Math.random()*18+6;
+  d.style.cssText=`
+    width:${size}px;height:${size}px;
+    left:${Math.random()*100}%;top:${Math.random()*100}%;
+    background:${dotColors[Math.floor(Math.random()*dotColors.length)]};
+    animation-duration:${Math.random()*3+2.5}s;
+    animation-delay:${Math.random()*3}s;
+  `;
+  dotsEl.appendChild(d);
+}
+
+/* ── FILTRO POR GÉNERO ── */
+let activeGen='all';
+let activeAge='all';
+
+// Paletas de fondo del catálogo según género
+const catalogueBg = {
+  all:    'linear-gradient(180deg, #F8F4FF 0%, #F8F4FF 100%)',
+  nina:   'linear-gradient(180deg, #FFF5F8 0%, #FFE8F1 100%)',
+  nino:   'linear-gradient(180deg, #F0F6FF 0%, #DDEEFF 100%)',
+  unisex: 'linear-gradient(180deg, #F0FBF8 0%, #D4F2EA 100%)',
+};
+
+// Mensaje vacío de estado cuando no hay resultados
+function showEmpty(gen){
+  const msgs = {
+    nina:   '👧 No hay gorras para niñas con ese filtro de edad. Probá otra edad.',
+    nino:   '🧒 No hay gorras para niños con ese filtro de edad. Probá otra edad.',
+    unisex: '🌈 No hay gorras unisex con ese filtro de edad. Probá otra edad.',
+    all:    '😕 Sin resultados. Probá otro filtro.',
+  };
+  let el = document.getElementById('emptyMsg');
+  if(!el){
+    el = document.createElement('p');
+    el.id='emptyMsg';
+    el.style.cssText='text-align:center;padding:48px 24px;font-size:1rem;color:var(--neutral);grid-column:1/-1;';
+    document.getElementById('productGrid').appendChild(el);
+  }
+  el.textContent = msgs[gen] || msgs.all;
+  el.style.display='block';
+}
+
+// Gradientes del CTA banner por género
+const ctaGradients = {
+  all:    { bg:'linear-gradient(135deg,#FFB3D1 0%,#FF6B9D 40%,#C026D3 80%,#7C3AED 100%)', deco:'🎀', deco2:'🌸' },
+  nina:   { bg:'linear-gradient(135deg,#FFD6E8 0%,#FF6B9D 35%,#FF3D7F 65%,#C8005A 100%)', deco:'🎀', deco2:'🌸' },
+  nino:   { bg:'linear-gradient(135deg,#B8D8FF 0%,#4F8EF7 35%,#2563EB 65%,#1240A0 100%)', deco:'🚀', deco2:'⭐' },
+  unisex: { bg:'linear-gradient(135deg,#FDE68A 0%,#6ECFB5 40%,#2BA98B 70%,#0D7A60 100%)', deco:'🌈', deco2:'✨' },
+};
+
+function filterGender(gen, btn){
+  activeGen = gen;
+  document.querySelectorAll('.gtab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Fondo del catálogo
+  document.querySelector('.catalogue').style.background = catalogueBg[gen];
+
+  // Clase de tema en catálogo (chips de edad)
+  const cat = document.querySelector('.catalogue');
+  cat.classList.remove('theme-nina','theme-nino','theme-unisex');
+  if(gen !== 'all') cat.classList.add('theme-' + gen);
+
+  // CTA banner — gradiente + emojis dinámicos
+  const banner = document.querySelector('.cta-banner');
+  const theme  = ctaGradients[gen] || ctaGradients.all;
+  banner.style.background = theme.bg;
+  const d1 = banner.querySelector('.cta-deco');
+  const d2 = banner.querySelector('.cta-deco-2');
+  if(d1){ d1.textContent = theme.deco;  d1.style.animation='none'; void d1.offsetWidth; d1.style.animation=''; }
+  if(d2){ d2.textContent = theme.deco2; d2.style.animation='none'; void d2.offsetWidth; d2.style.animation=''; }
+
+  applyFilter();
+}
+
+function filterAge(age, btn){
+  activeAge = age;
+  document.querySelectorAll('.age-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter();
+}
+
+function applyFilter(){
+  let visible = 0;
+  const emptyEl = document.getElementById('emptyMsg');
+  if(emptyEl) emptyEl.style.display='none';
+
+  document.querySelectorAll('.card').forEach((card) => {
+    const genOk = activeGen === 'all' || card.dataset.gen === activeGen;
+    const ageOk = activeAge === 'all' || card.dataset.age === activeAge;
+    const show  = genOk && ageOk;
+    card.style.display = show ? '' : 'none';
+    if(show){
+      visible++;
+      card.style.animation = 'none';
+      void card.offsetWidth;
+      card.style.animation = `fadeUp .45s ${visible * 0.07}s ease both`;
+    }
+  });
+
+  if(visible === 0) showEmpty(activeGen);
+}
+
+/* ── COUNTDOWN URGENCIA ── */
+(function(){
+  // Inicia desde un tiempo random entre 18 y 28 min para parecer real
+  let total = (Math.floor(Math.random()*10)+18)*60 + Math.floor(Math.random()*60);
+  const el = document.getElementById('countdown');
+  if(!el) return;
+  setInterval(()=>{
+    if(total <= 0){ total = 0; }
+    const m = String(Math.floor(total/60)).padStart(2,'0');
+    const s = String(total % 60).padStart(2,'0');
+    el.textContent = m + ':' + s;
+    total--;
+  }, 1000);
+})();
+
+/* ── TICKER SOCIAL ── */
+(function(){
+  const items = [
+    { name:'Valentina', city:'Ciudad de México', product:'Gorrita Pollito 🐣', time:'hace 3 min' },
+    { name:'Carolina',  city:'Guadalajara',      product:'Dino Explorer 🦕',   time:'hace 8 min' },
+    { name:'Lucía',     city:'Monterrey',        product:'Mariposa Rosa 🦋',   time:'hace 12 min'},
+    { name:'Sofía',     city:'Puebla',           product:'Osito Dorado 🐻',    time:'hace 15 min'},
+    { name:'Martina',   city:'Tijuana',          product:'Arcoiris Happy 🌈',  time:'hace 19 min'},
+    { name:'Fernanda',  city:'León',             product:'Sakura Girl 🌸',     time:'hace 22 min'},
+    { name:'Camila',    city:'Mérida',           product:'Space Kiddo 🚀',     time:'hace 26 min'},
+    { name:'Daniela',   city:'Querétaro',        product:'Ballena Azul 🐳',    time:'hace 31 min'},
+  ];
+  const track = document.getElementById('tickerTrack');
+  if(!track) return;
+  // Duplicamos para loop infinito
+  [...items, ...items].forEach(it => {
+    const span = document.createElement('span');
+    span.className = 'ticker-item';
+    span.innerHTML = `<span>🛍️</span> <strong>${it.name}</strong> de ${it.city} compró <strong>${it.product}</strong> <span class="ticker-dot">●</span> ${it.time}`;
+    track.appendChild(span);
+  });
+})();
+
+/* ── FAQ TOGGLE ── */
+function toggleFaq(btn){
+  const item   = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+
+  // Cierra todos primero
+  document.querySelectorAll('.faq-item.open').forEach(el => {
+    el.classList.remove('open');
+    el.querySelector('.faq-q').setAttribute('aria-expanded','false');
+  });
+
+  // Si estaba cerrado, lo abre
+  if(!isOpen){
+    item.classList.add('open');
+    btn.setAttribute('aria-expanded','true');
+  }
+}
+const cc=document.getElementById('confetti');
+const cols=['#FFB3D1','#FF6B9D','#C4B5FD','#7C3AED','#F7C948','#6ECFB5','#4F8EF7','#fff'];
+for(let i=0;i<24;i++){
+  const p=document.createElement('div');p.className='confetti-piece';
+  const s=Math.random()*9+4;
+  p.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};border-radius:${Math.random()>.5?'50%':'3px'};animation-duration:${Math.random()*5+4}s;animation-delay:${Math.random()*4}s;opacity:${Math.random()*.55+.3};`;
+  cc.appendChild(p);
+}
+
+/* ── COMPARTIR PÁGINA ── */
+function compartirPagina(){
+  if(navigator.share){
+    navigator.share({
+      title:'Gorras Baby & Kids 🧢',
+      text:'¡Mira estas gorras tan lindas para bebés y niños! Envían a toda la República Mexicana 🇲🇽',
+      url:window.location.href
+    }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(window.location.href).then(()=>{
+      const btn=document.querySelector('[onclick="compartirPagina()"]');
+      if(btn){const orig=btn.innerHTML;btn.innerHTML='✅ ¡Link copiado!';setTimeout(()=>btn.innerHTML=orig,2500);}
+    }).catch(()=>{
+      alert('Copia el link: '+window.location.href);
+    });
+  }
+}
+
+/* ── MODAL POLÍTICAS ── */
+function abrirPoliticas(){
+  const m=document.getElementById('politicasModal');
+  m.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function cerrarPoliticas(){
+  document.getElementById('politicasModal').style.display='none';
+  document.body.style.overflow='';
+}
+document.getElementById('politicasModal')?.addEventListener('click',e=>{
+  if(e.target.id==='politicasModal') cerrarPoliticas();
+});
+</script>
+</body>
+</html>

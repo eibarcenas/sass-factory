@@ -3,7 +3,9 @@
 > Multi-tenant SaaS platform for creating and managing themed web experiences.
 > One codebase, infinite occasions — Valentine's Day, Mother's Day, Three Kings Day, Christmas, and more.
 
-**Stack:** Nuxt 4 · UnoCSS · Firestore · GCP Cloud Build · Terraform · pnpm workspaces · Docker
+**Stack:** Nuxt 4 · UnoCSS · Firestore · GCP Cloud Build · Terraform · pnpm workspaces · Docker · Kubernetes (kind)
+
+> **TL;DR** — `git clone` + `make up` → http://localhost:4200
 
 ---
 
@@ -231,7 +233,81 @@ sass-factory/
 
 ---
 
-## Quick Start
+## Quick Start — Kubernetes (kind)
+
+> Single command starts a local k8s cluster + admin. Template apps are deployed dynamically — no static service list needed.
+
+### Prerequisites
+
+| Tool | Install |
+|------|---------|
+| Docker Desktop | https://docs.docker.com/get-docker/ |
+| kind | `brew install kind` or https://kind.sigs.k8s.io |
+| kubectl | `brew install kubectl` or https://kubernetes.io/docs/tasks/tools/ |
+
+### 1. Clone & start
+
+```bash
+git clone https://github.com/eibarcenas/sass-factory.git
+cd sass-factory
+make up
+```
+
+`make up` will:
+1. Create the kind cluster `sass-factory` (if not already running)
+2. Build the admin Docker image
+3. Load it into the cluster
+4. Apply RBAC + Deployment + Service manifests
+5. Wait for the admin pod to be ready
+
+Admin panel is live at **http://localhost:4200** with 6 seed apps (mock mode — no Firebase or GCP needed).
+
+### Common commands
+
+| Command | Description |
+|---------|-------------|
+| `make up` | Create cluster + build + deploy admin |
+| `make down` | Delete all deployments + destroy cluster |
+| `make status` | `kubectl get deployments,services` |
+| `make logs` | Follow admin pod logs |
+| `make shell` | Shell into admin pod |
+| `make rebuild` | Rebuild admin image + rolling restart |
+| `make clean` | Delete cluster + remove all images |
+
+### 2. Deploy template apps (on demand)
+
+Template apps are **not pre-deployed** — they are created dynamically when you simulate:
+
+1. Open **http://localhost:4200/infra/new**
+2. Select an app → click **Run in Docker** (or k8s mode auto-detected)
+3. Admin builds the template image, loads it into kind, creates a k8s Deployment + NodePort Service
+4. App is live at `http://localhost:3010` (or next available port 3011–3019)
+
+Ports are pre-mapped in `infrastructure/k8s/kind-config.yaml` — 10 slots (3010–3019).
+
+### 3. Optional: enable Firebase / AI / GCP
+
+Create a k8s Secret from your env file:
+
+```bash
+cp apps/admin/.env.example apps/admin/.env
+# fill in apps/admin/.env
+
+kubectl create secret generic admin-env --from-env-file=apps/admin/.env
+make rebuild   # restart admin to pick up new secret
+```
+
+| Feature | Env vars to set |
+|---------|----------------|
+| Real Firestore | `FIREBASE_*` (all 6 vars) |
+| AI app generation (`/apps/generate`) | `ANTHROPIC_API_KEY` |
+| GCP Cloud Build deploy | `GCP_PROJECT_ID`, `FACTORY_URL`, `TF_STATE_BUCKET`, `CLOUD_BUILD_REPO` |
+
+Without a secret the admin runs in **mock mode** automatically.
+
+---
+
+## Quick Start — Local (Node.js)
 
 ### Prerequisites
 

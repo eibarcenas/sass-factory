@@ -1,5 +1,4 @@
 import { defineEventHandler, getQuery } from 'h3'
-import { requireAuth } from '~/server/middleware/auth'
 import type { Business } from '@sass-factory/core'
 
 // Mock data — Sprint 5 replaces with real Firestore

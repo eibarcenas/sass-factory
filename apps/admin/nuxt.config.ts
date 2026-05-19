@@ -1,10 +1,9 @@
-import { federation } from '@module-federation/vite'
-
 const hasFirebase = !!(process.env.FIREBASE_API_KEY && process.env.FIREBASE_PROJECT_ID)
 
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   future: { compatibilityVersion: 4 },
+  telemetry: false,
   devtools: { enabled: true },
   modules: [
     '@unocss/nuxt',
@@ -30,9 +29,7 @@ export default defineNuxtConfig({
       }
     : {}),
   runtimeConfig: {
-    // Server-only
     anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
-    // Public (exposed to client)
     public: {
       appName: 'SASS Factory Admin',
       mockMode: !hasFirebase,
@@ -41,17 +38,6 @@ export default defineNuxtConfig({
       firebaseProjectId: process.env.FIREBASE_PROJECT_ID ?? '',
     },
   },
-  vite: {
-    plugins: [
-      federation({
-        name: 'admin_shell',
-        remotes: {
-          demo_mf: process.env.DEMO_MF_URL
-            ? `${process.env.DEMO_MF_URL}/assets/remoteEntry.js`
-            : 'http://localhost:3001/assets/remoteEntry.js',
-        },
-        shared: ['vue'],
-      }),
-    ],
-  },
+  // Module Federation disabled in dev — add back when MFE remotes are running
+  // vite: { plugins: [ federation({ ... }) ] }
 })

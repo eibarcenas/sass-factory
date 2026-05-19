@@ -1,5 +1,4 @@
 import { defineEventHandler, readBody, createError } from 'h3'
-import { requireAuth } from '~/server/middleware/auth'
 import type { Plan } from '@sass-factory/core'
 import { PLAN_PRICES } from '@sass-factory/core'
 

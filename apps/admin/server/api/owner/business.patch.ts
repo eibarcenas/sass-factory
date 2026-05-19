@@ -1,5 +1,4 @@
 import { defineEventHandler, readBody } from 'h3'
-import { requireAuth } from '~/server/middleware/auth'
 
 export default defineEventHandler(async (event) => {
   await requireAuth(event)
