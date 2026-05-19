@@ -1,112 +1,75 @@
-.PHONY: dev dev-admin dev-storefront dev-emulator \
+.PHONY: dev dev-admin dev-storefront dev-api \
         test typecheck lint \
-        deploy-demo deploy-storefront \
-        up down build-admin rebuild status logs shell clean
+        install \
+        deploy-storefront deploy-api \
+        up down status logs clean
 
-export PATH := $(HOME)/.local/bin:$(PATH)
+## ─── Install ─────────────────────────────────────────────────────────────────
 
-PROJECT_ID  ?= $(GOOGLE_CLOUD_PROJECT)
-REGION      ?= us-central1
-CLUSTER      = sass-factory
-ADMIN_IMAGE  = sass-factory/admin:latest
-K8S_DIR      = infrastructure/k8s
+install: ## Install all dependencies (JS + Python)
+	pnpm install
+	@[ -d apps/api ] && (cd apps/api && pip install -e ".[dev]") || true
 
 ## ─── Local development ───────────────────────────────────────────────────────
 
-dev: ## Start admin + storefront locally
-	@fuser -k 3000/tcp 2>/dev/null || true
-	@fuser -k 3010/tcp 2>/dev/null || true
+dev: ## Start all services locally
+	@fuser -k 3000/tcp 3010/tcp 8000/tcp 2>/dev/null || true
 	@echo ""
 	@echo "  ┌──────────────────────────────────────────────────────────┐"
 	@echo "  │  catalog.mx — Dev local                                  │"
-	@echo "  │  Admin        → http://localhost:3000                    │"
-	@echo "  │  Storefront   → http://localhost:3010                    │"
+	@echo "  │  Admin (React)       → http://localhost:3000             │"
+	@echo "  │  Storefront (Next)   → http://localhost:3010             │"
+	@echo "  │  API (FastAPI)       → http://localhost:8000             │"
 	@echo "  └──────────────────────────────────────────────────────────┘"
 	@echo ""
-	@cd apps/admin && NUXT_TELEMETRY_DISABLED=1 pnpm dev &
-	@cd apps/storefront && NUXT_TELEMETRY_DISABLED=1 pnpm dev &
+	@cd apps/admin && pnpm dev &
+	@cd apps/storefront && pnpm dev &
+	@[ -d apps/api ] && (cd apps/api && uvicorn main:app --reload --port 8000) || echo "  ⚠ API not scaffolded yet"
 	@wait
 
-dev-admin: ## Start only admin panel (localhost:3000)
-	cd apps/admin && NUXT_TELEMETRY_DISABLED=1 pnpm dev
+dev-admin: ## Start only admin panel (React, localhost:3000)
+	cd apps/admin && pnpm dev
 
-dev-storefront: ## Start only storefront (localhost:3010)
-	cd apps/storefront && NUXT_TELEMETRY_DISABLED=1 pnpm dev
+dev-storefront: ## Start only storefront (Next.js, localhost:3010)
+	cd apps/storefront && pnpm dev
 
-dev-emulator: ## Start admin + Firestore emulator
-	@firebase emulators:start --only firestore &
-	@sleep 3
-	@cd apps/admin && NUXT_TELEMETRY_DISABLED=1 pnpm dev
+dev-api: ## Start only FastAPI (localhost:8000)
+	cd apps/api && uvicorn main:app --reload --port 8000
 
 ## ─── Quality ─────────────────────────────────────────────────────────────────
 
-test: ## Run all unit tests
-	pnpm -F @sass-factory/core test
+test: ## Run all tests
+	pnpm -F @catalog-mx/core test
+	@[ -d apps/api ] && (cd apps/api && pytest) || true
 
-typecheck: ## Type-check all packages
-	pnpm -F @sass-factory/core typecheck
+typecheck: ## Type-check all JS/TS packages
+	pnpm -F @catalog-mx/core typecheck
+	@[ -d apps/admin ] && pnpm -F admin typecheck || true
+	@[ -d apps/storefront ] && pnpm -F storefront typecheck || true
 
 lint: ## Lint all packages
 	pnpm -r lint --if-present
 
 ## ─── Deploy (GCP Cloud Run) ──────────────────────────────────────────────────
 
-deploy-storefront: ## Deploy storefront to Cloud Run (requires GCP auth)
+deploy-storefront: ## Deploy Next.js storefront to Cloud Run
 	@[ -n "$(PROJECT_ID)" ] || (echo "❌ Set PROJECT_ID: make deploy-storefront PROJECT_ID=my-project"; exit 1)
-	gcloud config set project $(PROJECT_ID) --quiet
-	gcloud run deploy sass-factory-storefront \
+	gcloud run deploy catalog-mx-storefront \
 	  --source apps/storefront \
 	  --region $(REGION) \
 	  --allow-unauthenticated \
 	  --set-env-vars="FIREBASE_PROJECT_ID=$(PROJECT_ID)" \
-	  --min-instances=0 \
-	  --max-instances=10 \
-	  --memory=512Mi \
-	  --quiet
-	@echo ""
-	@echo "✅ Storefront deployed. Share: $$(gcloud run services describe sass-factory-storefront --region $(REGION) --format 'value(status.url)')/demo/{slug}"
+	  --min-instances=0 --max-instances=10 --memory=512Mi --quiet
 
-deploy-demo: deploy-storefront ## Alias for deploy-storefront
+deploy-api: ## Deploy FastAPI to Cloud Run
+	@[ -n "$(PROJECT_ID)" ] || (echo "❌ Set PROJECT_ID: make deploy-api PROJECT_ID=my-project"; exit 1)
+	gcloud run deploy catalog-mx-api \
+	  --source apps/api \
+	  --region $(REGION) \
+	  --set-secrets="ANTHROPIC_API_KEY=anthropic-api-key:latest" \
+	  --min-instances=0 --max-instances=10 --memory=512Mi --quiet
 
-## ─── k8s / kind (local cluster) ─────────────────────────────────────────────
+## ─── Vars ────────────────────────────────────────────────────────────────────
 
-up: ## Start full platform on kind cluster
-	@echo ""
-	@echo "  ┌──────────────────────────────────────────────────────────┐"
-	@echo "  │  SASS Factory (k8s/kind)                                 │"
-	@echo "  │  Admin        → http://localhost:4200                    │"
-	@echo "  └──────────────────────────────────────────────────────────┘"
-	@echo ""
-	@kind get clusters 2>/dev/null | grep -q "^$(CLUSTER)$$" || \
-	  kind create cluster --config $(K8S_DIR)/kind-config.yaml
-	@$(MAKE) build-admin
-	@kind load docker-image $(ADMIN_IMAGE) --name $(CLUSTER)
-	@kubectl apply -f $(K8S_DIR)/admin-rbac.yaml
-	@kubectl apply -f $(K8S_DIR)/admin-deployment.yaml
-	@kubectl rollout status deployment/admin --timeout=120s
-	@echo "  ✓ Running at http://localhost:4200"
-
-down: ## Stop kind cluster
-	@kubectl delete -f $(K8S_DIR)/admin-deployment.yaml --ignore-not-found
-	@kind delete cluster --name $(CLUSTER)
-
-build-admin: ## Build admin Docker image
-	docker build -t $(ADMIN_IMAGE) -f apps/admin/Dockerfile .
-
-rebuild: build-admin ## Rebuild admin image (no cache) and reload
-	docker build --no-cache -t $(ADMIN_IMAGE) -f apps/admin/Dockerfile .
-	kind load docker-image $(ADMIN_IMAGE) --name $(CLUSTER)
-	kubectl rollout restart deployment/admin
-
-status: ## Show cluster status
-	kubectl get deployments,services -n default
-
-logs: ## Follow admin logs
-	kubectl logs deployment/admin -f
-
-shell: ## Shell into admin pod
-	kubectl exec -it deployment/admin -- sh
-
-clean: ## Remove cluster and images
-	kind delete cluster --name $(CLUSTER) 2>/dev/null || true
-	docker rmi $(ADMIN_IMAGE) 2>/dev/null || true
+PROJECT_ID ?= $(GOOGLE_CLOUD_PROJECT)
+REGION     ?= us-central1
