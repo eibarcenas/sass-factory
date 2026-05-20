@@ -1,8 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  // ISR revalidation for catalog pages
-  experimental: {},
+  output: 'standalone', // required for Docker / Cloud Run
 }
 
 export default nextConfig
