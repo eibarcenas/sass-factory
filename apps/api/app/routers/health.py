@@ -9,7 +9,7 @@ def health_check():
         "status": "ok",
         "version": "0.1.0",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "stack": "FastAPI + Python 3.12",
+        "stack": "FastAPI + Python 3.13",
     }
 
 
