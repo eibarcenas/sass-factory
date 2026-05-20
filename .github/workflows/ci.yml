@@ -11,39 +11,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-
       - name: Install Python 3.13 + API deps
         run: |
           cd apps/api
           uv venv --python 3.13
           uv pip install \
             fastapi "uvicorn[standard]" pydantic pydantic-settings \
-            google-cloud-firestore google-cloud-storage python-dotenv python-multipart \
+            google-cloud-firestore google-cloud-storage \
             firebase-admin cachetools slowapi \
+            python-dotenv python-multipart \
             pytest httpx
-
       - name: Install JS dependencies
         run: pnpm install --frozen-lockfile
-
       - name: Typecheck core
         run: pnpm -F @catalog-mx/core typecheck
-
       - name: Core unit tests
         run: pnpm -F @catalog-mx/core test
-
       - name: API tests (Python 3.13)
         run: cd apps/api && DEV_USER_EMAIL=dev@catalog.mx ENVIRONMENT=local .venv/bin/pytest -q
-
       - name: Lint
         run: pnpm -r run lint --if-present 2>/dev/null || true
         continue-on-error: true
