@@ -1,7 +1,7 @@
 .PHONY: help dev dev-admin dev-storefront dev-api \
         test typecheck lint \
         install \
-        deploy-storefront deploy-api \
+        deploy-admin deploy-storefront deploy-api deploy-all \
         up down status logs clean
 
 help: ## Show available targets (run from repo root)
@@ -60,6 +60,19 @@ lint: ## Lint all packages
 	pnpm -r lint --if-present
 
 ## ─── Deploy (GCP Cloud Run) ──────────────────────────────────────────────────
+
+deploy-admin: ## Deploy React admin to Cloud Run
+	@[ -n "$(PROJECT_ID)" ] || (echo "❌ Set PROJECT_ID: make deploy-admin PROJECT_ID=catalog-mx-dev"; exit 1)
+	gcloud run deploy catalog-mx-admin \
+	  --source apps/admin \
+	  --region $(REGION) \
+	  --allow-unauthenticated \
+	  --min-instances=0 --max-instances=5 --memory=256Mi \
+	  --set-build-env-vars="VITE_API_URL=https://catalog-mx-api-105288105956.us-central1.run.app,VITE_STOREFRONT_URL=https://catalog-mx-storefront-105288105956.us-central1.run.app" \
+	  --project=$(PROJECT_ID) --quiet
+	@echo "✅ Admin: $$(gcloud run services describe catalog-mx-admin --region $(REGION) --project $(PROJECT_ID) --format 'value(status.url)')"
+
+deploy-all: deploy-admin deploy-storefront deploy-api ## Deploy all services to Cloud Run
 
 deploy-storefront: ## Deploy Next.js storefront to Cloud Run
 	@[ -n "$(PROJECT_ID)" ] || (echo "❌ Set PROJECT_ID: make deploy-storefront PROJECT_ID=my-project"; exit 1)
