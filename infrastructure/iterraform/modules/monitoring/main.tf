@@ -10,37 +10,33 @@ locals {
     [google_monitoring_notification_channel.email.name],
     var.notification_channels
   )
-  # Service filter for all monitored Cloud Run services
   service_filter = join(" OR ", [
     for svc in var.services : "resource.labels.service_name=\"${svc}\""
   ])
 }
 
-# Error rate alert — request-based, scale-to-zero safe
-# Only triggers when there IS traffic AND error rate is high
+# Alert on absolute 5xx count — scale-to-zero safe
+# (ratio metrics require REDUCE_FRACTION_TRUE which doesn't work on DOUBLE)
 resource "google_monitoring_alert_policy" "error_rate" {
   project      = var.project_id
-  display_name = "High error rate (5xx)"
+  display_name = "5xx errors spike"
   combiner     = "OR"
 
   conditions {
-    display_name = "Error rate > ${var.error_rate_threshold * 100}% over 1h"
+    display_name = "5xx errors > 10 in 1 hour"
     condition_threshold {
-      filter = <<-EOT
+      filter          = <<-EOT
         resource.type = "cloud_run_revision"
         AND (${local.service_filter})
         AND metric.type = "run.googleapis.com/request_count"
         AND metric.labels.response_code_class = "5xx"
       EOT
-      # 1-hour window: enough to filter out isolated cold-start errors
       duration        = "3600s"
       comparison      = "COMPARISON_GT"
-      threshold_value = var.error_rate_threshold
+      threshold_value = 10
       aggregations {
-        alignment_period     = "3600s"
-        per_series_aligner   = "ALIGN_RATE"
-        cross_series_reducer = "REDUCE_FRACTION_TRUE"
-        group_by_fields      = ["resource.labels.service_name"]
+        alignment_period   = "3600s"
+        per_series_aligner = "ALIGN_SUM"
       }
     }
   }
@@ -49,14 +45,14 @@ resource "google_monitoring_alert_policy" "error_rate" {
   alert_strategy { auto_close = "86400s" }
 }
 
-# p99 latency alert — only when there is sustained traffic
+# p99 latency alert — only meaningful with traffic (scale-to-zero aware)
 resource "google_monitoring_alert_policy" "latency" {
   project      = var.project_id
-  display_name = "High p99 latency (${var.latency_threshold_ms}ms)"
+  display_name = "High p99 latency"
   combiner     = "OR"
 
   conditions {
-    display_name = "p99 latency > ${var.latency_threshold_ms}ms over 30min"
+    display_name = "p99 latency > ${var.latency_threshold_ms}ms"
     condition_threshold {
       filter = <<-EOT
         resource.type = "cloud_run_revision"

@@ -16,14 +16,20 @@ resource "google_cloud_run_v2_service" "this" {
       image = var.image
 
       resources {
-        limits   = { memory = var.memory, cpu = var.cpu }
+        limits = {
+            memory = var.memory
+            cpu    = var.cpu
+          }
         # cpu_idle = true → only charged when handling a request (scale-to-zero cost model)
         cpu_idle = true
       }
 
       dynamic "env" {
         for_each = var.env_vars
-        content { name = env.key; value = env.value }
+        content {
+          name = env.key
+          value = env.value
+        }
       }
 
       dynamic "env" {
@@ -31,7 +37,10 @@ resource "google_cloud_run_v2_service" "this" {
         content {
           name = env.key
           value_source {
-            secret_key_ref { secret = env.value; version = "latest" }
+            secret_key_ref {
+              secret  = env.value
+              version = "latest"
+            }
           }
         }
       }
