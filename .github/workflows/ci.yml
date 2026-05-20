@@ -28,7 +28,7 @@ jobs:
           uv venv --python 3.13
           uv pip install \
             fastapi "uvicorn[standard]" pydantic pydantic-settings \
-            google-cloud-firestore python-dotenv python-multipart \
+            google-cloud-firestore google-cloud-storage python-dotenv python-multipart \
             firebase-admin cachetools slowapi \
             pytest httpx
 
