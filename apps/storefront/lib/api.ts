@@ -1,6 +1,9 @@
 import type { Business, Item } from '@/types/catalog'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+// API_URL: server-side only (no NEXT_PUBLIC_ prefix = configurable at runtime in Cloud Run)
+// For local dev: http://localhost:8000
+// For production: set API_URL env var in Cloud Run
+const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 export type CatalogData = Business & { items: Item[] }
 
