@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../store/auth'
+import { useAuthStore, type UserRole } from '../store/auth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 
 export default function LoginPage() {
   const { mockMode, setUser } = useAuthStore()
@@ -10,7 +14,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // In mock mode, skip login and go straight to dashboard
   if (mockMode) {
     navigate('/', { replace: true })
     return null
@@ -32,56 +35,73 @@ export default function LoginPage() {
       }
       const auth = getAuth()
       const cred = await signInWithEmailAndPassword(auth, email, password)
-      setUser({ uid: cred.user.uid, email: cred.user.email })
-      navigate('/', { replace: true })
-    } catch {
-      setError('Invalid credentials')
+
+      // Read custom claims to determine role
+      const { claims } = await cred.user.getIdTokenResult()
+      const role = (claims.role as UserRole) ?? 'OWNER'
+
+      setUser({
+        uid: cred.user.uid,
+        email: cred.user.email,
+        role,
+        businessId: claims.business_id as string | undefined,
+        modules: (claims.modules as string[]) ?? [],
+      })
+
+      // Route based on role
+      navigate(role === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
+    } catch (err: any) {
+      const msgs: Record<string, string> = {
+        'auth/user-not-found': 'User not found',
+        'auth/wrong-password': 'Incorrect password',
+        'auth/invalid-credential': 'Invalid credentials',
+        'auth/too-many-requests': 'Too many attempts. Try again later.',
+      }
+      setError(msgs[err.code] ?? 'Login failed')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">catalog.mx</h1>
-          <p className="text-sm text-gray-500 mt-1">Admin panel</p>
+          <h1 className="text-2xl font-bold">catalog.mx</h1>
+          <p className="text-muted-foreground text-sm mt-1">Sign in to your account</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@catalog.mx"
-                required
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@catalog.mx"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign in'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

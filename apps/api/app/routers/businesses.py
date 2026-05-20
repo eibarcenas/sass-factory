@@ -126,3 +126,23 @@ def business_action(id: str, action: str):
     now = datetime.now(timezone.utc).isoformat()
     ref.update({"status": new_status, "updatedAt": now})
     return {**business, "id": id, "status": new_status, "updatedAt": now}
+
+# ── Owner endpoints (business owner managing their own catalog) ─────────────
+
+@router.patch("/owner/business")
+def owner_update_business(id_or_slug: str | None = None, patch: dict = {}):
+    """Owner updates their own business tagline/theme.
+    In production: id comes from request.state.user.business_id via RBAC.
+    TODO: add Depends(require_role(Role.OWNER)) and use user.business_id.
+    """
+    db = get_db()
+    # For now accept slug as query param (production: from JWT claims)
+    slug = id_or_slug or "heladeria-el-pinguino"
+    ref = db.collection("businesses").document(slug)
+    if not ref.get().exists:
+        raise HTTPException(status_code=404, detail=f"Business '{slug}' not found")
+    now = datetime.now(timezone.utc).isoformat()
+    allowed = {k: v for k, v in patch.items() if k in ("tagline", "theme", "name")}
+    allowed["updatedAt"] = now
+    ref.update(allowed)
+    return {"updated": True, "slug": slug, **allowed}
