@@ -1,4 +1,4 @@
-import type { Business, Item } from '@catalog-mx/core'
+import type { Business, Item } from '@/types/catalog'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 

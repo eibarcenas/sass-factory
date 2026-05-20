@@ -1,4 +1,4 @@
-import type { Business } from '@catalog-mx/core'
+import type { Business } from '@/types/catalog'
 
 export default function StorefrontHeader({ business }: { business: Business }) {
   const phone = business.whatsapp.replace(/\D/g, '')
