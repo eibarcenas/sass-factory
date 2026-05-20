@@ -1,3 +1,4 @@
+import ImageUpload from './ImageUpload'
 import { useState } from 'react'
 import { useItems, useAddItem, useUpdateItem, useDeleteItem, type Item } from '../../hooks/useItems'
 
@@ -9,7 +10,7 @@ interface RowProps {
 
 function ItemRow({ item, businessId, onSaved }: RowProps) {
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ name: item.name, price: item.price, description: item.description ?? '' })
+  const [form, setForm] = useState({ name: item.name, price: item.price, description: item.description ?? '', image: item.image ?? '' })
   const updateItem = useUpdateItem(businessId)
   const deleteItem = useDeleteItem(businessId)
 
