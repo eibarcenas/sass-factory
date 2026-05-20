@@ -2,12 +2,15 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install uv for fast installs
 RUN pip install uv --quiet
 
 COPY pyproject.toml ./
-RUN uv pip install --system fastapi "uvicorn[standard]" pydantic pydantic-settings \
-    google-cloud-firestore python-dotenv python-multipart
+# Install all dependencies declared in pyproject.toml
+RUN uv pip install --system \
+    fastapi "uvicorn[standard]" pydantic pydantic-settings \
+    google-cloud-firestore google-cloud-storage \
+    firebase-admin cachetools slowapi \
+    python-dotenv python-multipart
 
 COPY . .
 
