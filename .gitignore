@@ -96,3 +96,8 @@ apps/api/service-account.json
 apps/api/*.json
 apps/admin/.env.production
 infrastructure/iterraform/app/environments/*/secrets.auto.tfvars.json
+
+# Terraform
+infrastructure/iterraform/**/.terraform/
+infrastructure/iterraform/**/.terraform.tfstate*
+infrastructure/iterraform/**/terraform.tfstate*
