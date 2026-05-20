@@ -10,45 +10,22 @@ jobs:
     if: ${{ vars.GCP_PROJECT_ID_DEV != '' }}
     permissions:
       contents: read
-      id-token: write   # required for WIF
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
 
-      # WIF — no keys stored in GitHub secrets
       - name: Authenticate to GCP via WIF
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.DEPLOYER_SA_EMAIL }}
 
-      - name: Install pnpm deps
-        run: pnpm install --frozen-lockfile
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
 
-      - name: Deploy storefront
-        env:
-          IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/storefront:${{ github.sha }}
-          SERVICE: catalog-mx-storefront
-          REGION: us-central1
-        run: |
-          docker build -t "$IMAGE" apps/storefront/
-          docker push "$IMAGE"
-          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
-
-      - name: Deploy admin
-        env:
-          IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/admin:${{ github.sha }}
-          SERVICE: catalog-mx-admin
-          REGION: us-central1
-        run: |
-          docker build -t "$IMAGE" apps/admin/
-          docker push "$IMAGE"
-          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Deploy API
         env:
@@ -58,4 +35,42 @@ jobs:
         run: |
           docker build -t "$IMAGE" apps/api/
           docker push "$IMAGE"
-          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --service-account "${{ vars.DEPLOYER_SA_EMAIL }}" \
+            --quiet
+
+      - name: Deploy storefront
+        env:
+          IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/catalog-mx-storefront:${{ github.sha }}
+          SERVICE: catalog-mx-storefront
+          REGION: us-central1
+        run: |
+          docker build -t "$IMAGE" apps/storefront/
+          docker push "$IMAGE"
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --quiet
+
+      - name: Deploy admin
+        env:
+          IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/catalog-mx-admin:${{ github.sha }}
+          SERVICE: catalog-mx-admin
+          REGION: us-central1
+        run: |
+          docker build -t "$IMAGE" apps/admin/
+          docker push "$IMAGE"
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --quiet
+
+      - name: Verify deployments
+        run: |
+          echo "=== Deployed services ==="
+          gcloud run services list \
+            --project=${{ vars.GCP_PROJECT_ID_DEV }} \
+            --region=us-central1 \
+            --format="table(name,status.url)"
