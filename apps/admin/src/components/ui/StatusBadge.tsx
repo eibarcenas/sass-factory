@@ -1,4 +1,4 @@
-import type { BusinessStatus } from '@catalog-mx/core'
+import type { BusinessStatus } from '@/types/catalog'
 
 const CONFIG: Record<BusinessStatus, { label: string; classes: string }> = {
   draft:    { label: 'Draft',    classes: 'bg-slate-100 text-slate-600' },

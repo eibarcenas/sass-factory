@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCreateDemo } from '../../hooks/useBusinesses'
-import type { BusinessType } from '@catalog-mx/core'
+import type { BusinessType } from '@/types/catalog'
 
 const TYPES: { key: BusinessType; label: string; emoji: string }[] = [
   { key: 'heladeria',  label: 'Ice cream', emoji: '🍦' },
