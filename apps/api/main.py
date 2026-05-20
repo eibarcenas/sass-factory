@@ -5,7 +5,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from app.routers import health, businesses, demos, storefront, prospects
+from app.routers import health, businesses, demos, storefront, prospects, images
 from app.shared.middleware.auth_middleware import AuthMiddleware
 
 # Rate limiter — use real client IP from X-Forwarded-For (behind GCP LB)
@@ -44,3 +44,4 @@ app.include_router(businesses.router, prefix="/api/v1")
 app.include_router(demos.router, prefix="/api/v1")
 app.include_router(storefront.router, prefix="/api/v1")
 app.include_router(prospects.router, prefix="/api/v1")
+app.include_router(images.router, prefix="/api/v1")

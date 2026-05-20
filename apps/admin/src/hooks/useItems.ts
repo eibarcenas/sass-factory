@@ -8,6 +8,7 @@ export interface Item {
   price: number
   currency: string
   description?: string
+  image?: string
   visible: boolean
   order: number
 }
