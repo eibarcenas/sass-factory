@@ -1,5 +1,7 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+
 export default function CategoryFilter({
   categories,
   selected,
@@ -11,25 +13,25 @@ export default function CategoryFilter({
 }) {
   if (!categories.length) return null
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-      <button
-        className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-          selected === '' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-        }`}
+    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      <Button
+        size="sm"
+        variant={selected === '' ? 'default' : 'secondary'}
+        className="rounded-full shrink-0"
         onClick={() => onSelect('')}
       >
         All
-      </button>
+      </Button>
       {categories.map((cat) => (
-        <button
+        <Button
           key={cat}
-          className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-            selected === cat ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
+          size="sm"
+          variant={selected === cat ? 'default' : 'secondary'}
+          className="rounded-full shrink-0"
           onClick={() => onSelect(cat)}
         >
           {cat}
-        </button>
+        </Button>
       ))}
     </div>
   )
