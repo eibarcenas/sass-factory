@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Item } from '@catalog-mx/core'
+import type { Item } from '@/types/catalog'
 import { buildWhatsAppUrl } from '@/lib/whatsapp'
 
 export default function ProductModal({
