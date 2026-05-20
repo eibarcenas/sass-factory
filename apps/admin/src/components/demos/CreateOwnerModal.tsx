@@ -14,21 +14,21 @@ interface Props {
 export default function CreateOwnerModal({ businessId, businessName, onClose }: Props) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<{ tempPassword: string } | null>(null)
+  const [done, setDone] = useState(false)
   const [error, setError] = useState('')
 
-  async function create() {
+  const ADMIN_URL = import.meta.env.VITE_ADMIN_URL
+    ?? 'https://catalog-mx-admin-105288105956.us-central1.run.app'
+
+  async function activate() {
     if (!email) return
     setLoading(true)
     setError('')
     try {
-      const res = await api.post<{ tempPassword: string }>('/api/v1/admin/owners', {
-        email,
-        businessId,
-      })
-      setResult(res)
+      await api.post('/api/v1/admin/owners', { email, businessId })
+      setDone(true)
     } catch (err: any) {
-      setError(err.message ?? 'Failed to create owner account')
+      setError(err.message ?? 'Failed to activate')
     } finally {
       setLoading(false)
     }
@@ -39,42 +39,45 @@ export default function CreateOwnerModal({ businessId, businessName, onClose }: 
       <div className="fixed inset-0 bg-black/40" />
       <Card className="relative w-full max-w-sm mx-4" onClick={e => e.stopPropagation()}>
         <CardHeader>
-          <CardTitle className="text-base">Activate owner account</CardTitle>
+          <CardTitle className="text-base">Activate owner</CardTitle>
           <p className="text-sm text-muted-foreground">{businessName}</p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!result ? (
+          {!done ? (
             <>
               <div className="space-y-1">
-                <Label>Owner email</Label>
+                <Label>Owner's Google email</Label>
                 <Input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="owner@business.com"
+                  placeholder="owner@gmail.com"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Must be a Google account they'll use to sign in.
+                </p>
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex gap-2">
-                <Button onClick={create} disabled={loading || !email} className="flex-1">
-                  {loading ? 'Creating...' : 'Create account'}
+                <Button onClick={activate} disabled={loading || !email} className="flex-1">
+                  {loading ? 'Activating...' : 'Activate'}
                 </Button>
                 <Button variant="outline" onClick={onClose}>Cancel</Button>
               </div>
             </>
           ) : (
             <div className="space-y-4">
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm font-semibold text-green-800 mb-2">✅ Account created!</p>
-                <p className="text-xs text-green-700">Send these credentials to the owner:</p>
-                <div className="mt-2 space-y-1">
-                  <p className="text-xs font-mono bg-white rounded px-2 py-1 border">Email: {email}</p>
-                  <p className="text-xs font-mono bg-white rounded px-2 py-1 border">Password: {result.tempPassword}</p>
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg space-y-2">
+                <p className="text-sm font-semibold text-green-800">✅ Owner activated!</p>
+                <p className="text-xs text-green-700">
+                  Send this message to <strong>{email}</strong>:
+                </p>
+                <div className="p-2 bg-white rounded border text-xs font-mono text-gray-700 leading-relaxed">
+                  Your catalog is ready! 🎉{'\n'}
+                  Log in here with your Google account:{'\n'}
+                  {ADMIN_URL}
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                The owner logs in at <strong>localhost:3000</strong> and is redirected to their dashboard automatically.
-              </p>
               <Button onClick={onClose} className="w-full">Done</Button>
             </div>
           )}

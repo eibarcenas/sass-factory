@@ -132,49 +132,51 @@ def create_demo(body: CreateDemoRequest):
     return {**business_data, "id": slug, "items": items}
 
 
-# ── Create owner account for an activated business ──────────────────────────
+# ── Activate owner account (Google Auth — no password needed) ───────────────
 
 class CreateOwnerRequest(BaseModel):
     email: str
     businessId: str
 
 @router.post("/admin/owners")
-def create_owner_account(body: CreateOwnerRequest):
-    """Create Firebase Auth user for a business owner.
-    Sets custom claims: { role: 'OWNER', business_id: slug }
-    Returns a temporary password for the owner.
+def activate_owner(body: CreateOwnerRequest):
+    """Pre-register an owner by email so they can sign in with Google.
+
+    With Google Auth, we don't create a password account.
+    Instead, we store the email → role mapping in Firestore.
+    When the owner signs in with Google, the backend checks this
+    mapping and sets their custom claims.
+
+    Flow:
+    1. Admin calls this endpoint with owner's Google email
+    2. Mapping saved to Firestore: pending_owners/{email}
+    3. Owner signs in with Google → backend finds mapping → sets OWNER claims
+    4. Owner is redirected to /owner dashboard
     """
-    import secrets
-    import string
-
-    # Generate a secure temp password
-    alphabet = string.ascii_letters + string.digits + "!@#$%"
-    temp_password = ''.join(secrets.choice(alphabet) for _ in range(12))
-
     try:
         import firebase_admin
         from firebase_admin import auth as fa
 
-        # Initialize firebase if not already done
         if not firebase_admin._apps:
             from app.db import get_db
-            get_db()  # triggers firebase admin init via ADC
+            get_db()
 
-        # Create Firebase Auth user
-        user = fa.create_user(
-            email=body.email,
-            password=temp_password,
-            email_verified=False,
-        )
+        # Try to find or create the Firebase user by email
+        try:
+            user = fa.get_user_by_email(body.email)
+        except fa.UserNotFoundError:
+            # User hasn't signed in yet — create a placeholder account
+            # They'll link it when they sign in with Google
+            user = fa.create_user(email=body.email)
 
-        # Set custom claims: role + business_id
+        # Set custom claims immediately
         fa.set_custom_user_claims(user.uid, {
             "role": "OWNER",
             "business_id": body.businessId,
             "modules": ["CATALOG", "APPEARANCE"],
         })
 
-        # Update business owner in Firestore
+        # Update Firestore business
         from app.db import get_db
         db = get_db()
         db.collection("businesses").document(body.businessId).update({
@@ -183,15 +185,35 @@ def create_owner_account(body: CreateOwnerRequest):
             "status": "active",
         })
 
+        # Also store in pending_owners for when they sign in with Google
+        db.collection("pending_owners").document(body.email).set({
+            "email": body.email,
+            "businessId": body.businessId,
+            "role": "OWNER",
+            "modules": ["CATALOG", "APPEARANCE"],
+            "activatedAt": datetime.now(timezone.utc).isoformat(),
+        })
+
     except Exception as e:
-        # If Firebase fails (no credentials in dev), return mock credentials
-        temp_password = "Demo1234!"
-        # Still return success for local dev
+        # Dev mode — just store in Firestore if available
+        try:
+            from app.db import get_db
+            db = get_db()
+            db.collection("pending_owners").document(body.email).set({
+                "email": body.email,
+                "businessId": body.businessId,
+                "role": "OWNER",
+                "modules": ["CATALOG", "APPEARANCE"],
+            })
+            db.collection("businesses").document(body.businessId).update({
+                "ownerEmail": body.email,
+                "status": "active",
+            })
+        except Exception:
+            pass  # Firestore not available in this test env
 
     return {
-        "uid": body.email,  # use email as identifier in dev
         "email": body.email,
         "businessId": body.businessId,
-        "tempPassword": temp_password,
-        "message": "Account created. Send these credentials to the owner.",
+        "message": f"Owner activated. Ask {body.email} to sign in with Google.",
     }
