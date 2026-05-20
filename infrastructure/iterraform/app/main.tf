@@ -1,33 +1,17 @@
-# ── IAM — API service account ─────────────────────────────────────────────────
-module "api_sa" {
-  source       = "../modules/iam"
-  project_id   = var.project_id
-  account_id   = "catalog-mx-api"
-  display_name = "catalog.mx API runtime"
-  roles = [
-    "roles/datastore.user",
-    "roles/storage.objectAdmin",
-    "roles/secretmanager.secretAccessor",
-    "roles/firebaseauth.admin",
-    "roles/monitoring.metricWriter",
-  ]
-}
+# SAs are created in setup/ — app/ only references them by email
+# Run setup first: cd setup && ./scripts/apply.sh dev
+# Then get: terraform -chdir=setup output api_runtime_sa_email
 
-# ── Cloud Storage — product images ───────────────────────────────────────────
-# Created BEFORE Cloud Run so services can reference the bucket name
+# ── Cloud Storage — product images (created in setup, referenced here) ────────
+# Import: terraform import module.images_bucket.google_storage_bucket.this catalog-mx-images
 module "images_bucket" {
   source      = "../modules/storage"
   project_id  = var.project_id
   bucket_name = "catalog-mx-images"
   location    = "US-CENTRAL1"
   public_read = true
-  # Static CORS — avoids circular dependency with Cloud Run URLs
-  cors_origins = [
-    "https://${var.project_id}.web.app",
-    "http://localhost:3000",
-    "http://localhost:3010",
-  ]
-  labels = { env = var.project_id }
+  cors_origins = ["*"]
+  labels      = { env = var.project_id }
 }
 
 # ── Cloud Run — API (FastAPI Python) ─────────────────────────────────────────
@@ -37,7 +21,7 @@ module "api" {
   project_id      = var.project_id
   region          = var.region
   image           = var.api_image
-  service_account = module.api_sa.service_account_email
+  service_account = var.api_sa_email
   min_instances   = 0
   max_instances   = 5
   memory          = "512Mi"
@@ -45,28 +29,23 @@ module "api" {
     FIRESTORE_PROJECT_ID = var.project_id
     GCS_BUCKET           = module.images_bucket.bucket_name
     ENVIRONMENT          = "production"
-    # CORS set to allow-all in API — fine since Firebase Auth enforces authn
     CORS_ALLOWED_ORIGINS = "*"
   }
-  secrets = var.anthropic_api_key != "" ? {
-    ANTHROPIC_API_KEY = module.anthropic_secret[0].secret_id
-  } : {}
 }
 
-# ── Cloud Run — Storefront (Next.js, public) ──────────────────────────────────
+# ── Cloud Run — Storefront (Next.js) ──────────────────────────────────────────
 module "storefront" {
   source          = "../modules/cloud_run"
   name            = "catalog-mx-storefront"
   project_id      = var.project_id
   region          = var.region
   image           = var.storefront_image
-  service_account = module.api_sa.service_account_email
+  service_account = var.api_sa_email
   min_instances   = 0
   max_instances   = 10
   memory          = "512Mi"
   env_vars = {
-    # Reference API by known naming pattern — no circular dep
-    API_URL = "https://catalog-mx-api-pfwg4b2n2q-uc.a.run.app"
+    API_URL = module.api.url
   }
 }
 
@@ -77,14 +56,14 @@ module "admin" {
   project_id      = var.project_id
   region          = var.region
   image           = var.admin_image
-  service_account = module.api_sa.service_account_email
+  service_account = var.api_sa_email
   min_instances   = 0
   max_instances   = 5
   memory          = "256Mi"
 }
 
-# ── Firestore — already exists, managed via import ───────────────────────────
-# terraform import module.firestore.google_firestore_database.this \
+# ── Firestore — database + indexes ────────────────────────────────────────────
+# Import: terraform import module.firestore.google_firestore_database.this \
 #   projects/${var.project_id}/databases/(default)
 module "firestore" {
   source      = "../modules/firestore"
@@ -100,7 +79,7 @@ module "anthropic_secret" {
   project_id  = var.project_id
   secret_id   = "anthropic-api-key"
   secret_data = var.anthropic_api_key
-  accessors   = [module.api_sa.member]
+  accessors   = ["serviceAccount:${var.api_sa_email}"]
 }
 
 module "mp_webhook_secret" {
@@ -109,32 +88,28 @@ module "mp_webhook_secret" {
   project_id  = var.project_id
   secret_id   = "mp-webhook-secret"
   secret_data = var.mp_webhook_secret
-  accessors   = [module.api_sa.member]
+  accessors   = ["serviceAccount:${var.api_sa_email}"]
 }
 
+
 # ── Budget ────────────────────────────────────────────────────────────────────
-# module "budget" {
-#   source             = "../modules/budget"
+module "budget" {
+  source             = "../modules/budget"
   project_id         = var.project_id
   billing_account_id = var.billing_account_id
   display_name       = "catalog-mx ${var.project_id} monthly"
   monthly_limit_usd  = 40
   alert_thresholds   = [0.5, 0.8, 1.0]
-  pubsub_topic_id    = google_pubsub_topic.budget_alerts.id
+  pubsub_topic_id    = google_pubsub_topic.budget_alerts.id  # defined in pubsub-managed.tf
 }
 
-# ── Monitoring ────────────────────────────────────────────────────────────────
+# ── Monitoring alert policies ─────────────────────────────────────────────────
 module "monitoring" {
-  source               = "../modules/monitoring"
-  project_id           = var.project_id
-  alert_email          = var.alert_email
-  services             = ["catalog-mx-storefront", "catalog-mx-admin", "catalog-mx-api"]
-  error_rate_threshold = 0.05
-  latency_threshold_ms = 5000
+  source                = "../modules/monitoring"
+  project_id            = var.project_id
+  alert_email           = var.alert_email
+  notification_channels = var.monitoring_channel_id != "" ? [var.monitoring_channel_id] : []
+  services              = ["catalog-mx-storefront", "catalog-mx-admin", "catalog-mx-api"]
+  error_rate_threshold  = 0.05
+  latency_threshold_ms  = 5000
 }
-
-# NOTE: Budget alert is managed via GCP Console (Billing → Budgets & alerts)
-# because google_billing_budget requires Billing Account Administrator role
-# which ADC credentials don't have in typical setups.
-# Go to: https://console.cloud.google.com/billing/01D723-FAA09C-E568B4/budgets
-# Create: $40/month alert at 50%, 80%, 100%

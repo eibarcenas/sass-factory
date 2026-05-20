@@ -2,6 +2,11 @@ variable "project_id" {
   type = string
 }
 
+variable "project_number" {
+  type        = string
+  description = "GCP project number (numeric). Run: gcloud projects describe PROJECT_ID --format='value(projectNumber)'"
+}
+
 variable "region" {
   type    = string
   default = "us-central1"
@@ -18,4 +23,19 @@ variable "alert_email" {
 variable "tf_state_bucket" {
   type    = string
   default = "catalog-mx-tf-state"
+}
+
+variable "images_bucket" {
+  type    = string
+  default = "catalog-mx-images"
+}
+
+variable "github_org" {
+  type        = string
+  description = "GitHub org or username (e.g. eibarcenas)"
+}
+
+variable "github_repo" {
+  type        = string
+  description = "GitHub repo name (e.g. sass-factory)"
 }
