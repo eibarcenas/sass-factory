@@ -95,3 +95,4 @@ apps/api/.env
 apps/api/service-account.json
 apps/api/*.json
 apps/admin/.env.production
+infrastructure/iterraform/app/environments/*/secrets.auto.tfvars.json

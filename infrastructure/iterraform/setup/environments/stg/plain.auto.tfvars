@@ -1,0 +1,5 @@
+project_id         = "catalog-mx-stg"
+region             = "us-central1"
+billing_account_id = "01D723-FAA09C-E568B4"
+alert_email        = "eibarcenas.m@gmail.com"
+tf_state_bucket    = "catalog-mx-tf-state"
