@@ -1,9 +1,12 @@
-# Sprint 0 — Cleanup + SDD (Software Design Document)
+# Sprint 0 — Cleanup + Core Domain Reset
 
-**Branch:** `sprint/0-cleanup-sdd` from `develop`
-**Duration:** 1 week
-**Agents:** `cleanup-agent` + `types-agent` (parallel)
-**Initiatives covered:** Platform Core (E1 partial)
+| Field | Value |
+|---|---|
+| Branch | `sprint/0-cleanup-sdd` from `develop` |
+| Status | ✅ Done |
+| Stack | TypeScript, pnpm monorepo |
+| Initiatives | Platform Core (E1 partial) |
+| Pre-condition | None — this is the base sprint |
 
 ---
 
@@ -491,15 +494,26 @@ Sprint 0 deliverable. Two coordinated changes:
 
 ---
 
+## Tests
+
+### Unit (Vitest)
+- `validateTransition('draft', 'demo')` returns `true`
+- `validateTransition('active', 'draft')` returns `false` (no backwards transitions)
+- `validateTransition('demo', 'sent')` returns `true`
+- All exported types from `@catalog-mx/core` compile without errors
+
+### Static verification
+- `pnpm typecheck` exits 0 across all packages
+- `pnpm lint` exits 0 with zero warnings
+- Zero grep matches for: `AppTopic`, `AppFeature`, `TOPIC_PRESETS`, `FEATURE_LABELS`, `provisioning`, `api/infra`
+
+---
+
 ## Definition of Done
 
-- [ ] All 9 files/folders listed under "What to DELETE" are confirmed absent from the repository
-- [ ] `pnpm typecheck` exits with code 0 across all packages
-- [ ] `pnpm lint` exits with code 0 with no warnings
-- [ ] `packages/core` exports `Business`, `BusinessStatus`, `BusinessType`, `BusinessTheme`, `validateTransition`, `VALID_TRANSITIONS`, `Item`, `Category`, `Click`, `Prospect`, `ProspectCreateInput`, `ProspectStatus`
-- [ ] Zero grep matches for: `AppTopic`, `AppFeature`, `TOPIC_PRESETS`, `FEATURE_LABELS`, `AppConfig`, `provisioning`, `api/infra`
-- [ ] `validateTransition('demo', 'sent')` does not throw
-- [ ] `validateTransition('active', 'demo')` throws with descriptive message
-- [ ] MR opened to `develop` with completed checklist
-- [ ] Erick has reviewed and approved the MR
-- [ ] MR is merged to `develop` using squash or merge commit (no rebase of Sprint 0 work)
+- [ ] All stale files deleted from repository
+- [ ] `packages/core` exports `Business`, `BusinessStatus`, `BusinessType`, `BusinessTheme`, `validateTransition`, `VALID_TRANSITIONS`, `Item`, `Category`, `Click`, `Prospect`
+- [ ] `validateTransition('demo', 'sent')` returns `true`
+- [ ] `validateTransition('active', 'demo')` returns `false`
+- [ ] `pnpm typecheck` passes with zero errors
+- [ ] PR opened to `develop` and merged
