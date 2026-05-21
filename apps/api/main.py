@@ -22,18 +22,14 @@ app = FastAPI(title="catalog.mx API", version="0.1.0", docs_url="/docs")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS — explicit origins, never wildcard when allow_credentials=True
-CORS_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:3010"
-).split(",")
-
+# CORS — allow all origins since security is via Firebase Bearer tokens.
+# allow_credentials must be False when allow_origins=["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 # Auth middleware — Firebase token verification + TTL cache
