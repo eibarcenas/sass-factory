@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react'
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+import { api } from '@/lib/api'
 
 interface Props {
   currentUrl?: string
@@ -39,20 +38,11 @@ export default function ImageUpload({ currentUrl, onUploaded, folder = 'products
       form.append('file', file)
       form.append('folder', folder)
 
-      const res = await fetch(`${API_URL}/api/v1/images/upload`, {
-        method: 'POST',
-        body: form,
-      })
-      const data = await res.json()
-      if (data.url) {
-        onUploaded(data.url)
-        setPreview(data.url)
-        setUploaded(true)
-        // Clear success message after 3s
-        setTimeout(() => setUploaded(false), 3000)
-      } else {
-        setError('Upload failed — no URL returned.')
-      }
+      const data = await api.upload<{ url: string }>('/api/v1/images/upload', form)
+      onUploaded(data.url)
+      setPreview(data.url)
+      setUploaded(true)
+      setTimeout(() => setUploaded(false), 3000)
     } catch {
       setError('Upload failed. Try again.')
     } finally {
