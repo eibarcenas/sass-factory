@@ -1,13 +1,38 @@
-name: Deploy — Dev
+name: Deploy — Dev (ei-catalog-dev)
 
 on:
   push:
     branches: [develop]
 
+env:
+  PROJECT: ei-catalog-dev
+  REGION: us-central1
+  AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/ei-catalog
+
 jobs:
-  deploy:
+  ci:
     runs-on: ubuntu-latest
-    if: ${{ vars.GCP_PROJECT_ID_DEV != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - uses: astral-sh/setup-uv@v5
+      - name: Install Python deps
+        run: |
+          cd apps/api && uv venv --python 3.13
+          uv pip install fastapi "uvicorn[standard]" pydantic pydantic-settings \
+            google-cloud-firestore google-cloud-storage firebase-admin \
+            cachetools slowapi python-dotenv python-multipart pytest httpx
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F @catalog-mx/core typecheck
+      - run: pnpm -F @catalog-mx/core test
+      - run: cd apps/api && DEV_USER_EMAIL=dev@test.com ENVIRONMENT=local .venv/bin/pytest -q
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    if: ${{ vars.WIF_PROVIDER_DEV != '' }}
     permissions:
       contents: read
       id-token: write
@@ -15,73 +40,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Authenticate to GCP via WIF
+      - name: Auth GCP — ei-catalog-dev
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
-          service_account: ${{ vars.DEPLOYER_SA_EMAIL }}
+          workload_identity_provider: ${{ vars.WIF_PROVIDER_DEV }}
+          service_account: ${{ vars.DEPLOYER_SA_DEV }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      - uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Build and deploy API
-        env:
-          IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/catalog-mx-api:${{ github.sha }}
-          SERVICE: catalog-mx-api
-          REGION: us-central1
-          PROJECT: ${{ vars.GCP_PROJECT_ID_DEV }}
+      - name: Deploy API
         run: |
+          IMAGE="${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
           docker build -t "$IMAGE" apps/api/
           docker push "$IMAGE"
-          gcloud run deploy "$SERVICE" \
-            --service-account "${{ vars.RUNTIME_SA_EMAIL }}" \
-            --image "$IMAGE" \
-            --region "$REGION" \
-            --project "$PROJECT" \
-            --update-env-vars="FIRESTORE_PROJECT_ID=$PROJECT,GCS_BUCKET=catalog-mx-images,ENVIRONMENT=production" \
+          gcloud run deploy catalog-mx-api \
+            --image "$IMAGE" --region "${{ env.REGION }}" \
+            --project "${{ env.PROJECT }}" \
+            --service-account "${{ vars.RUNTIME_SA_DEV }}" \
+            --update-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev,ENVIRONMENT=development" \
             --quiet
 
-      - name: Build and deploy storefront
-        env:
-          IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/catalog-mx-storefront:${{ github.sha }}
-          SERVICE: catalog-mx-storefront
-          REGION: us-central1
-          PROJECT: ${{ vars.GCP_PROJECT_ID_DEV }}
-          API_URL: https://catalog-mx-api-pfwg4b2n2q-uc.a.run.app
+      - name: Deploy Storefront
         run: |
+          IMAGE="${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
           docker build -t "$IMAGE" apps/storefront/
           docker push "$IMAGE"
-          gcloud run deploy "$SERVICE" \
-            --service-account "${{ vars.RUNTIME_SA_EMAIL }}" \
-            --image "$IMAGE" \
-            --region "$REGION" \
-            --project "$PROJECT" \
-            --update-env-vars="API_URL=$API_URL" \
+          gcloud run deploy catalog-mx-storefront \
+            --image "$IMAGE" --region "${{ env.REGION }}" \
+            --project "${{ env.PROJECT }}" \
+            --service-account "${{ vars.RUNTIME_SA_DEV }}" \
             --quiet
 
-      - name: Build and deploy admin
-        env:
-          IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/catalog-mx-admin:${{ github.sha }}
-          SERVICE: catalog-mx-admin
-          REGION: us-central1
-          PROJECT: ${{ vars.GCP_PROJECT_ID_DEV }}
+      - name: Deploy Admin
         run: |
+          IMAGE="${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
           docker build -t "$IMAGE" apps/admin/
           docker push "$IMAGE"
-          gcloud run deploy "$SERVICE" \
-            --service-account "${{ vars.RUNTIME_SA_EMAIL }}" \
-            --image "$IMAGE" \
-            --region "$REGION" \
-            --project "$PROJECT" \
+          gcloud run deploy catalog-mx-admin \
+            --image "$IMAGE" --region "${{ env.REGION }}" \
+            --project "${{ env.PROJECT }}" \
+            --service-account "${{ vars.RUNTIME_SA_DEV }}" \
             --quiet
-
-      - name: Verify
-        env:
-          REGION: us-central1
-          PROJECT: ${{ vars.GCP_PROJECT_ID_DEV }}
-        run: |
-          gcloud run services list --project="$PROJECT" --region="$REGION" \
-            --format="table(name,status.url)"

@@ -1,2 +1,2 @@
-bucket = "catalog-mx-tf-state"
+bucket = "ei-catalog-tf-state-stg"
 prefix = "setup/stg"

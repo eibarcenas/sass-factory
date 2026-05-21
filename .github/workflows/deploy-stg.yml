@@ -1,54 +1,49 @@
-name: Deploy — Staging
+name: Deploy — Stg (ei-catalog-stg)
 
 on:
   push:
     branches: ['release/**']
 
+env:
+  PROJECT: ei-catalog-stg
+  REGION: us-central1
+  AR_URL: us-central1-docker.pkg.dev/ei-catalog-stg/ei-catalog
+
 jobs:
-  build-test-deploy:
+  deploy:
     runs-on: ubuntu-latest
+    if: ${{ vars.WIF_PROVIDER_STG != '' }}
     permissions:
       contents: read
       id-token: write
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: pnpm }
-      - name: Install
-        run: pnpm install --frozen-lockfile
-      - name: Tests
-        run: |
-          pnpm -F @catalog-mx/core typecheck
-          pnpm -F @catalog-mx/core test
-      - name: Auth GCP
+
+      - name: Auth GCP — ei-catalog-stg
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SA_EMAIL_STG }}
-      - name: Build and deploy storefront
-        env:
-          IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_STG }}/storefront:${{ github.sha }}
-          SERVICE: catalog-mx-storefront-stg
-          REGION: us-central1
+          workload_identity_provider: ${{ vars.WIF_PROVIDER_STG }}
+          service_account: ${{ vars.DEPLOYER_SA_STG }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Deploy all services
         run: |
-          docker build -t "$IMAGE" apps/storefront/
-          docker push "$IMAGE"
-          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
-      - name: Build and deploy admin
-        env:
-          IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_STG }}/admin:${{ github.sha }}
-          SERVICE: catalog-mx-admin-stg
-          REGION: us-central1
-        run: |
-          docker build -t "$IMAGE" apps/admin/
-          docker push "$IMAGE"
-          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" --quiet
+          for svc in catalog-mx-api catalog-mx-storefront catalog-mx-admin; do
+            dir=$(echo $svc | sed 's/catalog-mx-/apps\//')
+            IMAGE="${{ env.AR_URL }}/${svc}:${{ github.sha }}"
+            docker build -t "$IMAGE" "$dir/"
+            docker push "$IMAGE"
+            gcloud run deploy "$svc" --image "$IMAGE" \
+              --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
+              --service-account "${{ vars.RUNTIME_SA_STG }}" --quiet
+          done
+
       - name: Smoke test
-        env:
-          REGION: us-central1
-          SERVICE: catalog-mx-storefront-stg
         run: |
-          URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')
-          curl -f "${URL}/api/health"
+          API=$(gcloud run services describe catalog-mx-api \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
+            --format='value(status.url)')
+          curl -f "${API}/health"
