@@ -24,10 +24,11 @@ async def upload_image(
         raise HTTPException(status_code=400, detail=f"File too large ({len(content)//1024}KB). Max 2MB.")
 
     # Validate magic bytes (not just content-type header)
-    if content[:2] not in (b'\xff\xd8', b'\x89P') and content[:4] != b'RIFF':
-        # JPEG: FF D8, PNG: 89 50 4E 47, WebP: RIFF
-        if not (content[:4] == b'\x89PNG' or content[:2] == b'\xff\xd8' or content[8:12] == b'WEBP'):
-            pass  # be lenient in dev, strict in prod
+    is_jpeg = content[:2] == b'\xff\xd8'
+    is_png  = content[:4] == b'\x89PNG'
+    is_webp = len(content) >= 12 and content[:4] == b'RIFF' and content[8:12] == b'WEBP'
+    if not (is_jpeg or is_png or is_webp):
+        raise HTTPException(status_code=400, detail="File content does not match declared type.")
 
     ext = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}.get(file.content_type, "jpg")
     filename = f"{folder}/{uuid.uuid4().hex}.{ext}"
