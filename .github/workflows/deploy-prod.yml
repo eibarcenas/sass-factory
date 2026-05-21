@@ -1,67 +1,58 @@
-name: Deploy — Production
+name: Deploy — Prod (ei-catalog-prod)
 
 on:
   push:
     branches: [production]
 
 jobs:
-  deploy-prod:
+  deploy:
     runs-on: ubuntu-latest
-    environment: production  # requires manual approval in GitHub
+    environment: production   # requires manual approval in GitHub
+    if: ${{ vars.WIF_PROVIDER_PROD != '' }}
     permissions:
       contents: read
       id-token: write
 
+    env:
+      PROJECT: ei-catalog-prod
+      REGION: us-central1
+      AR_URL: us-central1-docker.pkg.dev/ei-catalog-prod/ei-catalog
+
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: pnpm }
-      - name: Install + Test
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm -F @catalog-mx/core typecheck
-          pnpm -F @catalog-mx/core test
-      - name: Auth GCP
+
+      - name: Auth GCP — ei-catalog-prod
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER_PROD }}
-          service_account: ${{ secrets.GCP_SA_EMAIL_PROD }}
-      - name: Build images
-        env:
-          SHA: ${{ github.sha }}
-          PROJECT: ${{ secrets.GCP_PROJECT_ID_PROD }}
+          workload_identity_provider: ${{ vars.WIF_PROVIDER_PROD }}
+          service_account: ${{ vars.DEPLOYER_SA_PROD }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Deploy all services (canary 10% → 100%)
         run: |
-          for svc in storefront admin ops; do
-            IMAGE="gcr.io/${PROJECT}/${svc}:${SHA}"
-            docker build -t "$IMAGE" "apps/${svc}/"
+          for svc in catalog-mx-api catalog-mx-storefront catalog-mx-admin; do
+            dir=$(echo $svc | sed 's/catalog-mx-/apps\//')
+            IMAGE="${{ env.AR_URL }}/${svc}:${{ github.sha }}"
+            docker build -t "$IMAGE" "$dir/"
             docker push "$IMAGE"
+            # Deploy as canary revision
+            gcloud run deploy "$svc" --image "$IMAGE" \
+              --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
+              --service-account "${{ vars.RUNTIME_SA_PROD }}" \
+              --tag canary --no-traffic --quiet
+            # Send 10% traffic to canary
+            gcloud run services update-traffic "$svc" \
+              --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
+              --to-tags canary=10 --quiet
           done
-      - name: Canary deploy storefront (10%)
-        env:
-          IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID_PROD }}/storefront:${{ github.sha }}
-          REGION: us-central1
+
+      - name: Wait 5 minutes then promote to 100%
         run: |
-          gcloud run deploy catalog-mx-storefront \
-            --image "$IMAGE" --region "$REGION" \
-            --tag canary --no-traffic --quiet
-          gcloud run services update-traffic catalog-mx-storefront \
-            --region "$REGION" \
-            --to-tags canary=10 --quiet
-      - name: Wait 10 minutes + check error rate
-        run: sleep 600
-      - name: Promote to 100%
-        env:
-          REGION: us-central1
-        run: |
-          gcloud run services update-traffic catalog-mx-storefront \
-            --region "$REGION" --to-latest --quiet
-          for svc in admin ops; do
-            IMAGE="gcr.io/${{ secrets.GCP_PROJECT_ID_PROD }}/${svc}:${{ github.sha }}"
-            gcloud run deploy "catalog-mx-${svc}" \
-              --image "$IMAGE" --region "$REGION" --quiet
+          sleep 300
+          for svc in catalog-mx-api catalog-mx-storefront catalog-mx-admin; do
+            gcloud run services update-traffic "$svc" \
+              --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
+              --to-latest --quiet
           done
-      - name: Tag release
-        env:
-          SHA: ${{ github.sha }}
-        run: git tag "release-${SHA:0:8}" && git push origin --tags
