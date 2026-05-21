@@ -13,21 +13,25 @@ def _get_firebase_app():
     if firebase_admin._apps:
         return firebase_admin.get_app()
 
-    svc_account = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
-    project_id  = os.getenv("FIRESTORE_PROJECT_ID", "catalog-mx-dev")
+    # FIREBASE_AUTH_PROJECT_ID = project that issued the tokens (Firebase Auth)
+    # Separate from FIRESTORE_PROJECT_ID (where data lives)
+    # In dev: tokens from catalog-mx-dev, data in ei-catalog-dev
+    auth_project = os.getenv(
+        "FIREBASE_AUTH_PROJECT_ID",
+        os.getenv("FIRESTORE_PROJECT_ID", "catalog-mx-dev")
+    )
 
+    svc_account = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
     if svc_account and svc_account.strip():
         import json
         cred = credentials.Certificate(json.loads(svc_account))
         return firebase_admin.initialize_app(cred)
     else:
-        # Application Default Credentials (Cloud Run Workload Identity)
-        return firebase_admin.initialize_app(options={"projectId": project_id})
+        return firebase_admin.initialize_app(options={"projectId": auth_project})
 
 
 def verify_firebase_token(token: str) -> FirebaseClaims:
     app = _get_firebase_app()
-    # Skip revocation check when using the Firebase emulator
     check_revoked = os.getenv("FIREBASE_AUTH_EMULATOR_HOST") is None
     try:
         decoded = firebase_auth.verify_id_token(token, app=app, check_revoked=check_revoked)

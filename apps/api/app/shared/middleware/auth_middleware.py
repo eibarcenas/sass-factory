@@ -40,6 +40,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # 1. Skip public paths (exact match + prefix match)
         path = request.url.path
+        # Skip CORS preflight — browser sends OPTIONS before the real request
+        if request.method == "OPTIONS":
+            return await call_next(request)
         if path in SKIP_PATHS or any(path.startswith(p) for p in PUBLIC_PREFIXES):
             return await call_next(request)
 
