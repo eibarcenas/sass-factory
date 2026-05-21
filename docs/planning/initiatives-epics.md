@@ -970,7 +970,7 @@ Feature: Admin notification on prospect submission
 
 ### US-032: Admin contacts, accepts, or rejects a prospect from the Prospects page
 
-**Epic:** E16 | **Sprint:** 13 | **File:** [stories/US-032-prospect-contact-actions.md](../stories/US-032-prospect-contact-actions.md)
+**Epic:** E16 | **Sprint:** 13 | **File:** [sprints/sprint-13/US-032-prospect-contact-actions.md](./sprints/sprint-13/US-032-prospect-contact-actions.md)
 
 > Prospect CRM actions — Contact / Accept / Reject buttons with state machine. Accepting auto-advances business pipeline. ST-165–ST-170.
 
@@ -978,7 +978,7 @@ Feature: Admin notification on prospect submission
 
 ### US-033: Demo card shows prospect activity and links bidirectionally to Prospects
 
-**Epic:** E16 | **Sprint:** 13 | **File:** [stories/US-033-demo-prospect-link.md](../stories/US-033-demo-prospect-link.md)
+**Epic:** E16 | **Sprint:** 13 | **File:** [sprints/sprint-13/US-033-demo-prospect-link.md](./sprints/sprint-13/US-033-demo-prospect-link.md)
 
 > Demo card shows `prospectCount` badge; clicking navigates to filtered Prospects page. Prospect row links back to demo card. ST-171–ST-174.
 
@@ -986,7 +986,7 @@ Feature: Admin notification on prospect submission
 
 ### US-034: Prospect vs. client distinction — active businesses are clients, not leads
 
-**Epic:** E16 | **Sprint:** 13 | **File:** [stories/US-034-prospect-vs-client.md](../stories/US-034-prospect-vs-client.md)
+**Epic:** E16 | **Sprint:** 13 | **File:** [sprints/sprint-13/US-034-prospect-vs-client.md](./sprints/sprint-13/US-034-prospect-vs-client.md)
 
 > Sidebar splits into PIPELINE and CLIENTS sections. Active businesses move out of pipeline. New `/admin/clients` page. ST-175–ST-178.
 
@@ -994,7 +994,7 @@ Feature: Admin notification on prospect submission
 
 ### US-035: Dashboard quick-create button and pipeline action labels
 
-**Epic:** E6 | **Sprint:** 13 | **File:** [stories/US-035-dashboard-ux.md](../stories/US-035-dashboard-ux.md)
+**Epic:** E6 | **Sprint:** 13 | **File:** [sprints/sprint-13/US-035-dashboard-ux.md](./sprints/sprint-13/US-035-dashboard-ux.md)
 
 > `+ New demo` moved to page header top-right. "Mark as sent" renamed to "Sent to prospect". All 6 pipeline actions get tooltip copy. ST-179–ST-181.
 
@@ -1540,7 +1540,7 @@ Feature: Image upload size and format validation
 
 ### US-036: Customer searches for products by name in the storefront
 
-**Epic:** E17 | **Sprint:** 13 | **File:** [stories/US-036-storefront-search.md](../stories/US-036-storefront-search.md)
+**Epic:** E17 | **Sprint:** 13 | **File:** [sprints/sprint-13/US-036-storefront-search.md](./sprints/sprint-13/US-036-storefront-search.md)
 
 > Client-side product search by name and category. No API call. Composes with existing category filter. Empty-state + clear action. ST-182–ST-186.
 
@@ -1548,7 +1548,7 @@ Feature: Image upload size and format validation
 
 ### US-037: Customer saves products to a wishlist and orders all via WhatsApp
 
-**Epic:** E17 | **Sprint:** 13 | **File:** [stories/US-037-storefront-wishlist.md](../stories/US-037-storefront-wishlist.md)
+**Epic:** E17 | **Sprint:** 13 | **File:** [sprints/sprint-13/US-037-storefront-wishlist.md](./sprints/sprint-13/US-037-storefront-wishlist.md)
 
 > Wishlist with localStorage persistence keyed by slug. Quantity controls, total price, WhatsApp bulk-order message, and ProspectForm notes pre-fill. ST-187–ST-192.
 

@@ -22,12 +22,12 @@ Also ships two storefront UX features: client-side product search and a wishlist
 
 | Story | File | Priority | Effort |
 |---|---|---|---|
-| US-032 — Prospect contact/accept/reject actions | [US-032](../stories/US-032-prospect-contact-actions.md) | P1 Critical | M |
-| US-033 — Demo-prospect bidirectional link | [US-033](../stories/US-033-demo-prospect-link.md) | P1 Critical | S |
-| US-034 — Prospect vs. client labeling | [US-034](../stories/US-034-prospect-vs-client.md) | P2 High | S |
-| US-035 — Dashboard UX + action label copy | [US-035](../stories/US-035-dashboard-ux.md) | P3 Medium | XS |
-| US-036 — Storefront search bar | [US-036](../stories/US-036-storefront-search.md) | P2 High | S |
-| US-037 — Storefront wishlist/cart | [US-037](../stories/US-037-storefront-wishlist.md) | P3 Medium | M |
+| US-032 — Prospect contact/accept/reject actions | [US-032](./US-032-prospect-contact-actions.md) | P1 Critical | M |
+| US-033 — Demo-prospect bidirectional link | [US-033](./US-033-demo-prospect-link.md) | P1 Critical | S |
+| US-034 — Prospect vs. client labeling | [US-034](./US-034-prospect-vs-client.md) | P2 High | S |
+| US-035 — Dashboard UX + action label copy | [US-035](./US-035-dashboard-ux.md) | P3 Medium | XS |
+| US-036 — Storefront search bar | [US-036](./US-036-storefront-search.md) | P2 High | S |
+| US-037 — Storefront wishlist/cart | [US-037](./US-037-storefront-wishlist.md) | P3 Medium | M |
 
 ---
 
