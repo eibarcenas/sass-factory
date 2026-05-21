@@ -1,5 +1,5 @@
 .PHONY: help dev dev-admin dev-storefront dev-api \
-        test typecheck lint \
+        test test-unit test-api test-e2e typecheck lint \
         install \
         deploy-admin deploy-storefront deploy-api deploy-all \
         up down status logs clean
@@ -47,9 +47,17 @@ dev-api: ## Start only FastAPI (localhost:8000, Python 3.13)
 
 ## ─── Quality ─────────────────────────────────────────────────────────────────
 
-test: ## Run all tests
+test: test-unit test-api ## Run all unit + integration tests
+
+test-unit: ## Run Vitest unit tests (core + admin)
 	pnpm -F @catalog-mx/core test
-	cd apps/api && .venv/bin/pytest -q
+	pnpm -F admin test
+
+test-api: ## Run FastAPI pytest suite
+	cd apps/api && DEV_USER_EMAIL=dev@test.local ENVIRONMENT=local .venv/bin/pytest -q
+
+test-e2e: ## Run Playwright E2E tests (requires services running)
+	pnpm exec playwright test
 
 typecheck: ## Type-check all JS/TS packages
 	pnpm -F @catalog-mx/core typecheck
