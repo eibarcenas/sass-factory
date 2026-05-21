@@ -8,6 +8,7 @@ env:
   PROJECT: ei-catalog-dev
   REGION: us-central1
   AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/catalog-mx
+  ENV_SUFFIX: dev
 
 jobs:
   ci:
@@ -47,39 +48,58 @@ jobs:
           service_account: ${{ vars.DEPLOYER_SA_DEV }}
 
       - uses: google-github-actions/setup-gcloud@v2
-
       - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Deploy API
+      - name: Deploy API (catalog-mx-api-dev)
         run: |
           IMAGE="${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
           docker build -t "$IMAGE" apps/api/
           docker push "$IMAGE"
-          gcloud run deploy catalog-mx-api \
-            --image "$IMAGE" --region "${{ env.REGION }}" \
+          gcloud run deploy catalog-mx-api-${{ env.ENV_SUFFIX }} \
+            --image "$IMAGE" \
+            --region "${{ env.REGION }}" \
             --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_DEV }}" \
             --update-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev,ENVIRONMENT=development" \
+            --allow-unauthenticated \
             --quiet
 
-      - name: Deploy Storefront
+      - name: Deploy Storefront (catalog-mx-storefront-dev)
         run: |
+          API_URL=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
+            --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
           docker build -t "$IMAGE" apps/storefront/
           docker push "$IMAGE"
-          gcloud run deploy catalog-mx-storefront \
-            --image "$IMAGE" --region "${{ env.REGION }}" \
+          gcloud run deploy catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
+            --image "$IMAGE" \
+            --region "${{ env.REGION }}" \
             --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_DEV }}" \
+            --update-env-vars="API_URL=${API_URL}" \
+            --allow-unauthenticated \
             --quiet
 
-      - name: Deploy Admin
+      - name: Deploy Admin (catalog-mx-admin-dev)
         run: |
           IMAGE="${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
           docker build -t "$IMAGE" apps/admin/
           docker push "$IMAGE"
-          gcloud run deploy catalog-mx-admin \
-            --image "$IMAGE" --region "${{ env.REGION }}" \
+          gcloud run deploy catalog-mx-admin-${{ env.ENV_SUFFIX }} \
+            --image "$IMAGE" \
+            --region "${{ env.REGION }}" \
             --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_DEV }}" \
+            --allow-unauthenticated \
             --quiet
+
+      - name: Print URLs
+        run: |
+          echo "━━━ ei-catalog-dev URLs ━━━"
+          for svc in catalog-mx-api-dev catalog-mx-storefront-dev catalog-mx-admin-dev; do
+            URL=$(gcloud run services describe $svc \
+              --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
+              --format='value(status.url)' 2>/dev/null || echo "not deployed")
+            echo "  $svc: $URL"
+          done

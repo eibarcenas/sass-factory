@@ -7,7 +7,8 @@ on:
 env:
   PROJECT: ei-catalog-stg
   REGION: us-central1
-  AR_URL: us-central1-docker.pkg.dev/ei-catalog-stg/ei-catalog
+  AR_URL: us-central1-docker.pkg.dev/ei-catalog-stg/catalog-mx
+  ENV_SUFFIX: stg
 
 jobs:
   deploy:
@@ -29,21 +30,42 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
       - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Deploy all services
+      - name: Deploy API (catalog-mx-api-stg)
         run: |
-          for svc in catalog-mx-api catalog-mx-storefront catalog-mx-admin; do
-            dir=$(echo $svc | sed 's/catalog-mx-/apps\//')
-            IMAGE="${{ env.AR_URL }}/${svc}:${{ github.sha }}"
-            docker build -t "$IMAGE" "$dir/"
-            docker push "$IMAGE"
-            gcloud run deploy "$svc" --image "$IMAGE" \
-              --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
-              --service-account "${{ vars.RUNTIME_SA_STG }}" --quiet
-          done
+          IMAGE="${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
+          docker build -t "$IMAGE" apps/api/
+          docker push "$IMAGE"
+          gcloud run deploy catalog-mx-api-${{ env.ENV_SUFFIX }} \
+            --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
+            --service-account "${{ vars.RUNTIME_SA_STG }}" \
+            --update-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-stg,ENVIRONMENT=staging" \
+            --allow-unauthenticated --quiet
+
+      - name: Deploy Storefront (catalog-mx-storefront-stg)
+        run: |
+          API_URL=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
+          IMAGE="${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
+          docker build -t "$IMAGE" apps/storefront/
+          docker push "$IMAGE"
+          gcloud run deploy catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
+            --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
+            --service-account "${{ vars.RUNTIME_SA_STG }}" \
+            --update-env-vars="API_URL=${API_URL}" \
+            --allow-unauthenticated --quiet
+
+      - name: Deploy Admin (catalog-mx-admin-stg)
+        run: |
+          IMAGE="${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
+          docker build -t "$IMAGE" apps/admin/
+          docker push "$IMAGE"
+          gcloud run deploy catalog-mx-admin-${{ env.ENV_SUFFIX }} \
+            --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
+            --service-account "${{ vars.RUNTIME_SA_STG }}" \
+            --allow-unauthenticated --quiet
 
       - name: Smoke test
         run: |
-          API=$(gcloud run services describe catalog-mx-api \
-            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
-            --format='value(status.url)')
-          curl -f "${API}/health"
+          API=$(gcloud run services describe catalog-mx-api-stg \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
+          curl -f "${API}/health" && echo "✅ Smoke test passed"
