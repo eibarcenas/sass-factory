@@ -27,8 +27,16 @@ export default function CreateDemoForm({ onSuccess }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name || !form.type || !form.whatsapp || !form.city) {
-      setError('Name, type, WhatsApp and city are required')
+    const nameOk = form.name.trim().length >= 2
+    const phoneOk = /^[0-9+]{7,15}$/.test(form.whatsapp.trim())
+    const cityOk = form.city.trim().length >= 2
+    if (!form.type || !nameOk || !phoneOk || !cityOk) {
+      const msgs = []
+      if (!form.type) msgs.push('Select a business type')
+      if (!nameOk) msgs.push('Name must be at least 2 characters')
+      if (!phoneOk) msgs.push('WhatsApp must be a valid phone number (7-15 digits)')
+      if (!cityOk) msgs.push('City must be at least 2 characters')
+      setError(msgs.join(' · '))
       return
     }
     setError('')
