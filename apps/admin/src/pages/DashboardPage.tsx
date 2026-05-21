@@ -5,6 +5,7 @@ import { useProspects } from '../hooks/useProspects'
 import CreateDemoForm from '../components/demos/CreateDemoForm'
 import DemoList from '../components/demos/DemoList'
 import ProspectsPage from './ProspectsPage'
+import { BusinessStatus } from '../types/catalog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,11 +21,11 @@ function Sidebar({ active, onNavigate }: { active: Page; onNavigate: (p: Page) =
   const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
 
   const pipeline = [
-    { label: 'Draft', status: 'draft' },
-    { label: 'Demo', status: 'demo' },
-    { label: 'Sent', status: 'sent' },
-    { label: 'Accepted', status: 'accepted' },
-    { label: 'Active', status: 'active' },
+    { label: 'Draft',    status: BusinessStatus.Draft },
+    { label: 'Demo',     status: BusinessStatus.Demo },
+    { label: 'Sent',     status: BusinessStatus.Sent },
+    { label: 'Accepted', status: BusinessStatus.Accepted },
+    { label: 'Active',   status: BusinessStatus.Active },
   ]
 
   const nav: { key: Page; icon: string; label: string; badge?: number }[] = [
@@ -86,8 +87,8 @@ export default function DashboardPage() {
   const { data } = useBusinesses()
   const { data: prospectData } = useProspects()
 
-  const activeCount = data?.businesses.filter(b => b.status === 'active').length ?? 0
-  const demoCount = data?.businesses.filter(b => ['demo','sent','accepted'].includes(b.status)).length ?? 0
+  const activeCount = data?.businesses.filter(b => b.status === BusinessStatus.Active).length ?? 0
+  const demoCount = data?.businesses.filter(b => [BusinessStatus.Demo, BusinessStatus.Sent, BusinessStatus.Accepted].includes(b.status)).length ?? 0
   const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
 
   return (

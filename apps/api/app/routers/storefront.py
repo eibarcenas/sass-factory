@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.db import get_db
+from app.models.enums import BusinessStatus
 
 router = APIRouter(tags=["storefront"])
 
@@ -14,7 +15,7 @@ def get_storefront(slug: str):
     business = doc.to_dict()
     business["id"] = doc.id
 
-    if business.get("status") == "suspended":
+    if business.get("status") == BusinessStatus.SUSPENDED:
         raise HTTPException(status_code=410, detail="This business is currently suspended")
 
     # Fetch items sorted by order, filter visible in Python (no composite index needed)

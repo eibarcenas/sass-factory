@@ -39,6 +39,7 @@ export default function ImageUpload({ currentUrl, onUploaded, folder = 'products
       form.append('folder', folder)
 
       const data = await api.upload<{ url: string }>('/api/v1/images/upload', form)
+      if (!data.url) throw new Error('No URL in upload response')
       onUploaded(data.url)
       setPreview(data.url)
       setUploaded(true)

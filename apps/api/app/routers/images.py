@@ -41,7 +41,9 @@ async def upload_image(
         public_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{filename}"
         return {"url": public_url, "filename": filename}
     except Exception as e:
-        # Dev mode: return a placeholder
+        if os.getenv("GCS_DEV_FALLBACK", "false") != "true":
+            raise HTTPException(status_code=500, detail="Image upload failed")
+        # Local dev: GCS not configured, return a placeholder so UI is testable
         return {
             "url": f"https://via.placeholder.com/400x400?text={folder}",
             "filename": filename,
