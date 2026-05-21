@@ -84,6 +84,13 @@ function ItemRow({ item, businessId, onSaved }: RowProps) {
 
   return (
     <div className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${item.visible ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
+      {item.image ? (
+        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+      ) : (
+        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-lg">
+          📦
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
         {item.description && (
