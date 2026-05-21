@@ -8,6 +8,14 @@ from app.shared.auth.firebase_verifier import verify_firebase_token
 from app.shared.auth.jwt_models import UserContext, Role, INTERNAL_SERVICE_USER, FirebaseClaims
 
 SKIP_PATHS = {"/health", "/docs", "/openapi.json", "/redoc"}
+
+# Public path prefixes — no auth required (storefront, prospect form)
+PUBLIC_PREFIXES = (
+    "/api/v1/storefront/",   # public catalog pages
+    "/api/v1/prospects",     # prospect form submission (public)
+    "/health",
+    "/auth/",
+)
 CACHE_TTL  = int(os.getenv("AUTH_CACHE_TTL_SECONDS", "60"))
 
 # TTLCache is not coroutine-safe — use asyncio.Lock for writes
@@ -30,8 +38,9 @@ def _claims_to_user(claims: FirebaseClaims) -> UserContext:
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # 1. Skip public paths
-        if request.url.path in SKIP_PATHS:
+        # 1. Skip public paths (exact match + prefix match)
+        path = request.url.path
+        if path in SKIP_PATHS or any(path.startswith(p) for p in PUBLIC_PREFIXES):
             return await call_next(request)
 
         # 2. Local dev bypass — never set in staging/prod
