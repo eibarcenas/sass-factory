@@ -27,50 +27,58 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Deploy API
+      - name: Build and deploy API
         env:
           IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/catalog-mx-api:${{ github.sha }}
           SERVICE: catalog-mx-api
           REGION: us-central1
+          PROJECT: ${{ vars.GCP_PROJECT_ID_DEV }}
         run: |
           docker build -t "$IMAGE" apps/api/
           docker push "$IMAGE"
           gcloud run deploy "$SERVICE" \
             --image "$IMAGE" \
             --region "$REGION" \
-            --service-account "${{ vars.DEPLOYER_SA_EMAIL }}" \
+            --project "$PROJECT" \
+            --update-env-vars="FIRESTORE_PROJECT_ID=$PROJECT,GCS_BUCKET=catalog-mx-images,ENVIRONMENT=production" \
             --quiet
 
-      - name: Deploy storefront
+      - name: Build and deploy storefront
         env:
           IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/catalog-mx-storefront:${{ github.sha }}
           SERVICE: catalog-mx-storefront
           REGION: us-central1
+          PROJECT: ${{ vars.GCP_PROJECT_ID_DEV }}
+          API_URL: https://catalog-mx-api-pfwg4b2n2q-uc.a.run.app
         run: |
           docker build -t "$IMAGE" apps/storefront/
           docker push "$IMAGE"
           gcloud run deploy "$SERVICE" \
             --image "$IMAGE" \
             --region "$REGION" \
+            --project "$PROJECT" \
+            --update-env-vars="API_URL=$API_URL" \
             --quiet
 
-      - name: Deploy admin
+      - name: Build and deploy admin
         env:
           IMAGE: ${{ vars.ARTIFACT_REGISTRY_URL }}/catalog-mx-admin:${{ github.sha }}
           SERVICE: catalog-mx-admin
           REGION: us-central1
+          PROJECT: ${{ vars.GCP_PROJECT_ID_DEV }}
         run: |
           docker build -t "$IMAGE" apps/admin/
           docker push "$IMAGE"
           gcloud run deploy "$SERVICE" \
             --image "$IMAGE" \
             --region "$REGION" \
+            --project "$PROJECT" \
             --quiet
 
-      - name: Verify deployments
+      - name: Verify
+        env:
+          REGION: us-central1
+          PROJECT: ${{ vars.GCP_PROJECT_ID_DEV }}
         run: |
-          echo "=== Deployed services ==="
-          gcloud run services list \
-            --project=${{ vars.GCP_PROJECT_ID_DEV }} \
-            --region=us-central1 \
+          gcloud run services list --project="$PROJECT" --region="$REGION" \
             --format="table(name,status.url)"
