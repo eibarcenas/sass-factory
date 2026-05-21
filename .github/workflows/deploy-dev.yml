@@ -7,7 +7,7 @@ on:
 env:
   PROJECT: ei-catalog-dev
   REGION: us-central1
-  AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/ei-catalog
+  AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/catalog-mx
 
 jobs:
   ci:
