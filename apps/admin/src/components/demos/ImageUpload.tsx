@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react'
-import { Button } from '@/components/ui/button'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
@@ -11,6 +10,7 @@ interface Props {
 
 export default function ImageUpload({ currentUrl, onUploaded, folder = 'products' }: Props) {
   const [uploading, setUploading] = useState(false)
+  const [uploaded, setUploaded] = useState(false)
   const [preview, setPreview] = useState(currentUrl ?? '')
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -27,6 +27,7 @@ export default function ImageUpload({ currentUrl, onUploaded, folder = 'products
     }
     setError('')
     setUploading(true)
+    setUploaded(false)
 
     // Show local preview immediately
     const reader = new FileReader()
@@ -46,6 +47,11 @@ export default function ImageUpload({ currentUrl, onUploaded, folder = 'products
       if (data.url) {
         onUploaded(data.url)
         setPreview(data.url)
+        setUploaded(true)
+        // Clear success message after 3s
+        setTimeout(() => setUploaded(false), 3000)
+      } else {
+        setError('Upload failed — no URL returned.')
       }
     } catch {
       setError('Upload failed. Try again.')
@@ -55,10 +61,12 @@ export default function ImageUpload({ currentUrl, onUploaded, folder = 'products
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div
-        className="relative border-2 border-dashed rounded-xl p-3 text-center cursor-pointer hover:border-primary/50 transition-colors"
-        onClick={() => inputRef.current?.click()}
+        className={`relative border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition-colors ${
+          uploaded ? 'border-green-400 bg-green-50' : 'hover:border-indigo-300'
+        }`}
+        onClick={() => !uploading && inputRef.current?.click()}
       >
         <input
           ref={inputRef}
@@ -67,24 +75,31 @@ export default function ImageUpload({ currentUrl, onUploaded, folder = 'products
           className="hidden"
           onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
         />
+
         {preview ? (
           <div className="flex items-center gap-3">
             <img src={preview} alt="preview" className="w-14 h-14 rounded-lg object-cover border" />
-            <div className="text-left">
-              <p className="text-xs font-medium">Photo uploaded</p>
-              <p className="text-xs text-muted-foreground">Click to change</p>
+            <div className="text-left flex-1">
+              {uploaded ? (
+                <p className="text-xs font-semibold text-green-700">✅ Photo uploaded — click Save</p>
+              ) : uploading ? (
+                <p className="text-xs text-indigo-600 animate-pulse">⏳ Uploading...</p>
+              ) : (
+                <p className="text-xs font-medium">Photo ready</p>
+              )}
+              <p className="text-xs text-gray-400 mt-0.5">Click to change</p>
             </div>
           </div>
         ) : (
           <div className="py-2">
-            <p className="text-sm text-muted-foreground">
-              {uploading ? 'Uploading...' : '📷 Click to add photo'}
+            <p className="text-sm text-gray-400">
+              {uploading ? '⏳ Uploading...' : '📷 Click to add photo'}
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">JPEG, PNG, WebP · max 2MB</p>
+            <p className="text-xs text-gray-400 mt-0.5">JPEG, PNG, WebP · max 2MB</p>
           </div>
         )}
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   )
 }
