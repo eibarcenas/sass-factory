@@ -46,7 +46,9 @@ resource "google_cloud_run_v2_service" "this" {
       }
 
       startup_probe {
-        http_get { path = "/health" }
+        http_get {
+            path = var.health_path
+          }
         initial_delay_seconds = 5
         period_seconds        = 5
         failure_threshold     = 6
@@ -54,7 +56,9 @@ resource "google_cloud_run_v2_service" "this" {
       }
 
       liveness_probe {
-        http_get { path = "/health" }
+        http_get {
+            path = var.health_path
+          }
         period_seconds    = 30
         failure_threshold = 3
         timeout_seconds   = 5

@@ -42,6 +42,7 @@ module "storefront" {
   image           = var.storefront_image
   service_account = var.api_sa_email
   min_instances   = 0
+  health_path     = "/"
   max_instances   = 10
   memory          = "512Mi"
   env_vars = {

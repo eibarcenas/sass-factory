@@ -69,3 +69,9 @@ variable "secrets" {
   default     = {}
   description = "ENV_VAR_NAME => secret_id in Secret Manager"
 }
+
+variable "health_path" {
+  type    = string
+  default = "/health"
+  description = "Path for startup and liveness probes. Use / for SPAs."
+}
