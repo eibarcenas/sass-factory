@@ -40,9 +40,14 @@ function ItemRow({ item, businessId, onSaved }: RowProps) {
             <input
               type="number"
               value={form.price}
-              onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))}
+              onChange={e => {
+                const val = Math.min(Math.max(0, Number(e.target.value)), 999999)
+                setForm(f => ({ ...f, price: val }))
+              }}
               className="flex-1 px-2 py-2 text-sm focus:outline-none"
               min={0}
+              max={999999}
+              step={1}
             />
             <span className="px-2 py-2 bg-gray-50 text-gray-400 text-xs border-l">MXN</span>
           </div>
@@ -67,6 +72,11 @@ function ItemRow({ item, businessId, onSaved }: RowProps) {
           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
           placeholder="Description (optional)"
           className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <ImageUpload
+          currentUrl={form.image}
+          onUploaded={url => setForm(f => ({ ...f, image: url }))}
+          folder="products"
         />
       </div>
     )
@@ -145,9 +155,14 @@ function AddItemForm({ businessId, onAdded }: { businessId: string; onAdded: () 
           <input
             type="number"
             value={form.price}
-            onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+            onChange={e => {
+              const val = Math.min(Math.max(0, Number(e.target.value)), 999999)
+              setForm(f => ({ ...f, price: String(val) }))
+            }}
             placeholder="0"
             min={0}
+            max={999999}
+            step={1}
             required
             className="flex-1 px-2 py-2 text-sm focus:outline-none"
           />
