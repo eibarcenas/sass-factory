@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime, timezone
 import re
 from app.db import get_db
+from app.models.enums import BusinessStatus
 
 router = APIRouter(tags=["demos"])
 
@@ -100,7 +101,7 @@ def create_demo(body: CreateDemoRequest):
         "city": body.city,
         "tagline": body.tagline,
         "theme": THEMES.get(body.type, THEMES["otro"]),
-        "status": "demo",
+        "status": BusinessStatus.DEMO,
         "plan": "free",
         "createdAt": now,
         "updatedAt": now,
@@ -182,7 +183,7 @@ def activate_owner(body: CreateOwnerRequest):
         db.collection("businesses").document(body.businessId).update({
             "ownerId": user.uid,
             "ownerEmail": body.email,
-            "status": "active",
+            "status": BusinessStatus.ACTIVE,
         })
 
         # Also store in pending_owners for when they sign in with Google
@@ -207,7 +208,7 @@ def activate_owner(body: CreateOwnerRequest):
             })
             db.collection("businesses").document(body.businessId).update({
                 "ownerEmail": body.email,
-                "status": "active",
+                "status": BusinessStatus.ACTIVE,
             })
         except Exception:
             pass  # Firestore not available in this test env

@@ -2,31 +2,35 @@ import { useState } from 'react'
 import { useBusinesses, useBusinessAction } from '../../hooks/useBusinesses'
 import StatusBadge from '../ui/StatusBadge'
 import ProductEditor from './ProductEditor'
-import type { Business, BusinessStatus } from '@/types/catalog'
+import { BusinessStatus, type Business } from '@/types/catalog'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
 const STATUS_FILTERS: { label: string; value: BusinessStatus | '' }[] = [
-  { label: 'All', value: '' },
-  { label: 'Draft', value: 'draft' },
-  { label: 'Demo', value: 'demo' },
-  { label: 'Sent', value: 'sent' },
-  { label: 'Accepted', value: 'accepted' },
-  { label: 'Active', value: 'active' },
+  { label: 'All',      value: '' },
+  { label: 'Draft',    value: BusinessStatus.Draft },
+  { label: 'Demo',     value: BusinessStatus.Demo },
+  { label: 'Sent',     value: BusinessStatus.Sent },
+  { label: 'Accepted', value: BusinessStatus.Accepted },
+  { label: 'Active',   value: BusinessStatus.Active },
 ]
 
 const ACTIONS: Partial<Record<BusinessStatus, { label: string; classes: string }>> = {
-  draft:    { label: 'Publish demo', classes: 'bg-blue-600 hover:bg-blue-700' },
-  demo:     { label: 'Mark as sent', classes: 'bg-yellow-600 hover:bg-yellow-700' },
-  sent:     { label: 'Mark accepted', classes: 'bg-green-600 hover:bg-green-700' },
-  accepted: { label: 'Activate', classes: 'bg-emerald-600 hover:bg-emerald-700' },
-  active:   { label: 'Suspend', classes: 'bg-red-600 hover:bg-red-700' },
-  suspended:{ label: 'Reactivate', classes: 'bg-green-600 hover:bg-green-700' },
+  [BusinessStatus.Draft]:     { label: 'Publish demo',  classes: 'bg-blue-600 hover:bg-blue-700' },
+  [BusinessStatus.Demo]:      { label: 'Mark as sent',  classes: 'bg-yellow-600 hover:bg-yellow-700' },
+  [BusinessStatus.Sent]:      { label: 'Mark accepted', classes: 'bg-green-600 hover:bg-green-700' },
+  [BusinessStatus.Accepted]:  { label: 'Activate',      classes: 'bg-emerald-600 hover:bg-emerald-700' },
+  [BusinessStatus.Active]:    { label: 'Suspend',       classes: 'bg-red-600 hover:bg-red-700' },
+  [BusinessStatus.Suspended]: { label: 'Reactivate',    classes: 'bg-green-600 hover:bg-green-700' },
 }
 
 const ACTION_MAP: Partial<Record<BusinessStatus, string>> = {
-  draft: 'publish', demo: 'send', sent: 'accept',
-  accepted: 'activate', active: 'suspend', suspended: 'activate',
+  [BusinessStatus.Draft]:     'publish',
+  [BusinessStatus.Demo]:      'send',
+  [BusinessStatus.Sent]:      'accept',
+  [BusinessStatus.Accepted]:  'activate',
+  [BusinessStatus.Active]:    'suspend',
+  [BusinessStatus.Suspended]: 'activate',
 }
 
 function DemoCard({ business }: { business: Business }) {

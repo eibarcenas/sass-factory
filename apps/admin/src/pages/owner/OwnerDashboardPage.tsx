@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import type { Item } from '../../hooks/useItems'
+import { BusinessStatus } from '../../types/catalog'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 const CLOUD_STOREFRONT = 'https://catalog-mx-storefront-105288105956.us-central1.run.app'
@@ -151,7 +152,7 @@ export default function OwnerDashboardPage() {
 
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
-    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; status: string }>(`/api/v1/storefront/${businessId}`),
+    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; status: BusinessStatus }>(`/api/v1/storefront/${businessId}`),
   })
 
   const { data: itemsData } = useItems(businessId)
@@ -175,8 +176,8 @@ export default function OwnerDashboardPage() {
             <h1 className="font-bold text-sm">{bizData?.name ?? 'My Catalog'}</h1>
             <p className="text-xs text-muted-foreground">{user?.email}</p>
           </div>
-          <Badge variant={bizData?.status === 'active' ? 'default' : 'secondary'}>
-            {bizData?.status ?? 'demo'}
+          <Badge variant={bizData?.status === BusinessStatus.Active ? 'default' : 'secondary'}>
+            {bizData?.status ?? BusinessStatus.Demo}
           </Badge>
         </div>
       </header>

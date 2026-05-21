@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { useCreateDemo } from '../../hooks/useBusinesses'
-import type { BusinessType } from '@/types/catalog'
+import { BusinessType } from '@/types/catalog'
 
 const TYPES: { key: BusinessType; label: string; emoji: string }[] = [
-  { key: 'heladeria',  label: 'Ice cream', emoji: '🍦' },
-  { key: 'barberia',   label: 'Barbershop', emoji: '💈' },
-  { key: 'estetica',   label: 'Beauty salon', emoji: '💅' },
-  { key: 'restaurante',label: 'Restaurant', emoji: '🍽️' },
-  { key: 'panaderia',  label: 'Bakery', emoji: '🥐' },
-  { key: 'gym',        label: 'Gym', emoji: '💪' },
-  { key: 'mecanico',   label: 'Mechanic', emoji: '🔧' },
-  { key: 'otro',       label: 'Other', emoji: '🏪' },
+  { key: BusinessType.Heladeria,   label: 'Ice cream',    emoji: '🍦' },
+  { key: BusinessType.Barberia,    label: 'Barbershop',   emoji: '💈' },
+  { key: BusinessType.Estetica,    label: 'Beauty salon', emoji: '💅' },
+  { key: BusinessType.Restaurante, label: 'Restaurant',   emoji: '🍽️' },
+  { key: BusinessType.Panaderia,   label: 'Bakery',       emoji: '🥐' },
+  { key: BusinessType.Gym,         label: 'Gym',          emoji: '💪' },
+  { key: BusinessType.Mecanico,    label: 'Mechanic',     emoji: '🔧' },
+  { key: BusinessType.Otro,        label: 'Other',        emoji: '🏪' },
 ]
 
 interface Props { onSuccess?: (slug: string) => void }

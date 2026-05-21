@@ -1,13 +1,28 @@
 // Inlined from @catalog-mx/core — types only, erased at build time
 // Keep in sync with packages/core/src/types/
 
-export type BusinessStatus =
-  | 'draft' | 'demo' | 'sent' | 'accepted' | 'active'
-  | 'suspended' | 'expired' | 'rejected' | 'archived'
+export enum BusinessStatus {
+  Draft     = 'draft',
+  Demo      = 'demo',
+  Sent      = 'sent',
+  Accepted  = 'accepted',
+  Active    = 'active',
+  Suspended = 'suspended',
+  Expired   = 'expired',
+  Rejected  = 'rejected',
+  Archived  = 'archived',
+}
 
-export type BusinessType =
-  | 'heladeria' | 'barberia' | 'estetica' | 'restaurante'
-  | 'panaderia' | 'gym' | 'mecanico' | 'otro'
+export enum BusinessType {
+  Heladeria   = 'heladeria',
+  Barberia    = 'barberia',
+  Estetica    = 'estetica',
+  Restaurante = 'restaurante',
+  Panaderia   = 'panaderia',
+  Gym         = 'gym',
+  Mecanico    = 'mecanico',
+  Otro        = 'otro',
+}
 
 export interface BusinessTheme {
   primary: string
