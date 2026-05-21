@@ -57,7 +57,7 @@ function ProspectModal({ businessId, onClose }: { businessId: string; onClose: (
     if (!form.phone && !form.email) return
     setLoading(true)
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/api/v1/prospects`, {
+      await fetch('/api/prospects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ businessId, ...form }),
