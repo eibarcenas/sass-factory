@@ -81,8 +81,14 @@ export default function CreateDemoForm({ onSuccess }: Props) {
 
       <div className="grid grid-cols-2 gap-3">
         <input
-          value={form.whatsapp} onChange={set('whatsapp')}
-          placeholder="+52... WhatsApp *" type="tel"
+          value={form.whatsapp}
+          onChange={e => {
+            // Only allow digits and leading +
+            const val = e.target.value.replace(/[^\d+]/g, '')
+            setForm(f => ({ ...f, whatsapp: val }))
+          }}
+          placeholder="+52 55 1234 5678" type="tel"
+          maxLength={16}
           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <input
