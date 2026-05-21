@@ -88,6 +88,16 @@ def test_upload_invalid_mime_returns_400(client_with_auth):
     assert "Invalid type" in response.json()["detail"]
 
 
+def test_upload_spoofed_mime_returns_400(client_with_auth):
+    """Content-type says JPEG but magic bytes are wrong — must be rejected."""
+    response = client_with_auth.post(
+        "/api/v1/images/upload",
+        files=[_make_file(b"not-an-image", "photo.jpg", "image/jpeg")],
+    )
+    assert response.status_code == 400
+    assert "content" in response.json()["detail"].lower()
+
+
 def test_upload_too_large_returns_400(client_with_auth):
     big = jpeg_bytes(size=3 * 1024 * 1024)  # 3MB > 2MB limit
     response = client_with_auth.post(
