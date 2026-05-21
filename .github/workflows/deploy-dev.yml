@@ -37,6 +37,7 @@ jobs:
           docker build -t "$IMAGE" apps/api/
           docker push "$IMAGE"
           gcloud run deploy "$SERVICE" \
+            --service-account "${{ vars.RUNTIME_SA_EMAIL }}" \
             --image "$IMAGE" \
             --region "$REGION" \
             --project "$PROJECT" \
@@ -54,6 +55,7 @@ jobs:
           docker build -t "$IMAGE" apps/storefront/
           docker push "$IMAGE"
           gcloud run deploy "$SERVICE" \
+            --service-account "${{ vars.RUNTIME_SA_EMAIL }}" \
             --image "$IMAGE" \
             --region "$REGION" \
             --project "$PROJECT" \
@@ -70,6 +72,7 @@ jobs:
           docker build -t "$IMAGE" apps/admin/
           docker push "$IMAGE"
           gcloud run deploy "$SERVICE" \
+            --service-account "${{ vars.RUNTIME_SA_EMAIL }}" \
             --image "$IMAGE" \
             --region "$REGION" \
             --project "$PROJECT" \
