@@ -9,6 +9,8 @@ env:
   REGION: us-central1
   AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/catalog-mx
   ENV_SUFFIX: dev
+  ADMIN_URL: https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
+  STOREFRONT_URL: https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app
 
 jobs:
   ci:
@@ -60,7 +62,7 @@ jobs:
             --region "${{ env.REGION }}" \
             --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_DEV }}" \
-            --update-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev,ENVIRONMENT=development" \
+            --set-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev,ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=catalog-mx-dev,CORS_ALLOWED_ORIGINS=${{ env.ADMIN_URL }},${{ env.STOREFRONT_URL }},http://localhost:3000,http://localhost:3010" \
             --allow-unauthenticated \
             --quiet
 
@@ -77,7 +79,7 @@ jobs:
             --region "${{ env.REGION }}" \
             --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_DEV }}" \
-            --update-env-vars="API_URL=${API_URL}" \
+            --set-env-vars="API_URL=${API_URL}" \
             --allow-unauthenticated \
             --quiet
 
@@ -100,6 +102,6 @@ jobs:
           for svc in catalog-mx-api-dev catalog-mx-storefront-dev catalog-mx-admin-dev; do
             URL=$(gcloud run services describe $svc \
               --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
-              --format='value(status.url)' 2>/dev/null || echo "not deployed")
+              --format='value(status.url)' 2>/dev/null)
             echo "  $svc: $URL"
           done
