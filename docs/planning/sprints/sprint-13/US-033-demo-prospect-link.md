@@ -9,6 +9,10 @@
 
 **As** a salesperson, **I want** to see prospect signals on each demo card and navigate between demos and their prospects in both directions, **so that** I never lose context switching pages.
 
+> **Depends on:** US-032 (prospect status data must exist to show badge states)
+> **Unlocks:** US-034 (sidebar Clients section reads the same `prospectCount` field)
+> **Builds new:** `prospectCount` field on business doc, prospect badge on DemoCard, "View demo →" link on ProspectRow, `?businessId=` filter on Prospects page
+
 ---
 
 ## Data Model Change

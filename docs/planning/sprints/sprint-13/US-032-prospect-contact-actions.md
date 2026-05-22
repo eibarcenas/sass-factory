@@ -9,6 +9,9 @@
 
 **As** a salesperson, **I want** to act on a prospect (contact, accept, reject) directly from the admin panel, **so that** I don't need to cross-reference WhatsApp, Firestore, and the Demos list manually.
 
+> **Depends on:** nothing (first story in the CRM track)
+> **Unlocks:** US-033 (prospect badge needs accepted/contacted states to exist), US-034 (client labeling needs accept action to exist)
+
 ---
 
 ## State Machine
@@ -55,11 +58,12 @@ Validation rules:
 │ └───────────────────────────────────────────────────────────────────┘  │
 │                                                                        │
 │ ┌────────────────────────────────────────────────────────────────────┐ │
-│ │  Erick Bárcenas                  🥐 Bakery  [View demo →]         │ │
+│ │  Erick Bárcenas                        🥐 Bakery                  │ │
 │ │  5544712575 · erick@example.com                                   │ │
 │ │  Note: "Interested in: Concha, Croissant"        ● New  just now  │ │
 │ │                                                                   │ │
 │ │                         [Contact]   [Accept ✓]   [Reject ✗]      │ │
+│ │  (← "View demo →" link added by US-033, not built here)          │ │
 │ └────────────────────────────────────────────────────────────────────┘ │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -78,7 +82,7 @@ Feature: Prospect CRM actions
 
   Background:
     Given I am logged in as admin
-    And business "Bakery" is in status "Demo"
+    And business "Bakery" is in status "Sent"
     And prospect "Erick Bárcenas" submitted "Yes, I want it" on the Bakery demo
     And the prospect status is "new"
 
@@ -108,10 +112,7 @@ Feature: Prospect CRM actions
     Then a tooltip shows "Mark as contacted first"
     And the button is disabled
 
-  Scenario: Navigate to demo from prospect row
-    When I click "View demo →" on the Erick Bárcenas row
-    Then I navigate to /admin/demos#{businessId}
-    And the Bakery card is scrolled into view and highlighted
+  # Navigation from prospect row to demo card is built in US-033
 ```
 
 ---

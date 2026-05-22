@@ -9,6 +9,9 @@
 
 **As** a customer browsing a catalog, **I want** to search products by name, **so that** I can find what I need without scrolling the full grid.
 
+> **Depends on:** nothing — fully independent of admin CRM track
+> **Unlocks:** US-037 (wishlist adds a save button to the same ProductCard; search must exist first so the card layout is stable)
+
 ---
 
 ## Filter Logic

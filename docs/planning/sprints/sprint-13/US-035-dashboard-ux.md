@@ -9,6 +9,9 @@
 
 **As** a salesperson, **I want** the "+ New demo" button always visible at the top of the dashboard and pipeline action labels that clearly explain what they do, **so that** I can act fast without hunting for controls or guessing what a button means.
 
+> **Depends on:** nothing — pure UX polish on existing pipeline, independent of CRM track
+> **Owns:** Dashboard button placement, all 6 pipeline action label renames, Dashboard stat card navigation
+
 ---
 
 ## Button Placement

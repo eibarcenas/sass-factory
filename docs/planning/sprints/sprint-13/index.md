@@ -18,16 +18,41 @@ Also ships two storefront UX features: client-side product search and a wishlist
 
 ---
 
-## Stories
+## Delivery order
 
-| Story | File | Priority | Effort |
-|---|---|---|---|
-| US-032 — Prospect contact/accept/reject actions | [US-032](./US-032-prospect-contact-actions.md) | P1 Critical | M |
-| US-033 — Demo-prospect bidirectional link | [US-033](./US-033-demo-prospect-link.md) | P1 Critical | S |
-| US-034 — Prospect vs. client labeling | [US-034](./US-034-prospect-vs-client.md) | P2 High | S |
-| US-035 — Dashboard UX + action label copy | [US-035](./US-035-dashboard-ux.md) | P3 Medium | XS |
-| US-036 — Storefront search bar | [US-036](./US-036-storefront-search.md) | P2 High | S |
-| US-037 — Storefront wishlist/cart | [US-037](./US-037-storefront-wishlist.md) | P3 Medium | M |
+Two independent tracks. Stories within each track must ship in order.
+
+### Track A — Admin CRM
+
+```
+US-032 ──► US-033 ──► US-034
+                        US-035 (independent polish, ships anytime)
+
+US-032: Prospect state machine + Contact/Accept/Reject endpoints
+   └─► US-033: Demo badge + "View demo →" link + ?businessId= filter
+          └─► US-034: Sidebar PIPELINE/CLIENTS split + /admin/clients page
+US-035: Dashboard button + pipeline label rename (no dependency)
+```
+
+### Track B — Storefront UX
+
+```
+US-036 ──► US-037
+
+US-036: SearchBar + useProductSearch (ProductCard untouched)
+   └─► US-037: Save toggle on ProductCard + useWishlist + WishlistPanel + WhatsApp message + ProspectForm pre-fill
+```
+
+### Stories
+
+| Order | Story | File | Depends on | Effort |
+|---|---|---|---|---|
+| 1 | US-032 — Prospect contact/accept/reject | [US-032](./US-032-prospect-contact-actions.md) | — | M |
+| 2 | US-033 — Demo-prospect bidirectional link | [US-033](./US-033-demo-prospect-link.md) | US-032 | S |
+| 3 | US-034 — Prospect vs. client labeling | [US-034](./US-034-prospect-vs-client.md) | US-033 | S |
+| 4 | US-035 — Dashboard UX + action labels | [US-035](./US-035-dashboard-ux.md) | none | XS |
+| 5 | US-036 — Storefront search bar | [US-036](./US-036-storefront-search.md) | — | S |
+| 6 | US-037 — Storefront wishlist/cart | [US-037](./US-037-storefront-wishlist.md) | US-036 | M |
 
 ---
 

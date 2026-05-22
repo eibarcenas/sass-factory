@@ -9,6 +9,9 @@
 
 **As** a customer browsing a catalog, **I want** to save products I like and send a single WhatsApp message with everything I want, **so that** I don't have to order one item at a time.
 
+> **Depends on:** US-036 (ProductCard layout finalized), ProspectForm from Sprint 7 (pre-fill extends existing notes field)
+> **Unlocks:** nothing — final story in the storefront track
+
 ---
 
 ## State & Persistence

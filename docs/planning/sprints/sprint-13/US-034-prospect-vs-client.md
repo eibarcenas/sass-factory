@@ -9,6 +9,10 @@
 
 **As** a salesperson, **I want** active businesses and their owners labeled as clients (not prospects), **so that** I don't treat paying customers as cold leads.
 
+> **Depends on:** US-032 (accept action), US-033 (prospect badge visibility)
+> **Unlocks:** nothing — this is the final state of the CRM track
+> **Scope:** sidebar PIPELINE/CLIENTS split and `/admin/clients` page only. Dashboard stat card navigation is in US-035.
+
 ---
 
 ## Lifecycle: Prospect → Client
@@ -84,10 +88,7 @@ Feature: Prospect vs client labeling
     Then the prospect appears with "Accepted" badge
     And does NOT appear on /admin/clients yet
 
-  Scenario: Dashboard NEW PROSPECTS card navigates to Prospects
-    Given there is 1 new prospect
-    When I click the "NEW PROSPECTS 1" stat card
-    Then I navigate to /admin/prospects
+  # Dashboard stat card navigation is owned by US-035, not this story
 ```
 
 ---
