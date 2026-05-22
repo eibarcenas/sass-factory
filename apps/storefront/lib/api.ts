@@ -7,17 +7,30 @@ const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http:
 
 export type CatalogData = Business & { items: Item[] }
 
+export type CatalogResult =
+  | { type: 'ok'; data: CatalogData }
+  | { type: 'not_found' }
+  | { type: 'suspended' }
+  | { type: 'error' }
+
 export async function getCatalog(slug: string, isDemoMode = false): Promise<CatalogData | null> {
+  const result = await getCatalogResult(slug, isDemoMode)
+  if (result.type === 'ok') return result.data
+  return null
+}
+
+export async function getCatalogResult(slug: string, isDemoMode = false): Promise<CatalogResult> {
   try {
     const res = await fetch(`${API_URL}/api/v1/storefront/${slug}`, {
       // Demo pages: no cache (demos change often during sales flow)
       // Active catalog pages: ISR 60s
       next: isDemoMode ? { revalidate: 0 } : { revalidate: 60 },
     })
-    if (res.status === 404 || res.status === 410) return null
-    if (!res.ok) return null
-    return res.json()
+    if (res.status === 404) return { type: 'not_found' }
+    if (res.status === 410) return { type: 'suspended' }
+    if (!res.ok) return { type: 'error' }
+    return { type: 'ok', data: await res.json() }
   } catch {
-    return null
+    return { type: 'error' }
   }
 }

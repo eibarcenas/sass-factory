@@ -15,7 +15,7 @@ import { BusinessStatus } from '@catalog-mx/core'
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
 // ── Product row ───────────────────────────────────────────────────────────────
-function ProductRow({ item, businessId }: { item: Item; businessId: string }) {
+function ProductRow({ item, businessId, readonly = false }: { item: Item; businessId: string; readonly?: boolean }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(item.name)
   const [price, setPrice] = useState(String(item.price))
@@ -56,13 +56,15 @@ function ProductRow({ item, businessId }: { item: Item; businessId: string }) {
         {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
       </div>
       <span className="text-sm font-bold">${item.price.toLocaleString('es-MX')} MXN</span>
-      <div className="flex gap-1">
-        <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>✏️</Button>
-        <Button variant="ghost" size="sm" onClick={() => deleteItem.mutate(item.id)}
-          disabled={deleteItem.isPending} className="text-destructive hover:text-destructive">
-          🗑️
-        </Button>
-      </div>
+      {!readonly && (
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>✏️</Button>
+          <Button variant="ghost" size="sm" onClick={() => deleteItem.mutate(item.id)}
+            disabled={deleteItem.isPending} className="text-destructive hover:text-destructive">
+            🗑️
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
@@ -113,7 +115,7 @@ function AddProduct({ businessId }: { businessId: string }) {
 }
 
 // ── Appearance section ────────────────────────────────────────────────────────
-function AppearanceSection({ businessId, currentTagline }: { businessId: string; currentTagline?: string }) {
+function AppearanceSection({ businessId, currentTagline, readonly = false }: { businessId: string; currentTagline?: string; readonly?: boolean }) {
   const [tagline, setTagline] = useState(currentTagline ?? '')
   const [saved, setSaved] = useState(false)
   const qc = useQueryClient()
@@ -132,29 +134,37 @@ function AppearanceSection({ businessId, currentTagline }: { businessId: string;
         <div className="space-y-1">
           <Label>Tagline <span className="text-muted-foreground font-normal text-xs">({tagline.length}/120)</span></Label>
           <Input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={120}
-            placeholder="The best ice cream in Monterrey 🍦" />
+            placeholder="The best ice cream in Monterrey 🍦" disabled={readonly} />
         </div>
-        <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
-          {saved ? '✓ Saved' : save.isPending ? 'Saving...' : 'Save'}
-        </Button>
+        {!readonly && (
+          <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
+            {saved ? '✓ Saved' : save.isPending ? 'Saving...' : 'Save'}
+          </Button>
+        )}
       </CardContent>
     </Card>
   )
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
-export default function OwnerDashboardPage() {
-  const { user } = useAuthStore()
+interface OwnerDashboardProps {
+  previewSlug?: string
+}
 
-  // In mock mode, use heladeria-pinguino as demo business
-  const businessId = user?.businessId ?? 'heladeria-el-pinguino'
+export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps) {
+  const { user } = useAuthStore()
+  const isPreview = !!previewSlug
+
+  // Preview mode: businessId comes from the URL slug
+  // Normal mode: businessId comes from JWT claims (fallback to demo slug)
+  const businessId = previewSlug ?? user?.businessId ?? 'heladeria-el-pinguino'
 
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
     queryFn: () => api.get<{ name: string; slug: string; tagline?: string; status: BusinessStatus }>(`/api/v1/storefront/${businessId}`),
   })
 
-  const { data: itemsData } = useOwnerItems(businessId)
+  const { data: itemsData } = useOwnerItems(businessId, previewSlug)
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
 
   function copyLink() {
@@ -173,7 +183,7 @@ export default function OwnerDashboardPage() {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
             <h1 className="font-bold text-sm">{bizData?.name ?? 'My Catalog'}</h1>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
+            <p className="text-xs text-muted-foreground">{isPreview ? `Previewing as SUPER_ADMIN` : user?.email}</p>
           </div>
           <Badge variant={bizData?.status === BusinessStatus.Active ? 'default' : 'secondary'}>
             {bizData?.status ?? BusinessStatus.Demo}
@@ -182,6 +192,14 @@ export default function OwnerDashboardPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+
+        {/* Preview banner */}
+        {isPreview && (
+          <div data-testid="preview-banner" className="flex items-center gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
+            <span>🔍</span>
+            <span><strong>Previewing as owner</strong> — You are viewing this as SUPER_ADMIN. Read-only mode.</span>
+          </div>
+        )}
 
         {/* Catalog link */}
         <Card>
@@ -193,14 +211,16 @@ export default function OwnerDashboardPage() {
               <p className="text-xs font-mono text-muted-foreground flex-1 truncate">{catalogUrl}</p>
               <Button size="sm" variant="outline" onClick={copyLink}>Copy</Button>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={shareWhatsApp}>
-                📱 Share on WhatsApp
-              </Button>
-              <Button size="sm" variant="outline" className="flex-1" asChild>
-                <a href={catalogUrl} target="_blank" rel="noopener noreferrer">View catalog →</a>
-              </Button>
-            </div>
+            {!isPreview && (
+              <div className="flex gap-2">
+                <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={shareWhatsApp}>
+                  📱 Share on WhatsApp
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1" asChild>
+                  <a href={catalogUrl} target="_blank" rel="noopener noreferrer">View catalog →</a>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -213,15 +233,19 @@ export default function OwnerDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             {itemsData?.items.map(item => (
-              <ProductRow key={item.id} item={item} businessId={businessId} />
+              <ProductRow key={item.id} item={item} businessId={businessId} readonly={isPreview} />
             ))}
-            <Separator className="my-2" />
-            <AddProduct businessId={businessId} />
+            {!isPreview && (
+              <>
+                <Separator className="my-2" />
+                <AddProduct businessId={businessId} />
+              </>
+            )}
           </CardContent>
         </Card>
 
         {/* Appearance */}
-        <AppearanceSection businessId={businessId} currentTagline={bizData?.tagline} />
+        <AppearanceSection businessId={businessId} currentTagline={bizData?.tagline} readonly={isPreview} />
 
       </main>
     </div>

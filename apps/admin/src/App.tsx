@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'
@@ -84,6 +84,11 @@ function RequireOwner({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function OwnerPreviewPage() {
+  const { slug } = useParams<{ slug: string }>()
+  return <OwnerDashboardPage previewSlug={slug} />
+}
+
 function RoleRedirect() {
   const { user, mockMode } = useAuthStore()
   if (mockMode || user?.role === 'SUPER_ADMIN') return <Navigate to="/" replace />
@@ -114,6 +119,17 @@ export default function App() {
           <RequireAuth>
             <RequireSuperAdmin>
               <DashboardPage />
+            </RequireSuperAdmin>
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/owner/preview/:slug"
+        element={
+          <RequireAuth>
+            <RequireSuperAdmin>
+              <OwnerPreviewPage />
             </RequireSuperAdmin>
           </RequireAuth>
         }

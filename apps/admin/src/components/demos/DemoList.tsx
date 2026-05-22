@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useBusinesses, useBusinessAction } from '../../hooks/useBusinesses'
 import StatusBadge from '../ui/StatusBadge'
 import ProductEditor from './ProductEditor'
+import CreateOwnerModal from './CreateOwnerModal'
 import { BusinessStatus, type Business } from '@catalog-mx/core'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
@@ -35,7 +37,9 @@ const ACTION_MAP: Partial<Record<BusinessStatus, string>> = {
 
 function DemoCard({ business }: { business: Business }) {
   const action = useBusinessAction()
+  const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
+  const [showOwnerModal, setShowOwnerModal] = useState(false)
   const btn = ACTIONS[business.status]
   const verb = ACTION_MAP[business.status]
 
@@ -83,6 +87,18 @@ function DemoCard({ business }: { business: Business }) {
           >
             View demo →
           </a>
+          <button
+            onClick={() => navigate(`/owner/preview/${business.slug}`)}
+            className="text-xs font-medium text-gray-700 border border-gray-300 px-2.5 py-1 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Preview panel
+          </button>
+          <button
+            onClick={() => setShowOwnerModal(true)}
+            className="text-xs font-medium text-indigo-700 border border-indigo-300 px-2.5 py-1 rounded-lg hover:bg-indigo-50 transition-colors"
+          >
+            Activate owner
+          </button>
           {btn && verb && (
             <button
               disabled={action.isPending}
@@ -100,6 +116,14 @@ function DemoCard({ business }: { business: Business }) {
         <div className="border-t border-gray-100 p-4 bg-gray-50">
           <ProductEditor businessId={business.id} businessSlug={business.slug} />
         </div>
+      )}
+
+      {showOwnerModal && (
+        <CreateOwnerModal
+          businessId={business.id}
+          businessName={business.name}
+          onClose={() => setShowOwnerModal(false)}
+        />
       )}
     </div>
   )
