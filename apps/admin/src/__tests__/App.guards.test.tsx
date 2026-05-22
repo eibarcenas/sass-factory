@@ -11,14 +11,14 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
-  const { user, mockMode } = useAuthStore()
-  if (!mockMode && user?.role !== 'SUPER_ADMIN') return <div data-testid="redirected-owner" />
+  const { user } = useAuthStore()
+  if (user?.role !== 'SUPER_ADMIN') return <div data-testid="redirected-owner" />
   return <>{children}</>
 }
 
 function RequireOwner({ children }: { children: React.ReactNode }) {
-  const { user, mockMode } = useAuthStore()
-  if (!mockMode && user?.role !== 'OWNER') return <div data-testid="redirected-root" />
+  const { user } = useAuthStore()
+  if (user?.role !== 'OWNER') return <div data-testid="redirected-root" />
   return <>{children}</>
 }
 
@@ -70,6 +70,15 @@ describe('RequireSuperAdmin', () => {
     expect(screen.queryByTestId('protected')).not.toBeInTheDocument()
     expect(screen.getByTestId('redirected-owner')).toBeInTheDocument()
   })
+
+  it('blocks OWNER even in mockMode', () => {
+    useAuthStore.setState({ user: { uid: 'o1', email: 'o@b.com', role: 'OWNER', modules: [] }, mockMode: true })
+    render(
+      <MemoryRouter><RequireSuperAdmin><Protected label="admin" /></RequireSuperAdmin></MemoryRouter>
+    )
+    expect(screen.queryByTestId('protected')).not.toBeInTheDocument()
+    expect(screen.getByTestId('redirected-owner')).toBeInTheDocument()
+  })
 })
 
 describe('RequireOwner', () => {
@@ -83,6 +92,15 @@ describe('RequireOwner', () => {
 
   it('blocks SUPER_ADMIN', () => {
     useAuthStore.setState({ user: { uid: 'u1', email: 'a@b.com', role: 'SUPER_ADMIN', modules: [] }, mockMode: false })
+    render(
+      <MemoryRouter><RequireOwner><Protected label="owner" /></RequireOwner></MemoryRouter>
+    )
+    expect(screen.queryByTestId('protected')).not.toBeInTheDocument()
+    expect(screen.getByTestId('redirected-root')).toBeInTheDocument()
+  })
+
+  it('blocks SUPER_ADMIN even in mockMode', () => {
+    useAuthStore.setState({ user: { uid: 'u1', email: 'a@b.com', role: 'SUPER_ADMIN', modules: [] }, mockMode: true })
     render(
       <MemoryRouter><RequireOwner><Protected label="owner" /></RequireOwner></MemoryRouter>
     )
