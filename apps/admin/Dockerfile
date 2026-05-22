@@ -7,7 +7,6 @@ WORKDIR /repo
 
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/core/package.json ./packages/core/
-COPY packages/ui/package.json ./packages/ui/
 COPY apps/admin/package.json ./apps/admin/
 
 RUN pnpm install --frozen-lockfile --filter admin...
@@ -26,7 +25,6 @@ ENV VITE_FIREBASE_PROJECT_ID=catalog-mx-dev
 ENV VITE_ADMIN_URL=https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
 
 COPY packages/core/ ./packages/core/
-COPY packages/ui/ ./packages/ui/
 COPY apps/admin/ ./apps/admin/
 
 RUN pnpm --filter admin build
