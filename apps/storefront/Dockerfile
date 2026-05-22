@@ -32,8 +32,10 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/storefront/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /repo/apps/storefront/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /repo/apps/storefront/.next/static ./apps/storefront/.next/static
 
 USER nextjs
 EXPOSE 8080
+# monorepo standalone output nests server.js under the app path
+WORKDIR /app/apps/storefront
 CMD ["node", "server.js"]
