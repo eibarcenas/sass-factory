@@ -50,10 +50,13 @@ export function useDeleteItem(businessId: string) {
 
 // ── Owner-scoped hooks (call /owner/business/items — auth via JWT) ────────────
 
-export function useOwnerItems(businessId: string) {
+export function useOwnerItems(businessId: string, previewSlug?: string) {
+  const url = previewSlug
+    ? `/api/v1/owner/business/items?business=${previewSlug}`
+    : '/api/v1/owner/business/items'
   return useQuery<{ items: Item[] }>({
-    queryKey: ['items', businessId],
-    queryFn: () => api.get('/api/v1/owner/business/items'),
+    queryKey: ['owner-items', businessId, previewSlug ?? null],
+    queryFn: () => api.get(url),
     enabled: !!businessId,
   })
 }
