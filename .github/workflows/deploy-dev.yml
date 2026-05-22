@@ -78,7 +78,7 @@ jobs:
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
-          docker build -t "$IMAGE" apps/storefront/
+          docker build -t "$IMAGE" -f apps/storefront/Dockerfile .
           docker push "$IMAGE"
           gcloud run deploy catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" \
@@ -92,7 +92,7 @@ jobs:
       - name: Deploy Admin (catalog-mx-admin-dev)
         run: |
           IMAGE="${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
-          docker build -t "$IMAGE" apps/admin/
+          docker build -t "$IMAGE" -f apps/admin/Dockerfile .
           docker push "$IMAGE"
           gcloud run deploy catalog-mx-admin-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" \
