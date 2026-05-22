@@ -137,15 +137,29 @@ def business_action(id: str, action: str):
 
 # ── Owner endpoints (business owner managing their own catalog) ─────────────
 
+def _resolve_owner_slug(user: UserContext, business: str | None) -> str:
+    """
+    OWNER → use business_id from JWT claims (slug param ignored).
+    SUPER_ADMIN + ?business=<slug> → use the provided slug.
+    SUPER_ADMIN without slug → 400.
+    """
+    if user.is_owner:
+        if not user.business_id:
+            raise HTTPException(status_code=403, detail="No business associated with this account")
+        return user.business_id
+    if not business:
+        raise HTTPException(status_code=400, detail="SUPER_ADMIN must provide ?business=<slug>")
+    return business
+
+
 @router.patch("/owner/business")
 def owner_update_business(
     patch: dict,
-    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+    business: str | None = None,
+    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
+    slug = _resolve_owner_slug(user, business)
     db = get_db()
-    slug = user.business_id
-    if not slug:
-        raise HTTPException(status_code=403, detail="No business associated with this account")
     ref = db.collection("businesses").document(slug)
     if not ref.get().exists:
         raise HTTPException(status_code=404, detail=f"Business '{slug}' not found")
@@ -158,12 +172,11 @@ def owner_update_business(
 
 @router.get("/owner/business/items")
 def owner_list_items(
-    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+    business: str | None = None,
+    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
+    slug = _resolve_owner_slug(user, business)
     db = get_db()
-    slug = user.business_id
-    if not slug:
-        raise HTTPException(status_code=403, detail="No business associated with this account")
     items = [
         {**i.to_dict(), "id": i.id}
         for i in db.collection(COLL).document(slug).collection("items").order_by("order").stream()
@@ -174,12 +187,11 @@ def owner_list_items(
 @router.post("/owner/business/items")
 def owner_add_item(
     item: dict,
-    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+    business: str | None = None,
+    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
+    slug = _resolve_owner_slug(user, business)
     db = get_db()
-    slug = user.business_id
-    if not slug:
-        raise HTTPException(status_code=403, detail="No business associated with this account")
     ref = db.collection(COLL).document(slug)
     if not ref.get().exists:
         raise HTTPException(status_code=404, detail=f"Business '{slug}' not found")
@@ -207,12 +219,11 @@ def owner_add_item(
 def owner_update_item(
     item_id: str,
     patch: dict,
-    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+    business: str | None = None,
+    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
+    slug = _resolve_owner_slug(user, business)
     db = get_db()
-    slug = user.business_id
-    if not slug:
-        raise HTTPException(status_code=403, detail="No business associated with this account")
     item_ref = db.collection(COLL).document(slug).collection("items").document(item_id)
     if not item_ref.get().exists:
         raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
@@ -227,12 +238,11 @@ def owner_update_item(
 @router.delete("/owner/business/items/{item_id}")
 def owner_delete_item(
     item_id: str,
-    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+    business: str | None = None,
+    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
+    slug = _resolve_owner_slug(user, business)
     db = get_db()
-    slug = user.business_id
-    if not slug:
-        raise HTTPException(status_code=403, detail="No business associated with this account")
     item_ref = db.collection(COLL).document(slug).collection("items").document(item_id)
     if not item_ref.get().exists:
         raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
