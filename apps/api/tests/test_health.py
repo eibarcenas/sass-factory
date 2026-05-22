@@ -86,8 +86,17 @@ def make_mock_db(businesses: list[dict] | None = None):
 
 @pytest.fixture(autouse=True)
 def mock_firestore():
-    """Auto-mock Firestore for every test — no GCP credentials needed."""
-    with patch("app.db.get_db", return_value=make_mock_db()):
+    """Auto-mock Firestore for every test — no GCP credentials needed.
+    Patches the local import reference in each router, not app.db.get_db,
+    to avoid lru_cache and local-reference issues.
+    """
+    db = make_mock_db()
+    with (
+        patch("app.routers.storefront.get_db", return_value=db),
+        patch("app.routers.businesses.get_db", return_value=db),
+        patch("app.routers.prospects.get_db",  return_value=db),
+        patch("app.routers.images.storage",    MagicMock()),
+    ):
         yield
 
 
