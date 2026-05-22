@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
-import type { Business } from '@/types/catalog'
+import type { Business } from '@catalog-mx/core'
 
 interface BusinessListResponse {
   businesses: Business[]

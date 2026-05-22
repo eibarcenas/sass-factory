@@ -1,4 +1,4 @@
-import type { Business, Item } from '@/types/catalog'
+import type { Business, Item } from '@catalog-mx/core'
 
 // API_URL: server-side only (no NEXT_PUBLIC_ prefix = configurable at runtime in Cloud Run)
 // For local dev: http://localhost:8000

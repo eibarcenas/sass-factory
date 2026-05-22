@@ -1,4 +1,4 @@
-import type { Business } from '@/types/catalog'
+import type { Business } from '@catalog-mx/core'
 import { Button } from '@/components/ui/button'
 
 const WhatsAppIcon = () => (
