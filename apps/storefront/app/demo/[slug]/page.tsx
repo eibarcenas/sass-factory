@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getCatalog } from '@/lib/api'
 import CatalogView from '@/components/CatalogView'
-import { BusinessStatus } from '@/types/catalog'
+import { BusinessStatus } from '@catalog-mx/core'
 
 type Props = { params: Promise<{ slug: string }> }
 

@@ -1,4 +1,4 @@
-import { BusinessStatus } from '@/types/catalog'
+import { BusinessStatus } from '@catalog-mx/core'
 
 const CONFIG: Record<BusinessStatus, { label: string; classes: string }> = {
   [BusinessStatus.Draft]:     { label: 'Draft',     classes: 'bg-slate-100 text-slate-600' },

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useBusinesses, useBusinessAction } from '../../hooks/useBusinesses'
 import StatusBadge from '../ui/StatusBadge'
 import ProductEditor from './ProductEditor'
-import { BusinessStatus, type Business } from '@/types/catalog'
+import { BusinessStatus, type Business } from '@catalog-mx/core'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 

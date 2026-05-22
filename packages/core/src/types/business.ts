@@ -1,23 +1,25 @@
-export type BusinessStatus =
-  | 'draft'
-  | 'demo'
-  | 'sent'
-  | 'accepted'
-  | 'active'
-  | 'suspended'
-  | 'expired'
-  | 'rejected'
-  | 'archived'
+export enum BusinessStatus {
+  Draft     = 'draft',
+  Demo      = 'demo',
+  Sent      = 'sent',
+  Accepted  = 'accepted',
+  Active    = 'active',
+  Suspended = 'suspended',
+  Expired   = 'expired',
+  Rejected  = 'rejected',
+  Archived  = 'archived',
+}
 
-export type BusinessType =
-  | 'heladeria'
-  | 'barberia'
-  | 'estetica'
-  | 'restaurante'
-  | 'panaderia'
-  | 'gym'
-  | 'mecanico'
-  | 'otro'
+export enum BusinessType {
+  Heladeria   = 'heladeria',
+  Barberia    = 'barberia',
+  Estetica    = 'estetica',
+  Restaurante = 'restaurante',
+  Panaderia   = 'panaderia',
+  Gym         = 'gym',
+  Mecanico    = 'mecanico',
+  Otro        = 'otro',
+}
 
 export interface BusinessTheme {
   primary: string
@@ -53,15 +55,15 @@ export interface Business {
 
 // Valid status transitions — used by validateTransition()
 export const VALID_TRANSITIONS: Record<BusinessStatus, BusinessStatus[]> = {
-  draft:     ['demo', 'archived'],
-  demo:      ['sent', 'archived'],
-  sent:      ['accepted', 'rejected', 'expired'],
-  accepted:  ['active', 'archived'],
-  active:    ['suspended', 'archived'],
-  suspended: ['active', 'archived'],
-  expired:   ['archived'],
-  rejected:  ['archived'],
-  archived:  [],
+  [BusinessStatus.Draft]:     [BusinessStatus.Demo,      BusinessStatus.Archived],
+  [BusinessStatus.Demo]:      [BusinessStatus.Sent,      BusinessStatus.Archived],
+  [BusinessStatus.Sent]:      [BusinessStatus.Accepted,  BusinessStatus.Rejected, BusinessStatus.Expired],
+  [BusinessStatus.Accepted]:  [BusinessStatus.Active,    BusinessStatus.Archived],
+  [BusinessStatus.Active]:    [BusinessStatus.Suspended, BusinessStatus.Archived],
+  [BusinessStatus.Suspended]: [BusinessStatus.Active,    BusinessStatus.Archived],
+  [BusinessStatus.Expired]:   [BusinessStatus.Archived],
+  [BusinessStatus.Rejected]:  [BusinessStatus.Archived],
+  [BusinessStatus.Archived]:  [],
 }
 
 export function validateTransition(

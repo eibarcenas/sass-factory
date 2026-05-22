@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { Item } from '@/types/catalog'
+import type { Item } from '@catalog-mx/core'
 import type { CatalogData } from '@/lib/api'
 import StorefrontHeader from './StorefrontHeader'
 import CategoryFilter from './CategoryFilter'
