@@ -21,7 +21,8 @@
 
 | Service | URL |
 |---------|-----|
-| **Admin panel** | https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app |
+| **Admin panel** (SUPER_ADMIN) | https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app |
+| **Storefront admin panel** (OWNER) | https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app/owner |
 | **Storefront** | https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app |
 | **API** | https://catalog-mx-api-dev-q3peeste7q-uc.a.run.app |
 | **API docs (Swagger)** | https://catalog-mx-api-dev-q3peeste7q-uc.a.run.app/docs |
@@ -45,7 +46,7 @@
 | **API** | _pending_ |
 
 **Service names (after first deploy):**
-- `catalog-mx-admin-stg`
+- `catalog-mx-admin-stg` (serves both SUPER_ADMIN `/` and OWNER `/owner`)
 - `catalog-mx-api-stg`
 - `catalog-mx-storefront-stg`
 
@@ -66,7 +67,7 @@
 | **API** | _pending_ |
 
 **Service names (after first deploy):**
-- `catalog-mx-admin-prod`
+- `catalog-mx-admin-prod` (serves both SUPER_ADMIN `/` and OWNER `/owner`)
 - `catalog-mx-api-prod`
 - `catalog-mx-storefront-prod`
 

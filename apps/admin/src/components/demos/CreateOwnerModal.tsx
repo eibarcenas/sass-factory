@@ -17,8 +17,7 @@ export default function CreateOwnerModal({ businessId, businessName, onClose }: 
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
 
-  const ADMIN_URL = import.meta.env.VITE_ADMIN_URL
-    ?? 'https://catalog-mx-admin-105288105956.us-central1.run.app'
+  const ADMIN_URL = import.meta.env.VITE_ADMIN_URL ?? window.location.origin
 
   async function activate() {
     if (!email) return

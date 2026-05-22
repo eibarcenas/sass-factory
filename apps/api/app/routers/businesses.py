@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
 from app.db import get_db
 from app.models.enums import BusinessStatus
+from app.shared.auth.rbac import require_role, require_owner_or_admin
+from app.shared.auth.jwt_models import Role, UserContext
 
 router = APIRouter(tags=["businesses"])
 
@@ -135,14 +138,14 @@ def business_action(id: str, action: str):
 # ── Owner endpoints (business owner managing their own catalog) ─────────────
 
 @router.patch("/owner/business")
-def owner_update_business(id_or_slug: str | None = None, patch: dict = {}):
-    """Owner updates their own business tagline/theme.
-    In production: id comes from request.state.user.business_id via RBAC.
-    TODO: add Depends(require_role(Role.OWNER)) and use user.business_id.
-    """
+def owner_update_business(
+    patch: dict,
+    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+):
     db = get_db()
-    # For now accept slug as query param (production: from JWT claims)
-    slug = id_or_slug or "heladeria-el-pinguino"
+    slug = user.business_id
+    if not slug:
+        raise HTTPException(status_code=403, detail="No business associated with this account")
     ref = db.collection("businesses").document(slug)
     if not ref.get().exists:
         raise HTTPException(status_code=404, detail=f"Business '{slug}' not found")
@@ -151,3 +154,88 @@ def owner_update_business(id_or_slug: str | None = None, patch: dict = {}):
     allowed["updatedAt"] = now
     ref.update(allowed)
     return {"updated": True, "slug": slug, **allowed}
+
+
+@router.get("/owner/business/items")
+def owner_list_items(
+    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+):
+    db = get_db()
+    slug = user.business_id
+    if not slug:
+        raise HTTPException(status_code=403, detail="No business associated with this account")
+    items = [
+        {**i.to_dict(), "id": i.id}
+        for i in db.collection(COLL).document(slug).collection("items").order_by("order").stream()
+    ]
+    return {"items": items}
+
+
+@router.post("/owner/business/items")
+def owner_add_item(
+    item: dict,
+    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+):
+    db = get_db()
+    slug = user.business_id
+    if not slug:
+        raise HTTPException(status_code=403, detail="No business associated with this account")
+    ref = db.collection(COLL).document(slug)
+    if not ref.get().exists:
+        raise HTTPException(status_code=404, detail=f"Business '{slug}' not found")
+    items_ref = ref.collection("items")
+    count = len(list(items_ref.stream()))
+    now = datetime.now(timezone.utc).isoformat()
+    new_item = {
+        "businessId": slug,
+        "name": item.get("name", ""),
+        "price": float(item.get("price", 0)),
+        "currency": "MXN",
+        "description": item.get("description"),
+        "visible": item.get("visible", True),
+        "order": count + 1,
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    doc_ref = items_ref.document()
+    doc_ref.set(new_item)
+    ref.update({"updatedAt": now})
+    return {**new_item, "id": doc_ref.id}
+
+
+@router.patch("/owner/business/items/{item_id}")
+def owner_update_item(
+    item_id: str,
+    patch: dict,
+    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+):
+    db = get_db()
+    slug = user.business_id
+    if not slug:
+        raise HTTPException(status_code=403, detail="No business associated with this account")
+    item_ref = db.collection(COLL).document(slug).collection("items").document(item_id)
+    if not item_ref.get().exists:
+        raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
+    now = datetime.now(timezone.utc).isoformat()
+    allowed = {k: v for k, v in patch.items() if k in ("name", "price", "description", "visible", "order")}
+    allowed["updatedAt"] = now
+    item_ref.update(allowed)
+    db.collection(COLL).document(slug).update({"updatedAt": now})
+    return {**item_ref.get().to_dict(), "id": item_id}
+
+
+@router.delete("/owner/business/items/{item_id}")
+def owner_delete_item(
+    item_id: str,
+    user: Annotated[UserContext, Depends(require_role(Role.OWNER))],
+):
+    db = get_db()
+    slug = user.business_id
+    if not slug:
+        raise HTTPException(status_code=403, detail="No business associated with this account")
+    item_ref = db.collection(COLL).document(slug).collection("items").document(item_id)
+    if not item_ref.get().exists:
+        raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
+    item_ref.delete()
+    db.collection(COLL).document(slug).update({"updatedAt": datetime.now(timezone.utc).isoformat()})
+    return {"deleted": item_id}

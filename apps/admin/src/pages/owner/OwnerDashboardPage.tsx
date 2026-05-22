@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from '../../store/auth'
-import { useItems, useUpdateItem, useAddItem, useDeleteItem } from '../../hooks/useItems'
+import { useOwnerItems, useOwnerUpdateItem, useOwnerAddItem, useOwnerDeleteItem } from '../../hooks/useItems'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,6 @@ import type { Item } from '../../hooks/useItems'
 import { BusinessStatus } from '@catalog-mx/core'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
-const CLOUD_STOREFRONT = 'https://catalog-mx-storefront-105288105956.us-central1.run.app'
 
 // ── Product row ───────────────────────────────────────────────────────────────
 function ProductRow({ item, businessId }: { item: Item; businessId: string }) {
@@ -21,8 +20,8 @@ function ProductRow({ item, businessId }: { item: Item; businessId: string }) {
   const [name, setName] = useState(item.name)
   const [price, setPrice] = useState(String(item.price))
   const [description, setDescription] = useState(item.description ?? '')
-  const updateItem = useUpdateItem(businessId)
-  const deleteItem = useDeleteItem(businessId)
+  const updateItem = useOwnerUpdateItem(businessId)
+  const deleteItem = useOwnerDeleteItem(businessId)
 
   async function save() {
     await updateItem.mutateAsync({ itemId: item.id, patch: { name, price: Number(price), description } })
@@ -74,7 +73,7 @@ function AddProduct({ businessId }: { businessId: string }) {
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [description, setDescription] = useState('')
-  const addItem = useAddItem(businessId)
+  const addItem = useOwnerAddItem(businessId)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -155,8 +154,8 @@ export default function OwnerDashboardPage() {
     queryFn: () => api.get<{ name: string; slug: string; tagline?: string; status: BusinessStatus }>(`/api/v1/storefront/${businessId}`),
   })
 
-  const { data: itemsData } = useItems(businessId)
-  const catalogUrl = `${CLOUD_STOREFRONT}/demo/${businessId}`
+  const { data: itemsData } = useOwnerItems(businessId)
+  const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
 
   function copyLink() {
     navigator.clipboard.writeText(catalogUrl)

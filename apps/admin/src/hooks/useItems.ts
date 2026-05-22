@@ -47,3 +47,40 @@ export function useDeleteItem(businessId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
+
+// ── Owner-scoped hooks (call /owner/business/items — auth via JWT) ────────────
+
+export function useOwnerItems(businessId: string) {
+  return useQuery<{ items: Item[] }>({
+    queryKey: ['items', businessId],
+    queryFn: () => api.get('/api/v1/owner/business/items'),
+    enabled: !!businessId,
+  })
+}
+
+export function useOwnerAddItem(businessId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: Partial<Item>) =>
+      api.post<Item>('/api/v1/owner/business/items', data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
+  })
+}
+
+export function useOwnerUpdateItem(businessId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ itemId, patch }: { itemId: string; patch: Partial<Item> }) =>
+      api.patch<Item>(`/api/v1/owner/business/items/${itemId}`, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
+  })
+}
+
+export function useOwnerDeleteItem(businessId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (itemId: string) =>
+      api.del(`/api/v1/owner/business/items/${itemId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
+  })
+}
