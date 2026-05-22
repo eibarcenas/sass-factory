@@ -73,14 +73,14 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
-  const { user, mockMode } = useAuthStore()
-  if (!mockMode && user?.role !== 'SUPER_ADMIN') return <Navigate to="/owner" replace />
+  const { user } = useAuthStore()
+  if (user?.role !== 'SUPER_ADMIN') return <Navigate to="/owner" replace />
   return <>{children}</>
 }
 
 function RequireOwner({ children }: { children: React.ReactNode }) {
-  const { user, mockMode } = useAuthStore()
-  if (!mockMode && user?.role !== 'OWNER') return <Navigate to="/" replace />
+  const { user } = useAuthStore()
+  if (user?.role !== 'OWNER') return <Navigate to="/" replace />
   return <>{children}</>
 }
 

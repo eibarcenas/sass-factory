@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/auth'
 import { useOwnerItems, useOwnerUpdateItem, useOwnerAddItem, useOwnerDeleteItem } from '../../hooks/useItems'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -118,6 +118,10 @@ function AddProduct({ businessId }: { businessId: string }) {
 function AppearanceSection({ businessId, currentTagline, readonly = false }: { businessId: string; currentTagline?: string; readonly?: boolean }) {
   const [tagline, setTagline] = useState(currentTagline ?? '')
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (currentTagline !== undefined) setTagline(currentTagline)
+  }, [currentTagline])
   const qc = useQueryClient()
 
   const save = useMutation({
