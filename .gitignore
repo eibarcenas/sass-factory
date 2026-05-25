@@ -101,3 +101,9 @@ infrastructure/iterraform/app/environments/*/secrets.auto.tfvars.json
 infrastructure/iterraform/**/.terraform/
 infrastructure/iterraform/**/.terraform.tfstate*
 infrastructure/iterraform/**/terraform.tfstate*
+
+# Playwright MCP
+.playwright-mcp/
+
+# E2E screenshots (local artifacts)
+*.png
