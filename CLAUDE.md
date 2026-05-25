@@ -1,37 +1,49 @@
 ## Quick Context
-**Stack**: Nuxt 4 + Vue 3, UnoCSS, Firebase/Firestore, Nitro/H3, pnpm monorepo (Node ≥20)
-**Key services**: Firebase Firestore (data), GCP Cloud Run (prod), Anthropic Claude API (app generation)
-**Entry points**: `apps/admin` → localhost:3000 | `apps/template` → localhost:3010+ (spawned per slug)
-**Tests**: No test suite — use `pnpm typecheck` for verification
-**Dev**: `pnpm dev:admin` | `pnpm dev:emulator` (with Firestore) | `pnpm dev:app <slug>` (template)
+**Stack**: React (admin) + Next.js 15 (storefront) + FastAPI (API), Firebase Auth, Firestore, pnpm monorepo (Node ≥20)
+**Key services**: Firebase Firestore (data), GCP Cloud Run (deploy), Firebase Auth (identity)
+**Entry points**: `apps/admin` → localhost:5173 | `apps/storefront` → localhost:3000 | `apps/api` → localhost:8000
+**Tests**: `pnpm -F @catalog-mx/core test` | `pnpm -F admin test` | `cd apps/api && .venv/bin/pytest -q`
+**Dev**: `pnpm dev` (admin + storefront) | `pnpm -F admin dev` | `pnpm -F storefront dev`
 
 ## Independent Modules
 | Module | Directory | Notes |
 |--------|-----------|-------|
-| admin-frontend | `apps/admin/app/` | Pages, composables, layouts — no shared server state |
-| admin-server | `apps/admin/server/` | Nitro API routes + simulators; owns job/notification stores |
-| template-app | `apps/template/` | Standalone themed SaaS starter; spawned per app slug |
-| core-types | `packages/core/src/types/` | `AppConfig`, `AppTheme`, `TOPIC_PRESETS` — read by all |
-| core-utils | `packages/core/src/utils/` | Firestore collection constants |
-| ui-components | `packages/ui/src/components/` | `AppCard`, `ThemePicker`, `FeatureToggle` — admin only |
-| infrastructure | `infrastructure/` | Terraform, k8s manifests, Cloud Build, dev scripts |
+| admin-frontend | `apps/admin/src/` | React + Vite; pages, hooks, components, Zustand auth store |
+| storefront | `apps/storefront/` | Next.js 15 App Router; public catalog pages per slug |
+| api | `apps/api/app/` | FastAPI; routers, RBAC middleware, Firestore client |
+| core-types | `packages/core/src/` | Shared TS types — Business, Item, BusinessStatus enum |
 
 **Shared files (coordinate before editing):**
 - `pnpm-lock.yaml` — monorepo lock file, high merge conflict risk
 - `pnpm-workspace.yaml` — workspace definition
-- `package.json` (root, apps/admin, apps/template, packages/core, packages/ui)
 - `packages/core/src/index.ts` — barrel export; changes break all consumers
-- `packages/core/src/types/app.ts` — type signatures consumed by admin + template + ui
-- `firebase.json` / `.firebaserc` — shared Firebase project config
-- `.github/workflows/deploy.yml` — CI/CD pipeline
+- `.github/workflows/deploy-dev.yml` — CI/CD pipeline
 
 ## Verification
 ```
-pnpm typecheck       # type-check all packages
-pnpm lint            # ESLint across all packages
-pnpm build:all       # full monorepo build
-pnpm build:admin     # admin only
+pnpm -F @catalog-mx/core typecheck   # core types
+pnpm -F admin typecheck              # admin
+pnpm -F @catalog-mx/core test        # core unit tests
+pnpm -F admin test                   # admin Vitest tests
+cd apps/api && .venv/bin/pytest -q   # API tests
 ```
 
+## Design System
+
+Source of truth: `apps/admin/src/components/ui/`
+Rule: any panel UI (admin or owner) MUST use these components. Never use raw `<input>`, `<button>`, or ad-hoc wrappers when a component exists. This rule also applies to `apps/storefront/components/ui/` (same shadcn components, copied per-app).
+
+Components:
+- `Card / CardHeader / CardTitle / CardContent` → section containers
+- `Input + Label` → all form fields
+- `Button (size + variant)` → all actions
+- `Badge` → status labels
+- `Separator` → visual dividers
+
+Tokens (never hardcode equivalent raw Tailwind):
+- `bg-muted`, `text-muted-foreground`, `border-input`, `ring-ring`
+- `bg-background` instead of `bg-white`
+- `bg-primary/10 text-primary` for active nav states
+
 ## Architecture Notes
-4 deployment modes: mock (useState, zero config), local Docker (local-simulator.ts), GCP Cloud Build (Terraform per-app GCP projects), and Kubernetes (kind local / Cloud Run prod). Admin streams infra progress to UI via SSE (server-sent events). Template apps are dynamically spawned by `infrastructure/scripts/dev-app.mjs` and assigned stable ports tracked in `.dev-ports.json` (gitignored). `@sass-factory/core` is the single source of truth for types — changing exported signatures requires updating both apps simultaneously.
+Multi-tenant SaaS: businesses create catalog pages, customers browse and order via WhatsApp. Admin (SUPER_ADMIN role) manages businesses and demos. Owners (OWNER role) manage their own business catalog. Auth uses Firebase custom claims (`role`, `business_id`). API enforces RBAC via `require_role()` / `require_owner_or_admin()` FastAPI dependencies. Storefront is public (no auth). Mock mode: admin works without Firebase keys (Zustand mock user), useful for local dev without credentials.
