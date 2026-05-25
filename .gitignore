@@ -107,3 +107,4 @@ infrastructure/iterraform/**/terraform.tfstate*
 
 # E2E screenshots (local artifacts)
 *.png
+!docs/screenshots/**/*.png

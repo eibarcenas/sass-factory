@@ -5,6 +5,8 @@ import { useProspects } from '../hooks/useProspects'
 import CreateDemoForm from '../components/demos/CreateDemoForm'
 import DemoList from '../components/demos/DemoList'
 import ProspectsPage from './ProspectsPage'
+import AppSidebar from '../components/layout/AppSidebar'
+import type { NavItem } from '../components/layout/AppSidebar'
 import { BusinessStatus } from '@catalog-mx/core'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,7 +16,7 @@ const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:
 
 type Page = 'dashboard' | 'demos' | 'prospects'
 
-function Sidebar({ active, onNavigate }: { active: Page; onNavigate: (p: Page) => void }) {
+function AdminSidebar({ active, onNavigate }: { active: Page; onNavigate: (p: Page) => void }) {
   const { user, mockMode } = useAuthStore()
   const { data: bizData } = useBusinesses()
   const { data: prospectData } = useProspects()
@@ -28,56 +30,35 @@ function Sidebar({ active, onNavigate }: { active: Page; onNavigate: (p: Page) =
     { label: 'Active',   status: BusinessStatus.Active },
   ]
 
-  const nav: { key: Page; icon: string; label: string; badge?: number }[] = [
+  const nav: NavItem<Page>[] = [
     { key: 'dashboard', icon: '🏠', label: 'Dashboard' },
-    { key: 'demos', icon: '✨', label: 'Demos' },
+    { key: 'demos',     icon: '✨', label: 'Demos' },
     { key: 'prospects', icon: '👥', label: 'Prospects', badge: newProspects },
   ]
 
   return (
-    <aside className="w-64 bg-background border-r flex flex-col h-screen sticky top-0">
-      <div className="px-6 py-5 border-b">
-        <span className="font-bold text-lg">catalog.mx</span>
-        {mockMode && <Badge variant="secondary" className="ml-2 text-xs">mock</Badge>}
-      </div>
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {nav.map(item => (
-          <button
-            key={item.key}
-            onClick={() => onNavigate(item.key)}
-            className={`w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              active === item.key
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <span>{item.icon}</span> {item.label}
-            </span>
-            {(item.badge ?? 0) > 0 && (
-              <Badge className="bg-green-500 text-white text-xs h-5">{item.badge}</Badge>
-            )}
-          </button>
-        ))}
-        <div className="pt-4 px-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Pipeline</p>
-          <div className="space-y-1.5">
-            {pipeline.map(({ label, status }) => {
-              const count = bizData?.businesses.filter(b => b.status === status).length ?? 0
-              return (
-                <div key={status} className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{label}</span>
-                  <span className="text-xs font-semibold bg-muted px-1.5 py-0.5 rounded-full">{count}</span>
-                </div>
-              )
-            })}
-          </div>
+    <AppSidebar
+      nav={nav}
+      active={active}
+      onNavigate={onNavigate}
+      headerSlot={mockMode && <Badge variant="secondary" className="ml-2 text-xs">mock</Badge>}
+      footerSlot={<p className="text-xs text-muted-foreground truncate">{user?.email}</p>}
+    >
+      <div className="pt-4 px-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Pipeline</p>
+        <div className="space-y-1.5">
+          {pipeline.map(({ label, status }) => {
+            const count = bizData?.businesses.filter(b => b.status === status).length ?? 0
+            return (
+              <div key={status} className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="text-xs font-semibold bg-muted px-1.5 py-0.5 rounded-full">{count}</span>
+              </div>
+            )
+          })}
         </div>
-      </nav>
-      <div className="px-4 py-4 border-t">
-        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
       </div>
-    </aside>
+    </AppSidebar>
   )
 }
 
@@ -93,7 +74,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
-      <Sidebar active={page} onNavigate={setPage} />
+      <AdminSidebar active={page} onNavigate={setPage} />
       <main className="flex-1 overflow-y-auto p-8">
 
         {page === 'dashboard' && (
