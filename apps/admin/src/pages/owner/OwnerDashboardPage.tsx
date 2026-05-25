@@ -14,6 +14,8 @@ import { BusinessStatus } from '@catalog-mx/core'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
+type Page = 'catalog' | 'appearance'
+
 // ── Product row ───────────────────────────────────────────────────────────────
 function ProductRow({ item, businessId, readonly = false }: { item: Item; businessId: string; readonly?: boolean }) {
   const [editing, setEditing] = useState(false)
@@ -32,10 +34,10 @@ function ProductRow({ item, businessId, readonly = false }: { item: Item; busine
     <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
       <Input value={name} onChange={e => setName(e.target.value)} placeholder="Product name" />
       <div className="grid grid-cols-2 gap-2">
-        <div className="flex items-center border rounded-md overflow-hidden">
+        <div className="flex items-center rounded-md border border-input bg-background overflow-hidden">
           <span className="px-2 text-sm text-muted-foreground border-r bg-muted">$</span>
-          <input type="number" value={price} onChange={e => setPrice(e.target.value)}
-            className="flex-1 px-2 py-1.5 text-sm focus:outline-none" min={0} />
+          <Input type="number" value={price} onChange={e => setPrice(e.target.value)}
+            className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0" min={0} />
           <span className="px-2 text-xs text-muted-foreground border-l bg-muted">MXN</span>
         </div>
         <div className="flex gap-1">
@@ -85,10 +87,10 @@ function AddProduct({ businessId }: { businessId: string }) {
   }
 
   if (!open) return (
-    <button onClick={() => setOpen(true)}
-      className="w-full py-2 border-2 border-dashed border-muted-foreground/30 rounded-lg text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors">
+    <Button variant="outline" onClick={() => setOpen(true)}
+      className="w-full border-dashed text-muted-foreground hover:text-primary">
       + Add product
-    </button>
+    </Button>
   )
 
   return (
@@ -96,10 +98,10 @@ function AddProduct({ businessId }: { businessId: string }) {
       <p className="text-xs font-semibold text-green-700">New product</p>
       <Input value={name} onChange={e => setName(e.target.value)} placeholder="Product name *" required />
       <div className="grid grid-cols-2 gap-2">
-        <div className="flex items-center border rounded-md overflow-hidden">
+        <div className="flex items-center rounded-md border border-input bg-background overflow-hidden">
           <span className="px-2 text-sm text-muted-foreground border-r bg-muted">$</span>
-          <input type="number" value={price} onChange={e => setPrice(e.target.value)}
-            className="flex-1 px-2 py-1.5 text-sm focus:outline-none" min={0} required />
+          <Input type="number" value={price} onChange={e => setPrice(e.target.value)}
+            className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0" min={0} required />
           <span className="px-2 text-xs text-muted-foreground border-l bg-muted">MXN</span>
         </div>
         <div className="flex gap-1">
@@ -114,15 +116,139 @@ function AddProduct({ businessId }: { businessId: string }) {
   )
 }
 
-// ── Appearance section ────────────────────────────────────────────────────────
-function AppearanceSection({ businessId, currentTagline, readonly = false }: { businessId: string; currentTagline?: string; readonly?: boolean }) {
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function Sidebar({ bizName, bizStatus, email, active, onNavigate, isPreview }: {
+  bizName?: string
+  bizStatus?: BusinessStatus
+  email?: string
+  active: Page
+  onNavigate: (p: Page) => void
+  isPreview?: boolean
+}) {
+  const nav: { key: Page; icon: string; label: string }[] = [
+    { key: 'catalog',    icon: '🛍️', label: 'My Products' },
+    { key: 'appearance', icon: '🎨', label: 'Appearance' },
+  ]
+
+  return (
+    <aside className="w-64 bg-background border-r flex flex-col h-screen sticky top-0">
+      <div className="px-6 py-5 border-b">
+        <span className="font-bold text-lg">catalog.mx</span>
+        {bizName && <p className="text-xs text-muted-foreground mt-0.5 truncate">{bizName}</p>}
+      </div>
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {nav.map(item => (
+          <button
+            key={item.key}
+            onClick={() => onNavigate(item.key)}
+            className={`w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              active === item.key
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            <span>{item.icon}</span> {item.label}
+          </button>
+        ))}
+      </nav>
+      <div className="px-4 py-4 border-t space-y-2">
+        {isPreview && (
+          <Badge variant="outline" className="w-full justify-center text-amber-700 border-amber-300 bg-amber-50">
+            Preview mode
+          </Badge>
+        )}
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground truncate">{email}</p>
+          {bizStatus && (
+            <Badge variant={bizStatus === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">
+              {bizStatus}
+            </Badge>
+          )}
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+// ── Catalog page (link + products) ───────────────────────────────────────────
+function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview }: {
+  businessId: string
+  previewSlug?: string
+  catalogUrl: string
+  isPreview: boolean
+}) {
+  const { data: itemsData } = useOwnerItems(businessId, previewSlug)
+
+  function copyLink() { navigator.clipboard.writeText(catalogUrl) }
+  function shareWhatsApp() {
+    const text = encodeURIComponent(`Check out my catalog! 🛍️ ${catalogUrl}`)
+    window.open(`https://wa.me/?text=${text}`, '_blank')
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">My Products</h1>
+        <p className="text-muted-foreground text-sm mt-1">Manage your catalog</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Your catalog link</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+            <p className="text-xs font-mono text-muted-foreground flex-1 truncate">{catalogUrl}</p>
+            <Button size="sm" variant="outline" onClick={copyLink}>Copy</Button>
+          </div>
+          {!isPreview && (
+            <div className="flex gap-2">
+              <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={shareWhatsApp}>
+                📱 Share on WhatsApp
+              </Button>
+              <Button size="sm" variant="outline" className="flex-1" asChild>
+                <a href={catalogUrl} target="_blank" rel="noopener noreferrer">View catalog →</a>
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Products <span className="text-muted-foreground font-normal text-sm">({itemsData?.items.length ?? 0})</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {itemsData?.items.map(item => (
+            <ProductRow key={item.id} item={item} businessId={businessId} readonly={isPreview} />
+          ))}
+          {!isPreview && (
+            <>
+              <Separator className="my-2" />
+              <AddProduct businessId={businessId} />
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// ── Appearance page ───────────────────────────────────────────────────────────
+function AppearancePage({ businessId, currentTagline, readonly = false }: {
+  businessId: string
+  currentTagline?: string
+  readonly?: boolean
+}) {
   const [tagline, setTagline] = useState(currentTagline ?? '')
   const [saved, setSaved] = useState(false)
+  const qc = useQueryClient()
 
   useEffect(() => {
     if (currentTagline !== undefined) setTagline(currentTagline)
   }, [currentTagline])
-  const qc = useQueryClient()
 
   const save = useMutation({
     mutationFn: () => api.patch(`/api/v1/owner/business`, { tagline }),
@@ -130,23 +256,30 @@ function AppearanceSection({ businessId, currentTagline, readonly = false }: { b
   })
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Appearance</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="space-y-1">
-          <Label>Tagline <span className="text-muted-foreground font-normal text-xs">({tagline.length}/120)</span></Label>
-          <Input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={120}
-            placeholder="The best ice cream in Monterrey 🍦" disabled={readonly} />
-        </div>
-        {!readonly && (
-          <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
-            {saved ? '✓ Saved' : save.isPending ? 'Saving...' : 'Save'}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Appearance</h1>
+        <p className="text-muted-foreground text-sm mt-1">Customize how your catalog looks</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Tagline</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-1">
+            <Label>Tagline <span className="text-muted-foreground font-normal text-xs">({tagline.length}/120)</span></Label>
+            <Input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={120}
+              placeholder="The best ice cream in Monterrey 🍦" disabled={readonly} />
+          </div>
+          {!readonly && (
+            <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
+              {saved ? '✓ Saved' : save.isPending ? 'Saving...' : 'Save'}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
@@ -158,99 +291,41 @@ interface OwnerDashboardProps {
 export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps) {
   const { user } = useAuthStore()
   const isPreview = !!previewSlug
-
-  // Preview mode: businessId comes from the URL slug
-  // Normal mode: businessId comes from JWT claims (fallback to demo slug)
   const businessId = previewSlug ?? user?.businessId ?? 'heladeria-el-pinguino'
+  const [page, setPage] = useState<Page>('catalog')
 
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
     queryFn: () => api.get<{ name: string; slug: string; tagline?: string; status: BusinessStatus }>(`/api/v1/storefront/${businessId}`),
   })
 
-  const { data: itemsData } = useOwnerItems(businessId, previewSlug)
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
 
-  function copyLink() {
-    navigator.clipboard.writeText(catalogUrl)
-  }
-
-  function shareWhatsApp() {
-    const text = encodeURIComponent(`Check out my catalog! 🛍️ ${catalogUrl}`)
-    window.open(`https://wa.me/?text=${text}`, '_blank')
-  }
-
   return (
-    <div className="min-h-screen bg-muted/20">
-      {/* Header */}
-      <header className="bg-background border-b sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="font-bold text-sm">{bizData?.name ?? 'My Catalog'}</h1>
-            <p className="text-xs text-muted-foreground">{isPreview ? `Previewing as SUPER_ADMIN` : user?.email}</p>
-          </div>
-          <Badge variant={bizData?.status === BusinessStatus.Active ? 'default' : 'secondary'}>
-            {bizData?.status ?? BusinessStatus.Demo}
-          </Badge>
-        </div>
-      </header>
+    <div className="flex h-screen overflow-hidden bg-muted/20">
+      <Sidebar
+        bizName={bizData?.name}
+        bizStatus={bizData?.status}
+        email={isPreview ? `Previewing: ${businessId}` : user?.email ?? undefined}
+        active={page}
+        onNavigate={setPage}
+        isPreview={isPreview}
+      />
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-
-        {/* Preview banner */}
+      <main className="flex-1 overflow-y-auto p-8">
         {isPreview && (
-          <div data-testid="preview-banner" className="flex items-center gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
+          <div data-testid="preview-banner" className="mb-6 flex items-center gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
             <span>🔍</span>
             <span><strong>Previewing as owner</strong> — You are viewing this as SUPER_ADMIN. Read-only mode.</span>
           </div>
         )}
 
-        {/* Catalog link */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Your catalog link</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-              <p className="text-xs font-mono text-muted-foreground flex-1 truncate">{catalogUrl}</p>
-              <Button size="sm" variant="outline" onClick={copyLink}>Copy</Button>
-            </div>
-            {!isPreview && (
-              <div className="flex gap-2">
-                <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={shareWhatsApp}>
-                  📱 Share on WhatsApp
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1" asChild>
-                  <a href={catalogUrl} target="_blank" rel="noopener noreferrer">View catalog →</a>
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Products */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Products <span className="text-muted-foreground font-normal text-sm">({itemsData?.items.length ?? 0})</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {itemsData?.items.map(item => (
-              <ProductRow key={item.id} item={item} businessId={businessId} readonly={isPreview} />
-            ))}
-            {!isPreview && (
-              <>
-                <Separator className="my-2" />
-                <AddProduct businessId={businessId} />
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Appearance */}
-        <AppearanceSection businessId={businessId} currentTagline={bizData?.tagline} readonly={isPreview} />
-
+        {page === 'catalog' && (
+          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} />
+        )}
+        {page === 'appearance' && (
+          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} readonly={isPreview} />
+        )}
       </main>
     </div>
   )
