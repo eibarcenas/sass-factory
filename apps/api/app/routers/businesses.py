@@ -5,6 +5,7 @@ from app.db import get_db
 from app.models.enums import BusinessStatus
 from app.shared.auth.rbac import require_role, require_owner_or_admin
 from app.shared.auth.jwt_models import Role, UserContext
+from app.services import item_service
 
 router = APIRouter(tags=["businesses"])
 
@@ -35,7 +36,6 @@ COLL = "businesses"
 def _doc_to_dict(doc) -> dict:
     d = doc.to_dict() or {}
     d["id"] = doc.id
-    # Fetch items subcollection inline
     items = [
         {**i.to_dict(), "id": i.id}
         for i in doc.reference.collection("items").order_by("order").stream()
@@ -52,67 +52,23 @@ def list_businesses(status: str | None = None):
     businesses = [_doc_to_dict(doc) for doc in q.stream()]
     return {"businesses": businesses, "total": len(businesses)}
 
-# ── Item CRUD (specific routes BEFORE /{action}) ───────────────────────────────
+# ── Item CRUD — admin (specific routes BEFORE /{action}) ──────────────────────
 
 @router.get("/admin/businesses/{id}/items")
 def list_items(id: str):
-    db = get_db()
-    ref = db.collection(COLL).document(id)
-    if not ref.get().exists:
-        raise HTTPException(status_code=404, detail=f"Business '{id}' not found")
-    items = [
-        {**i.to_dict(), "id": i.id}
-        for i in ref.collection("items").order_by("order").stream()
-    ]
-    return {"items": items}
+    return {"items": item_service.list_items(id)}
 
 @router.post("/admin/businesses/{id}/items")
 def add_item(id: str, item: dict):
-    db = get_db()
-    ref = db.collection(COLL).document(id)
-    if not ref.get().exists:
-        raise HTTPException(status_code=404, detail=f"Business '{id}' not found")
-    items_ref = ref.collection("items")
-    count = len(list(items_ref.stream()))
-    now = datetime.now(timezone.utc).isoformat()
-    new_item = {
-        "businessId": id,
-        "name": item.get("name", ""),
-        "price": float(item.get("price", 0)),
-        "currency": "MXN",
-        "description": item.get("description"),
-        "visible": item.get("visible", True),
-        "order": count + 1,
-        "createdAt": now,
-        "updatedAt": now,
-    }
-    doc_ref = items_ref.document()
-    doc_ref.set(new_item)
-    ref.update({"updatedAt": now})
-    return {**new_item, "id": doc_ref.id}
+    return item_service.add_item(id, item)
 
 @router.patch("/admin/businesses/{id}/items/{item_id}")
 def update_item(id: str, item_id: str, patch: dict):
-    db = get_db()
-    item_ref = db.collection(COLL).document(id).collection("items").document(item_id)
-    if not item_ref.get().exists:
-        raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
-    now = datetime.now(timezone.utc).isoformat()
-    allowed = {k: v for k, v in patch.items() if k in ("name", "price", "description", "visible", "order")}
-    allowed["updatedAt"] = now
-    item_ref.update(allowed)
-    db.collection(COLL).document(id).update({"updatedAt": now})
-    return {**item_ref.get().to_dict(), "id": item_id}
+    return item_service.update_item(id, item_id, patch)
 
 @router.delete("/admin/businesses/{id}/items/{item_id}")
 def delete_item(id: str, item_id: str):
-    db = get_db()
-    item_ref = db.collection(COLL).document(id).collection("items").document(item_id)
-    if not item_ref.get().exists:
-        raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
-    item_ref.delete()
-    db.collection(COLL).document(id).update({"updatedAt": datetime.now(timezone.utc).isoformat()})
-    return {"deleted": item_id}
+    return item_service.delete_item(id, item_id)
 
 # ── Business lifecycle action ──────────────────────────────────────────────────
 
@@ -170,18 +126,15 @@ def owner_update_business(
     return {"updated": True, "slug": slug, **allowed}
 
 
+# ── Item CRUD — owner ─────────────────────────────────────────────────────────
+
 @router.get("/owner/business/items")
 def owner_list_items(
     business: str | None = None,
     user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
     slug = _resolve_owner_slug(user, business)
-    db = get_db()
-    items = [
-        {**i.to_dict(), "id": i.id}
-        for i in db.collection(COLL).document(slug).collection("items").order_by("order").stream()
-    ]
-    return {"items": items}
+    return {"items": item_service.list_items(slug)}
 
 
 @router.post("/owner/business/items")
@@ -191,28 +144,7 @@ def owner_add_item(
     user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
     slug = _resolve_owner_slug(user, business)
-    db = get_db()
-    ref = db.collection(COLL).document(slug)
-    if not ref.get().exists:
-        raise HTTPException(status_code=404, detail=f"Business '{slug}' not found")
-    items_ref = ref.collection("items")
-    count = len(list(items_ref.stream()))
-    now = datetime.now(timezone.utc).isoformat()
-    new_item = {
-        "businessId": slug,
-        "name": item.get("name", ""),
-        "price": float(item.get("price", 0)),
-        "currency": "MXN",
-        "description": item.get("description"),
-        "visible": item.get("visible", True),
-        "order": count + 1,
-        "createdAt": now,
-        "updatedAt": now,
-    }
-    doc_ref = items_ref.document()
-    doc_ref.set(new_item)
-    ref.update({"updatedAt": now})
-    return {**new_item, "id": doc_ref.id}
+    return item_service.add_item(slug, item)
 
 
 @router.patch("/owner/business/items/{item_id}")
@@ -223,16 +155,7 @@ def owner_update_item(
     user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
     slug = _resolve_owner_slug(user, business)
-    db = get_db()
-    item_ref = db.collection(COLL).document(slug).collection("items").document(item_id)
-    if not item_ref.get().exists:
-        raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
-    now = datetime.now(timezone.utc).isoformat()
-    allowed = {k: v for k, v in patch.items() if k in ("name", "price", "description", "visible", "order")}
-    allowed["updatedAt"] = now
-    item_ref.update(allowed)
-    db.collection(COLL).document(slug).update({"updatedAt": now})
-    return {**item_ref.get().to_dict(), "id": item_id}
+    return item_service.update_item(slug, item_id, patch)
 
 
 @router.delete("/owner/business/items/{item_id}")
@@ -242,10 +165,4 @@ def owner_delete_item(
     user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
 ):
     slug = _resolve_owner_slug(user, business)
-    db = get_db()
-    item_ref = db.collection(COLL).document(slug).collection("items").document(item_id)
-    if not item_ref.get().exists:
-        raise HTTPException(status_code=404, detail=f"Item '{item_id}' not found")
-    item_ref.delete()
-    db.collection(COLL).document(slug).update({"updatedAt": datetime.now(timezone.utc).isoformat()})
-    return {"deleted": item_id}
+    return item_service.delete_item(slug, item_id)
