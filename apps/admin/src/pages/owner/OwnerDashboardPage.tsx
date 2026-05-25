@@ -3,6 +3,8 @@ import { useAuthStore } from '../../store/auth'
 import { useOwnerItems, useOwnerUpdateItem, useOwnerAddItem, useOwnerDeleteItem } from '../../hooks/useItems'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
+import AppSidebar from '../../components/layout/AppSidebar'
+import type { NavItem } from '../../components/layout/AppSidebar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -116,59 +118,10 @@ function AddProduct({ businessId }: { businessId: string }) {
   )
 }
 
-// ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar({ bizName, bizStatus, email, active, onNavigate, isPreview }: {
-  bizName?: string
-  bizStatus?: BusinessStatus
-  email?: string
-  active: Page
-  onNavigate: (p: Page) => void
-  isPreview?: boolean
-}) {
-  const nav: { key: Page; icon: string; label: string }[] = [
-    { key: 'catalog',    icon: '🛍️', label: 'My Products' },
-    { key: 'appearance', icon: '🎨', label: 'Appearance' },
-  ]
-
-  return (
-    <aside className="w-64 bg-background border-r flex flex-col h-screen sticky top-0">
-      <div className="px-6 py-5 border-b">
-        <span className="font-bold text-lg">catalog.mx</span>
-        {bizName && <p className="text-xs text-muted-foreground mt-0.5 truncate">{bizName}</p>}
-      </div>
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {nav.map(item => (
-          <button
-            key={item.key}
-            onClick={() => onNavigate(item.key)}
-            className={`w-full text-left flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              active === item.key
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <span>{item.icon}</span> {item.label}
-          </button>
-        ))}
-      </nav>
-      <div className="px-4 py-4 border-t space-y-2">
-        {isPreview && (
-          <Badge variant="outline" className="w-full justify-center text-amber-700 border-amber-300 bg-amber-50">
-            Preview mode
-          </Badge>
-        )}
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-muted-foreground truncate">{email}</p>
-          {bizStatus && (
-            <Badge variant={bizStatus === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">
-              {bizStatus}
-            </Badge>
-          )}
-        </div>
-      </div>
-    </aside>
-  )
-}
+const OWNER_NAV: NavItem<Page>[] = [
+  { key: 'catalog',    icon: '🛍️', label: 'My Products' },
+  { key: 'appearance', icon: '🎨', label: 'Appearance' },
+]
 
 // ── Catalog page (link + products) ───────────────────────────────────────────
 function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview }: {
@@ -303,13 +256,30 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
-      <Sidebar
-        bizName={bizData?.name}
-        bizStatus={bizData?.status}
-        email={isPreview ? `Previewing: ${businessId}` : user?.email ?? undefined}
+      <AppSidebar
+        nav={OWNER_NAV}
         active={page}
         onNavigate={setPage}
-        isPreview={isPreview}
+        headerSlot={bizData?.name && <p className="text-xs text-muted-foreground mt-0.5 truncate">{bizData.name}</p>}
+        footerSlot={
+          <div className="space-y-2">
+            {isPreview && (
+              <Badge variant="outline" className="w-full justify-center text-amber-700 border-amber-300 bg-amber-50">
+                Preview mode
+              </Badge>
+            )}
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground truncate">
+                {isPreview ? `Previewing: ${businessId}` : user?.email}
+              </p>
+              {bizData?.status && (
+                <Badge variant={bizData.status === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">
+                  {bizData.status}
+                </Badge>
+              )}
+            </div>
+          </div>
+        }
       />
 
       <main className="flex-1 overflow-y-auto p-8">
