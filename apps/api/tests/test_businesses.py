@@ -63,11 +63,7 @@ def _db_with(businesses: list[dict]):
 
 @pytest.fixture
 def client():
-    import app.shared.middleware.auth_middleware as mw
-    with (
-        patch.object(mw, "DEV_USER_EMAIL", "dev@test.local"),
-        patch.dict(os.environ, {"ENVIRONMENT": "local"}),
-    ):
+    with patch.dict(os.environ, {"DEV_USER_EMAIL": "dev@test.local", "ENVIRONMENT": "local"}):
         from main import app
         yield TestClient(app)
 
@@ -88,8 +84,7 @@ def test_list_businesses_returns_all(client):
 
 
 def test_list_businesses_requires_auth():
-    import app.shared.middleware.auth_middleware as mw
-    with patch.object(mw, "DEV_USER_EMAIL", None):
+    with patch.dict(os.environ, {"DEV_USER_EMAIL": ""}):
         from main import app
         c = TestClient(app)
         db = _db_with([])

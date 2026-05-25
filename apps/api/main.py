@@ -7,7 +7,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.routers import health, businesses, demos, storefront, prospects, images
-from app.shared.middleware.auth_middleware import AuthMiddleware
+from factory_auth import AuthMiddleware
 
 def _client_ip(request: Request) -> str:
     forwarded = request.headers.get("x-forwarded-for")
@@ -23,7 +23,14 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Auth middleware — added FIRST so CORS wraps it (CORS added last = outermost)
-app.add_middleware(AuthMiddleware)
+app.add_middleware(
+    AuthMiddleware,
+    public_prefixes=(
+        "/api/v1/storefront/",
+        "/api/v1/prospects",
+        "/auth/",
+    ),
+)
 
 # CORS — added LAST = outermost middleware = adds headers to ALL responses including 401/403
 app.add_middleware(

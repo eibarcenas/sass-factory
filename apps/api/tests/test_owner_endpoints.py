@@ -9,7 +9,7 @@ import os
 from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
-from app.shared.auth.jwt_models import UserContext, Role
+from factory_auth import UserContext, Role
 
 
 # ---------------------------------------------------------------------------
@@ -57,11 +57,7 @@ def _empty_db():
 @pytest.fixture
 def super_admin_client():
     """SUPER_ADMIN via dev bypass."""
-    import app.shared.middleware.auth_middleware as mw
-    with (
-        patch.object(mw, "DEV_USER_EMAIL", "dev@test.local"),
-        patch.dict(os.environ, {"ENVIRONMENT": "local"}),
-    ):
+    with patch.dict(os.environ, {"DEV_USER_EMAIL": "dev@test.local", "ENVIRONMENT": "local"}):
         from main import app
         yield TestClient(app)
 
@@ -72,8 +68,7 @@ def owner_client():
     Uses dev bypass so middleware passes, then overrides get_current_user
     via FastAPI's dependency_overrides to inject OWNER context.
     """
-    import app.shared.middleware.auth_middleware as mw
-    from app.shared.auth.rbac import get_current_user
+    from factory_auth import get_current_user
 
     owner = UserContext(
         firebase_uid="owner-uid",
@@ -83,10 +78,7 @@ def owner_client():
         modules=[],
     )
 
-    with (
-        patch.object(mw, "DEV_USER_EMAIL", "dev@test.local"),
-        patch.dict(os.environ, {"ENVIRONMENT": "local"}),
-    ):
+    with patch.dict(os.environ, {"DEV_USER_EMAIL": "dev@test.local", "ENVIRONMENT": "local"}):
         from main import app
         app.dependency_overrides[get_current_user] = lambda: owner
         try:

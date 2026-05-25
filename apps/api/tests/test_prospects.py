@@ -28,19 +28,14 @@ def db():
 @pytest.fixture
 def public_client():
     """No auth bypass — simulates storefront (public)."""
-    import app.shared.middleware.auth_middleware as mw
-    with patch.object(mw, "DEV_USER_EMAIL", None):
+    with patch.dict(os.environ, {"DEV_USER_EMAIL": ""}):
         from main import app
         yield TestClient(app)
 
 
 @pytest.fixture
 def authed_client():
-    import app.shared.middleware.auth_middleware as mw
-    with (
-        patch.object(mw, "DEV_USER_EMAIL", "dev@test.local"),
-        patch.dict(os.environ, {"ENVIRONMENT": "local"}),
-    ):
+    with patch.dict(os.environ, {"DEV_USER_EMAIL": "dev@test.local", "ENVIRONMENT": "local"}):
         from main import app
         yield TestClient(app)
 
