@@ -1,22 +1,8 @@
-import { create } from 'zustand'
+import { createAuthStore } from '@catalog-mx/auth'
+import type { AuthUser } from '@catalog-mx/auth'
 
 export type UserRole = 'SUPER_ADMIN' | 'OWNER'
-
-export interface AuthUser {
-  uid: string
-  email: string | null
-  role: UserRole
-  businessId?: string  // set when role === 'OWNER'
-  modules: string[]
-}
-
-interface AuthStore {
-  user: AuthUser | null
-  mockMode: boolean
-  loading: boolean
-  setUser: (user: AuthUser | null) => void
-  setLoading: (v: boolean) => void
-}
+export type { AuthUser }
 
 const MOCK_MODE = !import.meta.env.VITE_FIREBASE_API_KEY
 const MOCK_ROLE = (import.meta.env.VITE_MOCK_ROLE ?? 'SUPER_ADMIN') as UserRole
@@ -35,10 +21,7 @@ function mockUser(): AuthUser {
   return { uid: 'mock-admin', email: 'admin@catalog.mx', role: 'SUPER_ADMIN', modules: [] }
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
-  user: MOCK_MODE ? mockUser() : null,
+export const useAuthStore = createAuthStore({
   mockMode: MOCK_MODE,
-  loading: false,
-  setUser: (user) => set({ user }),
-  setLoading: (loading) => set({ loading }),
-}))
+  initialUser: MOCK_MODE ? mockUser() : null,
+})

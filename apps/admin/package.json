@@ -13,6 +13,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@catalog-mx/auth": "workspace:*",
+    "@catalog-mx/client": "workspace:*",
     "@catalog-mx/core": "workspace:*",
     "@catalog-mx/ui": "workspace:*",
     "@radix-ui/react-label": "^2.1.8",
