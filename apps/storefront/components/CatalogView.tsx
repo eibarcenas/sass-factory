@@ -9,6 +9,7 @@ import ProductModal from './ProductModal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
 
 function ProductCard({ item, primaryColor, onSelect }: {
   item: Item; primaryColor: string; onSelect: (item: Item) => void
@@ -88,10 +89,9 @@ function ProspectModal({ businessId, onClose }: { businessId: string; onClose: (
                 { key: 'phone', type: 'tel', placeholder: 'Phone / WhatsApp *' },
                 { key: 'email', type: 'email', placeholder: 'Email (optional)' },
               ].map(f => (
-                <input key={f.key} type={f.type} placeholder={f.placeholder}
+                <Input key={f.key} type={f.type} placeholder={f.placeholder}
                   value={form[f.key as keyof typeof form]}
                   onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                  className="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
                 />
               ))}
             </div>
