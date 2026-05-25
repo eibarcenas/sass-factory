@@ -1,70 +1,17 @@
-import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { useFirebaseAuthRestore } from '@catalog-mx/auth'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'
 import { useAuthStore, type UserRole } from './store/auth'
 
-// Restore Firebase session on page reload
-function useAuthRestore() {
-  const [checking, setChecking] = useState(true)
-  const { mockMode, setUser } = useAuthStore()
-
-  useEffect(() => {
-    if (mockMode) {
-      setChecking(false)
-      return
+const FIREBASE_CONFIG = import.meta.env.VITE_FIREBASE_API_KEY
+  ? {
+      apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
     }
-
-    let unsubscribe: (() => void) | null = null
-
-    async function init() {
-      try {
-        const { getAuth, onAuthStateChanged } = await import('firebase/auth')
-        const { initializeApp, getApps } = await import('firebase/app')
-
-        if (!getApps().length) {
-          initializeApp({
-            apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
-            authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-            projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
-          })
-        }
-
-        const auth = getAuth()
-        unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-          if (fbUser) {
-            // User is still logged in — restore session with claims
-            const { claims } = await fbUser.getIdTokenResult()
-            const role = claims.role as UserRole | undefined
-            if (role) {
-              setUser({
-                uid:        fbUser.uid,
-                email:      fbUser.email,
-                role,
-                businessId: claims.business_id as string | undefined,
-                modules:    (claims.modules as string[]) ?? [],
-              })
-            } else {
-              // Logged in with Google but no role assigned yet
-              setUser(null)
-            }
-          } else {
-            setUser(null)
-          }
-          setChecking(false)
-        })
-      } catch {
-        setChecking(false)
-      }
-    }
-
-    init()
-    return () => { unsubscribe?.() }
-  }, [mockMode, setUser])
-
-  return checking
-}
+  : null
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, mockMode } = useAuthStore()
@@ -97,9 +44,23 @@ function RoleRedirect() {
 }
 
 export default function App() {
-  const checking = useAuthRestore()
+  const store = useAuthStore()
+  const { checking } = useFirebaseAuthRestore({
+    store,
+    firebaseConfig: FIREBASE_CONFIG,
+    buildUser: (uid, email, claims) => {
+      const role = claims.role as UserRole | undefined
+      if (!role) return null
+      return {
+        uid,
+        email,
+        role,
+        businessId: claims.business_id as string | undefined,
+        modules: (claims.modules as string[]) ?? [],
+      }
+    },
+  })
 
-  // Show nothing while Firebase checks the session (prevents login flash)
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
