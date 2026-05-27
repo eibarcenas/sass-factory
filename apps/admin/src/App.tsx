@@ -5,6 +5,9 @@ import DashboardPage from './pages/DashboardPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'
 import { useAuthStore, type UserRole } from './store/auth'
 
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const RESOLVE_CLAIMS_URL = `${API_URL}/api/v1/auth/resolve-claims`
+
 const FIREBASE_CONFIG = import.meta.env.VITE_FIREBASE_API_KEY
   ? {
       apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
@@ -48,6 +51,7 @@ export default function App() {
   const { checking } = useFirebaseAuthRestore({
     store,
     firebaseConfig: FIREBASE_CONFIG,
+    resolveClaimsUrl: RESOLVE_CLAIMS_URL,
     buildUser: (uid, email, claims) => {
       const role = claims.role as UserRole | undefined
       if (!role) return null
