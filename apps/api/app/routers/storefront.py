@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from app.db import get_db
 from app.models.enums import BusinessStatus
@@ -26,3 +27,21 @@ def get_storefront(slug: str):
     business["items"] = [i for i in all_items if i.get("visible", True)]
 
     return business
+
+@router.post("/storefront/{slug}/whatsapp-click")
+def record_whatsapp_click(slug: str):
+    """Fire-and-forget click counter. Called from storefront on every WhatsApp CTA tap."""
+    try:
+        db = get_db()
+        biz_ref = db.collection("businesses").document(slug)
+        doc = biz_ref.get()
+        if not doc.exists:
+            return {"ok": False}
+        current = doc.to_dict().get("whatsappClicks", 0)
+        biz_ref.update({
+            "whatsappClicks": current + 1,
+            "lastWhatsappClickAt": datetime.now(timezone.utc).isoformat(),
+        })
+    except Exception:
+        pass
+    return {"ok": True}

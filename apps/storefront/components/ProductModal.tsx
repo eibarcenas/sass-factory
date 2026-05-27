@@ -21,17 +21,17 @@ const WhatsAppIcon = () => (
 export default function ProductModal({
   item,
   whatsapp,
+  slug,
   onClose,
 }: {
   item: Item | null
   whatsapp: string
+  slug: string
   onClose: () => void
 }) {
   const [qty, setQty] = useState(1)
 
   useEffect(() => { if (item) setQty(1) }, [item])
-
-  const waUrl = item ? buildWhatsAppUrl(whatsapp, `${qty}x ${item.name}`, item.price * qty) : '#'
 
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
@@ -68,11 +68,19 @@ export default function ProductModal({
                   >+</button>
                 </div>
               </div>
-              <Button asChild className="w-full bg-green-500 hover:bg-green-600 gap-2">
-                <a href={waUrl} target="_blank" rel="noopener noreferrer">
-                  <WhatsAppIcon />
-                  Order via WhatsApp
-                </a>
+              <Button
+                className="w-full bg-green-500 hover:bg-green-600 gap-2"
+                onClick={() => {
+                  fetch(`/api/wa-click`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug }),
+                  }).catch(() => {})
+                  window.open(buildWhatsAppUrl(whatsapp, `${qty}x ${item.name}`, item.price * qty), '_blank')
+                }}
+              >
+                <WhatsAppIcon />
+                Order via WhatsApp
               </Button>
             </div>
           </>

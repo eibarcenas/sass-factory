@@ -132,11 +132,12 @@ const OWNER_NAV: NavItem<Page>[] = [
 ]
 
 // ── Catalog page (link + products) ───────────────────────────────────────────
-function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview }: {
+function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, whatsappClicks }: {
   businessId: string
   previewSlug?: string
   catalogUrl: string
   isPreview: boolean
+  whatsappClicks?: number
 }) {
   const { data: itemsData } = useOwnerItems(businessId, previewSlug)
 
@@ -171,6 +172,11 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview }: {
                 <a href={catalogUrl} target="_blank" rel="noopener noreferrer">View catalog →</a>
               </Button>
             </div>
+          )}
+          {typeof whatsappClicks === 'number' && (
+            <p className="text-xs text-muted-foreground">
+              📱 {whatsappClicks} WhatsApp clicks
+            </p>
           )}
         </CardContent>
       </Card>
@@ -268,7 +274,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
 
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
-    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; whatsapp?: string; status: BusinessStatus }>(`/api/v1/storefront/${businessId}`),
+    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; whatsapp?: string; status: BusinessStatus; whatsappClicks?: number }>(`/api/v1/storefront/${businessId}`),
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
@@ -310,7 +316,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         )}
 
         {page === 'catalog' && (
-          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} />
+          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} whatsappClicks={bizData?.whatsappClicks} />
         )}
         {page === 'appearance' && (
           <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} />

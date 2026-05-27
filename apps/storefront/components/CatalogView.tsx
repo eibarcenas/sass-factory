@@ -243,7 +243,7 @@ export default function CatalogView({ data, isDemo = false }: { data: CatalogDat
         <ViralFooter />
       </main>
 
-      <ProductModal item={selectedItem} whatsapp={data.whatsapp} onClose={() => setSelectedItem(null)} />
+      <ProductModal item={selectedItem} whatsapp={data.whatsapp} slug={data.slug} onClose={() => setSelectedItem(null)} />
       {showDemoAccept && <DemoAcceptModal slug={data.slug} onClose={() => setShowDemoAccept(false)} />}
       {showProspect && <ProspectModal businessId={data.id} onClose={() => setShowProspect(false)} />}
     </div>
