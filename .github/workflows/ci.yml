@@ -20,11 +20,11 @@ jobs:
         uses: astral-sh/setup-uv@v5
       - name: Install Python 3.13 + API deps
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           cd apps/api
           uv venv --python 3.13
-          git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
           uv pip install -e ".[dev]"
       - name: Install JS dependencies
         run: pnpm install --frozen-lockfile
