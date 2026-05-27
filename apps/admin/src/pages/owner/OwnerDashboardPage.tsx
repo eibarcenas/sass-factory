@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/auth'
 import { useOwnerItems, useOwnerUpdateItem, useOwnerAddItem, useOwnerDeleteItem } from '../../hooks/useItems'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
+import ImageUpload from '../../components/demos/ImageUpload'
 import AppSidebar from '../../components/layout/AppSidebar'
 import type { NavItem } from '../../components/layout/AppSidebar'
 import { Button } from '@/components/ui/button'
@@ -24,11 +25,12 @@ function ProductRow({ item, businessId, readonly = false }: { item: Item; busine
   const [name, setName] = useState(item.name)
   const [price, setPrice] = useState(String(item.price))
   const [description, setDescription] = useState(item.description ?? '')
+  const [image, setImage] = useState(item.image ?? '')
   const updateItem = useOwnerUpdateItem(businessId)
   const deleteItem = useOwnerDeleteItem(businessId)
 
   async function save() {
-    await updateItem.mutateAsync({ itemId: item.id, patch: { name, price: Number(price), description } })
+    await updateItem.mutateAsync({ itemId: item.id, patch: { name, price: Number(price), description, image: image || undefined } })
     setEditing(false)
   }
 
@@ -50,11 +52,17 @@ function ProductRow({ item, businessId, readonly = false }: { item: Item; busine
         </div>
       </div>
       <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Description (optional)" />
+      <ImageUpload currentUrl={image} onUploaded={url => setImage(url)} folder="products" />
     </div>
   )
 
   return (
     <div className={`flex items-center gap-3 p-3 rounded-lg border ${!item.visible ? 'opacity-50' : ''}`}>
+      {item.image ? (
+        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-border" />
+      ) : (
+        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 text-lg">📦</div>
+      )}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{item.name}</p>
         {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}

@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from app.db import get_db
 
 COLL = "businesses"
-ALLOWED_PATCH_FIELDS = ("name", "price", "description", "visible", "order")
+ALLOWED_PATCH_FIELDS = ("name", "price", "description", "image", "visible", "order")
 
 
 def list_items(business_id: str) -> list[dict]:
