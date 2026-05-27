@@ -22,11 +22,13 @@ jobs:
         with: { node-version: 20, cache: pnpm }
       - uses: astral-sh/setup-uv@v5
       - name: Install Python deps
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          cd apps/api && uv venv --python 3.13
-          uv pip install fastapi "uvicorn[standard]" pydantic pydantic-settings \
-            google-cloud-firestore google-cloud-storage firebase-admin \
-            cachetools slowapi python-dotenv python-multipart pytest httpx
+          cd apps/api
+          uv venv --python 3.13
+          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          uv pip install -e ".[dev]"
       - run: pnpm install --frozen-lockfile
       - run: pnpm -F @eguru/core typecheck
       - run: pnpm -F admin typecheck
