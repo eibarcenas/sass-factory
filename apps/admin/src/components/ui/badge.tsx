@@ -1,1 +1,1 @@
-export { Badge, badgeVariants, type BadgeProps } from '@catalog-mx/ui'
+export { Badge, badgeVariants, type BadgeProps } from '@eguru/ui'

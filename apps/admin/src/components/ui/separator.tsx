@@ -1,1 +1,1 @@
-export { Separator } from '@catalog-mx/ui'
+export { Separator } from '@eguru/ui'

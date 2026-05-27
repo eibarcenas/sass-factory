@@ -1,1 +1,1 @@
-export { Label } from '@catalog-mx/ui'
+export { Label } from '@eguru/ui'

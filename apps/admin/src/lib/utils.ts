@@ -1,1 +1,1 @@
-export { cn } from '@catalog-mx/ui'
+export { cn } from '@eguru/ui'

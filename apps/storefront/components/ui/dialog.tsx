@@ -9,4 +9,4 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from '@catalog-mx/ui'
+} from '@eguru/ui'

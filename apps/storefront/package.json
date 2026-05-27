@@ -10,8 +10,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@catalog-mx/core": "workspace:*",
-    "@catalog-mx/ui": "workspace:*",
+    "@eguru/core": "workspace:*",
+    "@eguru/ui": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",

@@ -31,9 +31,9 @@ jobs:
       - name: Install JS dependencies
         run: pnpm install --frozen-lockfile
       - name: Typecheck core
-        run: pnpm -F @catalog-mx/core typecheck
+        run: pnpm -F @eguru/core typecheck
       - name: Core unit tests
-        run: pnpm -F @catalog-mx/core test
+        run: pnpm -F @eguru/core test
       - name: API tests (Python 3.13)
         run: cd apps/api && DEV_USER_EMAIL=dev@catalog.mx ENVIRONMENT=local .venv/bin/pytest -q
       - name: Lint

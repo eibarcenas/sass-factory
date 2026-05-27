@@ -23,16 +23,16 @@ importers:
 
   apps/admin:
     dependencies:
-      '@catalog-mx/auth':
+      '@eguru/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@catalog-mx/client':
+      '@eguru/client':
         specifier: workspace:*
         version: link:../../packages/client
-      '@catalog-mx/core':
+      '@eguru/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@catalog-mx/ui':
+      '@eguru/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@radix-ui/react-label':
@@ -123,10 +123,10 @@ importers:
 
   apps/storefront:
     dependencies:
-      '@catalog-mx/core':
+      '@eguru/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@catalog-mx/ui':
+      '@eguru/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@radix-ui/react-dialog':

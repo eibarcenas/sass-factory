@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import type { Item } from '../../hooks/useItems'
-import { BusinessStatus } from '@catalog-mx/core'
+import { BusinessStatus } from '@eguru/core'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 

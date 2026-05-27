@@ -4,7 +4,7 @@ import { useBusinesses, useBusinessAction } from '../../hooks/useBusinesses'
 import StatusBadge from '../ui/StatusBadge'
 import ProductEditor from './ProductEditor'
 import CreateOwnerModal from './CreateOwnerModal'
-import { BusinessStatus, type Business } from '@catalog-mx/core'
+import { BusinessStatus, type Business } from '@eguru/core'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 

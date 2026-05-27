@@ -28,9 +28,9 @@ jobs:
             google-cloud-firestore google-cloud-storage firebase-admin \
             cachetools slowapi python-dotenv python-multipart pytest httpx
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -F @catalog-mx/core typecheck
+      - run: pnpm -F @eguru/core typecheck
       - run: pnpm -F admin typecheck
-      - run: pnpm -F @catalog-mx/core test
+      - run: pnpm -F @eguru/core test
       - run: pnpm -F admin test
       - name: Run API tests
         run: cd apps/api && .venv/bin/pytest -q
