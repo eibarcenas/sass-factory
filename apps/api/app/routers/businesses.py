@@ -122,7 +122,7 @@ def owner_update_business(
     if not ref.get().exists:
         raise HTTPException(status_code=404, detail=f"Business '{slug}' not found")
     now = datetime.now(timezone.utc).isoformat()
-    allowed = {k: v for k, v in patch.items() if k in ("tagline", "theme", "name")}
+    allowed = {k: v for k, v in patch.items() if k in ("tagline", "theme", "name", "whatsapp")}
     allowed["updatedAt"] = now
     ref.update(allowed)
     return {"updated": True, "slug": slug, **allowed}

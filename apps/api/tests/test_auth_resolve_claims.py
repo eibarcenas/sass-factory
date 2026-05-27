@@ -4,7 +4,6 @@ Verifies that owners with no role claim get their Firebase custom claims
 set when a pending_owners record exists, and that the endpoint is a no-op
 when the record is absent.
 """
-import os
 from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
@@ -42,13 +41,12 @@ def roleless_client():
         modules=[],
     )
 
-    with patch.dict(os.environ, {"DEV_USER_EMAIL": "dev@test.local", "ENVIRONMENT": "local"}):
-        from main import app
-        app.dependency_overrides[get_current_user] = lambda: roleless
-        try:
-            yield TestClient(app)
-        finally:
-            app.dependency_overrides.pop(get_current_user, None)
+    from main import app
+    app.dependency_overrides[get_current_user] = lambda: roleless
+    try:
+        yield TestClient(app)
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
 
 
 def _db_with_pending(email: str, business_id: str):

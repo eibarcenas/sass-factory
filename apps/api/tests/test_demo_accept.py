@@ -3,8 +3,7 @@ POST /api/v1/demos/{slug}/accept tests.
 Verifies that a demo owner can self-accept, triggering pending_owners creation
 and business status advance to ACCEPTED. Public endpoint — no auth required.
 """
-import os
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
@@ -40,9 +39,8 @@ def _db_missing():
 
 @pytest.fixture
 def public_client():
-    with patch.dict(os.environ, {"DEV_USER_EMAIL": "dev@test.local", "ENVIRONMENT": "local"}):
-        from main import app
-        yield TestClient(app)
+    from main import app
+    yield TestClient(app)
 
 
 # ---------------------------------------------------------------------------

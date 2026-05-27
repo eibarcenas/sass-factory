@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/auth'
 import { useOwnerItems, useOwnerUpdateItem, useOwnerAddItem, useOwnerDeleteItem } from '../../hooks/useItems'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
+import ImageUpload from '../../components/demos/ImageUpload'
 import AppSidebar from '../../components/layout/AppSidebar'
 import type { NavItem } from '../../components/layout/AppSidebar'
 import { Button } from '@/components/ui/button'
@@ -24,11 +25,12 @@ function ProductRow({ item, businessId, readonly = false }: { item: Item; busine
   const [name, setName] = useState(item.name)
   const [price, setPrice] = useState(String(item.price))
   const [description, setDescription] = useState(item.description ?? '')
+  const [image, setImage] = useState(item.image ?? '')
   const updateItem = useOwnerUpdateItem(businessId)
   const deleteItem = useOwnerDeleteItem(businessId)
 
   async function save() {
-    await updateItem.mutateAsync({ itemId: item.id, patch: { name, price: Number(price), description } })
+    await updateItem.mutateAsync({ itemId: item.id, patch: { name, price: Number(price), description, image: image || undefined } })
     setEditing(false)
   }
 
@@ -50,11 +52,17 @@ function ProductRow({ item, businessId, readonly = false }: { item: Item; busine
         </div>
       </div>
       <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Description (optional)" />
+      <ImageUpload currentUrl={image} onUploaded={url => setImage(url)} folder="products" />
     </div>
   )
 
   return (
     <div className={`flex items-center gap-3 p-3 rounded-lg border ${!item.visible ? 'opacity-50' : ''}`}>
+      {item.image ? (
+        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-border" />
+      ) : (
+        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 text-lg">📦</div>
+      )}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{item.name}</p>
         {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
@@ -124,11 +132,12 @@ const OWNER_NAV: NavItem<Page>[] = [
 ]
 
 // ── Catalog page (link + products) ───────────────────────────────────────────
-function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview }: {
+function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, whatsappClicks }: {
   businessId: string
   previewSlug?: string
   catalogUrl: string
   isPreview: boolean
+  whatsappClicks?: number
 }) {
   const { data: itemsData } = useOwnerItems(businessId, previewSlug)
 
@@ -164,6 +173,11 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview }: {
               </Button>
             </div>
           )}
+          {typeof whatsappClicks === 'number' && (
+            <p className="text-xs text-muted-foreground">
+              📱 {whatsappClicks} WhatsApp clicks
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -190,12 +204,14 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview }: {
 }
 
 // ── Appearance page ───────────────────────────────────────────────────────────
-function AppearancePage({ businessId, currentTagline, readonly = false }: {
+function AppearancePage({ businessId, currentTagline, currentWhatsapp, readonly = false }: {
   businessId: string
   currentTagline?: string
+  currentWhatsapp?: string
   readonly?: boolean
 }) {
   const [tagline, setTagline] = useState(currentTagline ?? '')
+  const [whatsapp, setWhatsapp] = useState(currentWhatsapp ?? '')
   const [saved, setSaved] = useState(false)
   const qc = useQueryClient()
 
@@ -203,8 +219,12 @@ function AppearancePage({ businessId, currentTagline, readonly = false }: {
     if (currentTagline !== undefined) setTagline(currentTagline)
   }, [currentTagline])
 
+  useEffect(() => {
+    if (currentWhatsapp !== undefined) setWhatsapp(currentWhatsapp)
+  }, [currentWhatsapp])
+
   const save = useMutation({
-    mutationFn: () => api.patch(`/api/v1/owner/business`, { tagline }),
+    mutationFn: () => api.patch(`/api/v1/owner/business`, { tagline, whatsapp }),
     onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); qc.invalidateQueries({ queryKey: ['owner-business'] }) },
   })
 
@@ -224,6 +244,11 @@ function AppearancePage({ businessId, currentTagline, readonly = false }: {
             <Label>Tagline <span className="text-muted-foreground font-normal text-xs">({tagline.length}/120)</span></Label>
             <Input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={120}
               placeholder="The best ice cream in Monterrey 🍦" disabled={readonly} />
+          </div>
+          <div className="space-y-1">
+            <Label>WhatsApp number</Label>
+            <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
+              placeholder="+52 55 1234 5678" disabled={readonly} />
           </div>
           {!readonly && (
             <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
@@ -249,7 +274,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
 
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
-    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; status: BusinessStatus }>(`/api/v1/storefront/${businessId}`),
+    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; whatsapp?: string; status: BusinessStatus; whatsappClicks?: number }>(`/api/v1/storefront/${businessId}`),
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
@@ -291,10 +316,10 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         )}
 
         {page === 'catalog' && (
-          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} />
+          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} whatsappClicks={bizData?.whatsappClicks} />
         )}
         {page === 'appearance' && (
-          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} readonly={isPreview} />
+          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} />
         )}
       </main>
     </div>
