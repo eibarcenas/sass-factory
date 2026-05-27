@@ -32,13 +32,21 @@ jobs:
       - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Build and push all images
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DOCKER_BUILDKIT: "1"
         run: |
-          for svc in api storefront admin; do
-            IMAGE="${{ env.AR_URL }}/catalog-mx-${svc}:${{ github.sha }}"
-            docker build -t "$IMAGE" apps/${svc}/
-            docker push "$IMAGE"
-            echo "Pushed: $IMAGE"
-          done
+          docker build --secret id=gh_pat,env=GH_PAT \
+            -t "${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}" apps/api/
+          docker push "${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
+
+          docker build -f apps/storefront/Dockerfile \
+            -t "${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}" .
+          docker push "${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
+
+          docker build -f apps/admin/Dockerfile \
+            -t "${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}" .
+          docker push "${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
 
       - name: Deploy API (catalog-mx-api-prod) — canary
         run: |
