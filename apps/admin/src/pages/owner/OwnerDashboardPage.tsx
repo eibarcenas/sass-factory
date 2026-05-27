@@ -198,12 +198,14 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview }: {
 }
 
 // ── Appearance page ───────────────────────────────────────────────────────────
-function AppearancePage({ businessId, currentTagline, readonly = false }: {
+function AppearancePage({ businessId, currentTagline, currentWhatsapp, readonly = false }: {
   businessId: string
   currentTagline?: string
+  currentWhatsapp?: string
   readonly?: boolean
 }) {
   const [tagline, setTagline] = useState(currentTagline ?? '')
+  const [whatsapp, setWhatsapp] = useState(currentWhatsapp ?? '')
   const [saved, setSaved] = useState(false)
   const qc = useQueryClient()
 
@@ -211,8 +213,12 @@ function AppearancePage({ businessId, currentTagline, readonly = false }: {
     if (currentTagline !== undefined) setTagline(currentTagline)
   }, [currentTagline])
 
+  useEffect(() => {
+    if (currentWhatsapp !== undefined) setWhatsapp(currentWhatsapp)
+  }, [currentWhatsapp])
+
   const save = useMutation({
-    mutationFn: () => api.patch(`/api/v1/owner/business`, { tagline }),
+    mutationFn: () => api.patch(`/api/v1/owner/business`, { tagline, whatsapp }),
     onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); qc.invalidateQueries({ queryKey: ['owner-business'] }) },
   })
 
@@ -232,6 +238,11 @@ function AppearancePage({ businessId, currentTagline, readonly = false }: {
             <Label>Tagline <span className="text-muted-foreground font-normal text-xs">({tagline.length}/120)</span></Label>
             <Input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={120}
               placeholder="The best ice cream in Monterrey 🍦" disabled={readonly} />
+          </div>
+          <div className="space-y-1">
+            <Label>WhatsApp number</Label>
+            <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
+              placeholder="+52 55 1234 5678" disabled={readonly} />
           </div>
           {!readonly && (
             <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
@@ -257,7 +268,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
 
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
-    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; status: BusinessStatus }>(`/api/v1/storefront/${businessId}`),
+    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; whatsapp?: string; status: BusinessStatus }>(`/api/v1/storefront/${businessId}`),
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
@@ -302,7 +313,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
           <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} />
         )}
         {page === 'appearance' && (
-          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} readonly={isPreview} />
+          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} />
         )}
       </main>
     </div>
