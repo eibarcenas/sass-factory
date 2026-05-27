@@ -7,6 +7,7 @@ WORKDIR /repo
 
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/core/package.json ./packages/core/
+COPY packages/ui/package.json ./packages/ui/
 COPY apps/storefront/package.json ./apps/storefront/
 
 RUN pnpm install --frozen-lockfile --filter storefront...
@@ -16,6 +17,7 @@ FROM deps AS builder
 WORKDIR /repo
 
 COPY packages/core/ ./packages/core/
+COPY packages/ui/ ./packages/ui/
 COPY apps/storefront/ ./apps/storefront/
 
 ENV NEXT_TELEMETRY_DISABLED=1
