@@ -49,6 +49,85 @@ function ViralFooter() {
   )
 }
 
+function DemoAcceptModal({ slug, onClose }: { slug: string; onClose: () => void }) {
+  const [form, setForm] = useState({ name: '', email: '' })
+  const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit() {
+    if (!form.email) return
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/demo-accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, email: form.email, name: form.name }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? 'Something went wrong')
+      } else {
+        setSubmitted(true)
+      }
+    } catch {
+      setError('Network error — try again')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/40" />
+      <div className="relative bg-background w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl p-6 shadow-xl"
+        onClick={e => e.stopPropagation()}>
+        {submitted ? (
+          <div className="text-center py-4">
+            <div className="text-5xl mb-3">🎉</div>
+            <h2 className="font-bold text-lg">Your catalog is reserved!</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              Go to <span className="font-medium">admin.catalog.mx</span> and sign in
+              with Google using this email to activate your account.
+            </p>
+            <Button className="mt-4 w-full" onClick={onClose}>Got it</Button>
+          </div>
+        ) : (
+          <>
+            <h2 className="font-bold text-lg mb-1">Activate your catalog</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Enter the email you'll use to sign in with Google.
+            </p>
+            <div className="space-y-3">
+              <Input
+                type="text"
+                placeholder="Your name"
+                value={form.name}
+                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+              />
+              <Input
+                type="email"
+                placeholder="Email (Google account) *"
+                value={form.email}
+                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+              />
+            </div>
+            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+            <Button
+              className="mt-4 w-full"
+              disabled={loading || !form.email}
+              onClick={submit}
+            >
+              {loading ? 'Saving...' : 'Activate →'}
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ProspectModal({ businessId, onClose }: { businessId: string; onClose: () => void }) {
   const [form, setForm] = useState({ contactName: '', phone: '', email: '' })
   const [submitted, setSubmitted] = useState(false)
@@ -112,6 +191,7 @@ function ProspectModal({ businessId, onClose }: { businessId: string; onClose: (
 export default function CatalogView({ data, isDemo = false }: { data: CatalogData; isDemo?: boolean }) {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null)
   const [activeCategory, setActiveCategory] = useState('')
+  const [showDemoAccept, setShowDemoAccept] = useState(false)
   const [showProspect, setShowProspect] = useState(false)
 
   const categories = [...new Set(
@@ -126,9 +206,9 @@ export default function CatalogView({ data, isDemo = false }: { data: CatalogDat
     <div>
       {isDemo && (
         <div className="sticky top-0 z-20 bg-primary text-primary-foreground px-4 py-2.5 flex items-center justify-between gap-3">
-          <p className="text-sm font-medium">✨ This is a demo — want this catalog for your business?</p>
+          <p className="text-sm font-medium">✨ This is your demo — ready to activate?</p>
           <Button size="sm" variant="secondary" className="shrink-0 rounded-full h-7 text-xs"
-            onClick={() => setShowProspect(true)}>
+            onClick={() => setShowDemoAccept(true)}>
             Yes →
           </Button>
         </div>
@@ -164,6 +244,7 @@ export default function CatalogView({ data, isDemo = false }: { data: CatalogDat
       </main>
 
       <ProductModal item={selectedItem} whatsapp={data.whatsapp} onClose={() => setSelectedItem(null)} />
+      {showDemoAccept && <DemoAcceptModal slug={data.slug} onClose={() => setShowDemoAccept(false)} />}
       {showProspect && <ProspectModal businessId={data.id} onClose={() => setShowProspect(false)} />}
     </div>
   )

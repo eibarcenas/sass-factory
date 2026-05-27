@@ -28,6 +28,7 @@ app.add_middleware(
     public_prefixes=(
         "/api/v1/storefront/",
         "/api/v1/prospects",
+        "/api/v1/demos/",
         "/auth/",
     ),
 )

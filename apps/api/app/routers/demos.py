@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from datetime import datetime, timezone
 import re
@@ -158,3 +158,51 @@ def activate_owner(body: CreateOwnerRequest):
         "businessId": body.businessId,
         "message": f"Owner activated. Ask {body.email} to sign in with Google.",
     }
+
+
+# ── Public demo self-acceptance ─────────────────────────────────────────────
+
+class AcceptDemoRequest(BaseModel):
+    email: str
+    name: str | None = None
+
+@router.post("/demos/{slug}/accept")
+def accept_demo(slug: str, body: AcceptDemoRequest):
+    """Public — called from the demo page when the owner decides to activate.
+
+    Creates pending_owners/{email} so that resolve-claims picks it up
+    on first Google sign-in. Advances business status DEMO → ACCEPTED.
+    """
+    if not body.email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    db = get_db()
+    biz_ref = db.collection("businesses").document(slug)
+    biz_doc = biz_ref.get()
+
+    if not biz_doc.exists:
+        raise HTTPException(status_code=404, detail="Demo not found")
+
+    biz_data = biz_doc.to_dict()
+    if biz_data.get("status") != BusinessStatus.DEMO:
+        return {"accepted": True, "alreadyActive": True}
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    db.collection("pending_owners").document(body.email).set({
+        "email": body.email,
+        "businessId": slug,
+        "role": "OWNER",
+        "modules": ["CATALOG", "APPEARANCE"],
+        "ownerName": body.name,
+        "createdAt": now,
+    })
+
+    biz_ref.update({
+        "ownerEmail": body.email,
+        "status": BusinessStatus.ACCEPTED,
+        "acceptedAt": now,
+        "updatedAt": now,
+    })
+
+    return {"accepted": True}
