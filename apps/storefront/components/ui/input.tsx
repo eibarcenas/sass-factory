@@ -1,1 +1,1 @@
-export { Input } from '@catalog-mx/ui'
+export { Input } from '@eguru/ui'

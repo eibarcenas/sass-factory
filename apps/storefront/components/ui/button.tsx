@@ -1,1 +1,1 @@
-export { Button, buttonVariants, type ButtonProps } from '@catalog-mx/ui'
+export { Button, buttonVariants, type ButtonProps } from '@eguru/ui'

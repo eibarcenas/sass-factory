@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { Item } from '@catalog-mx/core'
+import type { Item } from '@eguru/core'
 import { buildWhatsAppUrl } from '@/lib/whatsapp'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'

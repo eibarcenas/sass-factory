@@ -13,10 +13,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@catalog-mx/auth": "workspace:*",
-    "@catalog-mx/client": "workspace:*",
-    "@catalog-mx/core": "workspace:*",
-    "@catalog-mx/ui": "workspace:*",
+    "@eguru/auth": "workspace:*",
+    "@eguru/client": "workspace:*",
+    "@eguru/core": "workspace:*",
+    "@eguru/ui": "workspace:*",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",

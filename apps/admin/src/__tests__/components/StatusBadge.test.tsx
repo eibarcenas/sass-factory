@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import StatusBadge from '@/components/ui/StatusBadge'
-import { BusinessStatus } from '@catalog-mx/core'
+import { BusinessStatus } from '@eguru/core'
 
 const STATUSES: [BusinessStatus, string][] = [
   [BusinessStatus.Draft,     'Draft'],

@@ -1,7 +1,7 @@
 {
-  "name": "@catalog-mx/auth",
+  "name": "@eguru/auth",
   "version": "0.1.0",
-  "description": "Firebase auth store and session restore hook for @catalog-mx apps",
+  "description": "Firebase auth store and session restore hook for @eguru apps",
   "type": "module",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

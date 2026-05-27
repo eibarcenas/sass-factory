@@ -19,21 +19,19 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: Install Python 3.13 + API deps
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           cd apps/api
           uv venv --python 3.13
-          uv pip install \
-            fastapi "uvicorn[standard]" pydantic pydantic-settings \
-            google-cloud-firestore google-cloud-storage \
-            firebase-admin cachetools slowapi \
-            python-dotenv python-multipart \
-            pytest httpx
+          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          uv pip install -e ".[dev]"
       - name: Install JS dependencies
         run: pnpm install --frozen-lockfile
       - name: Typecheck core
-        run: pnpm -F @catalog-mx/core typecheck
+        run: pnpm -F @eguru/core typecheck
       - name: Core unit tests
-        run: pnpm -F @catalog-mx/core test
+        run: pnpm -F @eguru/core test
       - name: API tests (Python 3.13)
         run: cd apps/api && DEV_USER_EMAIL=dev@catalog.mx ENVIRONMENT=local .venv/bin/pytest -q
       - name: Lint

@@ -1,7 +1,7 @@
 {
-  "name": "@catalog-mx/core",
+  "name": "@eguru/core",
   "version": "0.1.0",
-  "description": "Shared types, composables, and utilities for @catalog-mx",
+  "description": "Shared types, composables, and utilities for @eguru",
   "type": "module",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

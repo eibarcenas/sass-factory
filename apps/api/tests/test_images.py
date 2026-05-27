@@ -42,11 +42,7 @@ def mock_firestore():
 @pytest.fixture
 def client_with_auth():
     """Client with dev auth bypass and GCS dev fallback active."""
-    import app.shared.middleware.auth_middleware as mw
-    with (
-        patch.object(mw, "DEV_USER_EMAIL", "dev@test.local"),
-        patch.dict(os.environ, {"ENVIRONMENT": "local", "GCS_DEV_FALLBACK": "true"}),
-    ):
+    with patch.dict(os.environ, {"DEV_USER_EMAIL": "dev@test.local", "ENVIRONMENT": "local", "GCS_DEV_FALLBACK": "true"}):
         from main import app
         yield TestClient(app)
 
@@ -54,8 +50,7 @@ def client_with_auth():
 @pytest.fixture
 def client_no_auth():
     """Client with NO auth bypass — DEV_USER_EMAIL absent."""
-    import app.shared.middleware.auth_middleware as mw
-    with patch.object(mw, "DEV_USER_EMAIL", None):
+    with patch.dict(os.environ, {"DEV_USER_EMAIL": ""}):
         from main import app
         yield TestClient(app)
 

@@ -3,8 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
 from app.db import get_db
 from app.models.enums import BusinessStatus
-from app.shared.auth.rbac import require_role, require_owner_or_admin
-from app.shared.auth.jwt_models import Role, UserContext
+from factory_auth import require_role, Role, UserContext
+
+def require_owner_or_admin():
+    return require_role(Role.SUPER_ADMIN, Role.OWNER)
 from app.services import item_service
 
 router = APIRouter(tags=["businesses"])

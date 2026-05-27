@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
-import { useFirebaseAuthRestore } from '@catalog-mx/auth'
+import { useFirebaseAuthRestore } from '@eguru/auth'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'

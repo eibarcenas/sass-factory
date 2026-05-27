@@ -1,7 +1,7 @@
 {
-  "name": "@catalog-mx/client",
+  "name": "@eguru/client",
   "version": "0.1.0",
-  "description": "Generic typed HTTP client factory for @catalog-mx apps",
+  "description": "Generic typed HTTP client factory for @eguru apps",
   "type": "module",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

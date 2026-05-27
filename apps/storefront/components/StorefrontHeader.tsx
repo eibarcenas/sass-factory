@@ -1,4 +1,4 @@
-import type { Business } from '@catalog-mx/core'
+import type { Business } from '@eguru/core'
 import { Button } from '@/components/ui/button'
 
 const WhatsAppIcon = () => (

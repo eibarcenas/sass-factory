@@ -1,7 +1,7 @@
 {
-  "name": "@catalog-mx/ui",
+  "name": "@eguru/ui",
   "version": "0.1.0",
-  "description": "Shared UI components for @catalog-mx apps",
+  "description": "Shared UI components for @eguru apps",
   "type": "module",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

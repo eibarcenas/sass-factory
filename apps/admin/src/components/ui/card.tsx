@@ -1,1 +1,1 @@
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@catalog-mx/ui'
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@eguru/ui'

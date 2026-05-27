@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCreateDemo } from '../../hooks/useBusinesses'
-import { BusinessType } from '@catalog-mx/core'
+import { BusinessType } from '@eguru/core'
 
 const TYPES: { key: BusinessType; label: string; emoji: string }[] = [
   { key: BusinessType.Heladeria,   label: 'Ice cream',    emoji: '🍦' },

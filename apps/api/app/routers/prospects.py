@@ -2,8 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from app.db import get_db
-from app.shared.auth.jwt_models import Role
-from app.shared.auth.rbac import require_role
+from factory_auth import Role, require_role
 from typing import Annotated
 from fastapi import Depends
 

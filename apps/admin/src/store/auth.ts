@@ -1,5 +1,5 @@
-import { createAuthStore } from '@catalog-mx/auth'
-import type { AuthUser } from '@catalog-mx/auth'
+import { createAuthStore } from '@eguru/auth'
+import type { AuthUser } from '@eguru/auth'
 
 export type UserRole = 'SUPER_ADMIN' | 'OWNER'
 export type { AuthUser }
