@@ -14,9 +14,10 @@ export interface FirebaseAuthRestoreOptions {
   }
   firebaseConfig: FirebaseConfig | null
   buildUser: (uid: string, email: string | null, claims: Record<string, unknown>) => AuthUser | null
+  resolveClaimsUrl?: string
 }
 
-export function useFirebaseAuthRestore({ store, firebaseConfig, buildUser }: FirebaseAuthRestoreOptions): { checking: boolean } {
+export function useFirebaseAuthRestore({ store, firebaseConfig, buildUser, resolveClaimsUrl }: FirebaseAuthRestoreOptions): { checking: boolean } {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
@@ -39,8 +40,26 @@ export function useFirebaseAuthRestore({ store, firebaseConfig, buildUser }: Fir
         const auth = getAuth()
         unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
           if (fbUser) {
-            const { claims } = await fbUser.getIdTokenResult()
-            const user = buildUser(fbUser.uid, fbUser.email, claims)
+            let tokenResult = await fbUser.getIdTokenResult()
+
+            // No custom claims yet (no business_id) — try resolving pending_owners
+            if (!tokenResult.claims.business_id && resolveClaimsUrl) {
+              try {
+                const res = await fetch(resolveClaimsUrl, {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${tokenResult.token}` },
+                })
+                const json = await res.json()
+                if (json.resolved) {
+                  // Force-refresh so the new claims are in the next token
+                  tokenResult = await fbUser.getIdTokenResult(true)
+                }
+              } catch {
+                // Network error — proceed without claims, user stays on login
+              }
+            }
+
+            const user = buildUser(fbUser.uid, fbUser.email, tokenResult.claims)
             store.setUser(user)
           } else {
             store.setUser(null)
