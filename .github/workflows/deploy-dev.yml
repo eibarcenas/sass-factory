@@ -61,9 +61,12 @@ jobs:
       - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Deploy API (catalog-mx-api-dev)
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DOCKER_BUILDKIT: "1"
         run: |
           IMAGE="${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
-          docker build -t "$IMAGE" apps/api/
+          docker build --secret id=gh_pat,env=GH_PAT -t "$IMAGE" apps/api/
           docker push "$IMAGE"
           gcloud run deploy catalog-mx-api-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" \
