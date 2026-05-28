@@ -1,18 +1,26 @@
 import ImageUpload from './ImageUpload'
 import { useState } from 'react'
-import { useItems, useAddItem, useUpdateItem, useDeleteItem, type Item } from '../../hooks/useItems'
+import { useItems, useAddItem, useUpdateItem, useDeleteItem, useOwnerItems, useOwnerAddItem, useOwnerUpdateItem, useOwnerDeleteItem, type Item } from '../../hooks/useItems'
+
+type Scope = 'admin' | 'owner'
 
 interface RowProps {
   item: Item
   businessId: string
+  scope: Scope
+  readonly?: boolean
   onSaved: () => void
 }
 
-function ItemRow({ item, businessId, onSaved }: RowProps) {
+function ItemRow({ item, businessId, scope, readonly = false, onSaved }: RowProps) {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ name: item.name, price: item.price, description: item.description ?? '', image: item.image ?? '' })
-  const updateItem = useUpdateItem(businessId)
-  const deleteItem = useDeleteItem(businessId)
+  const adminUpdate = useUpdateItem(businessId)
+  const ownerUpdate = useOwnerUpdateItem(businessId)
+  const adminDelete = useDeleteItem(businessId)
+  const ownerDelete = useOwnerDeleteItem(businessId)
+  const updateItem = scope === 'owner' ? ownerUpdate : adminUpdate
+  const deleteItem = scope === 'owner' ? ownerDelete : adminDelete
 
   async function save() {
     await updateItem.mutateAsync({ itemId: item.id, patch: { ...form, price: Number(form.price) } })
@@ -24,6 +32,21 @@ function ItemRow({ item, businessId, onSaved }: RowProps) {
     if (!confirm(`Delete "${item.name}"?`)) return
     await deleteItem.mutateAsync(item.id)
   }
+
+  if (readonly) return (
+    <div className={`flex items-center gap-3 p-3 rounded-xl border ${item.visible ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
+      {item.image ? (
+        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+      ) : (
+        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-lg">📦</div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+        {item.description && <p className="text-xs text-gray-400 truncate">{item.description}</p>}
+      </div>
+      <span className="text-sm font-bold text-gray-900 flex-shrink-0">${item.price.toLocaleString('es-MX')}</span>
+    </div>
+  )
 
   if (editing) {
     return (
@@ -121,10 +144,12 @@ function ItemRow({ item, businessId, onSaved }: RowProps) {
   )
 }
 
-function AddItemForm({ businessId, onAdded }: { businessId: string; onAdded: () => void }) {
+function AddItemForm({ businessId, scope, onAdded }: { businessId: string; scope: Scope; onAdded: () => void }) {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ name: '', price: '', description: '' })
-  const addItem = useAddItem(businessId)
+  const adminAdd = useAddItem(businessId)
+  const ownerAdd = useOwnerAddItem(businessId)
+  const addItem = scope === 'owner' ? ownerAdd : adminAdd
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -202,8 +227,16 @@ function AddItemForm({ businessId, onAdded }: { businessId: string; onAdded: () 
   )
 }
 
-export default function ProductEditor({ businessId, businessSlug }: { businessId: string; businessSlug: string }) {
-  const { data, isLoading, refetch } = useItems(businessId)
+export default function ProductEditor({ businessId, businessSlug, scope = 'admin', previewSlug, readonly = false }: {
+  businessId: string
+  businessSlug: string
+  scope?: Scope
+  previewSlug?: string
+  readonly?: boolean
+}) {
+  const adminData = useItems(businessId)
+  const ownerData = useOwnerItems(businessId, previewSlug)
+  const { data, isLoading, refetch } = scope === 'owner' ? ownerData : adminData
   const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
   return (
@@ -229,9 +262,9 @@ export default function ProductEditor({ businessId, businessSlug }: { businessId
       ) : (
         <div className="space-y-2">
           {data?.items.map(item => (
-            <ItemRow key={item.id} item={item} businessId={businessId} onSaved={() => refetch()} />
+            <ItemRow key={item.id} item={item} businessId={businessId} scope={scope} readonly={readonly} onSaved={() => refetch()} />
           ))}
-          <AddItemForm businessId={businessId} onAdded={() => refetch()} />
+          {!readonly && <AddItemForm businessId={businessId} scope={scope} onAdded={() => refetch()} />}
         </div>
       )}
     </div>
