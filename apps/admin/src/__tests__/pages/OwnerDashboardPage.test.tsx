@@ -12,9 +12,13 @@ vi.mock('@/lib/api', () => ({
 }))
 
 vi.mock('@/hooks/useItems', () => ({
-  useOwnerItems: () => ({ data: { items: [] } }),
+  useItems: () => ({ data: { items: [] }, isLoading: false, refetch: vi.fn() }),
+  useAddItem: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpdateItem: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useDeleteItem: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useOwnerItems: () => ({ data: { items: [] }, isLoading: false, refetch: vi.fn() }),
   useOwnerUpdateItem: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useOwnerDeleteItem: () => ({ mutate: vi.fn(), isPending: false }),
+  useOwnerDeleteItem: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useOwnerAddItem: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }))
 
