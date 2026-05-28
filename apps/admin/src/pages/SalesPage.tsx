@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useProspects } from '../hooks/useProspects'
-import DemoList from '../components/demos/DemoList'
+import KanbanBoard from '../components/dashboard/KanbanBoard'
 import CreateDemoForm from '../components/demos/CreateDemoForm'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -125,7 +125,7 @@ export default function SalesPage({ onSelectBusiness }: { onSelectBusiness: (b: 
         ))}
       </div>
 
-      {tab === 'demos' && <DemoList onSelectBusiness={onSelectBusiness} />}
+      {tab === 'demos' && <KanbanBoard onSelectBusiness={onSelectBusiness} />}
       {tab === 'prospects' && <ProspectsTab />}
     </div>
   )
