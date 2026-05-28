@@ -3,7 +3,6 @@ import { useAuthStore } from '../store/auth'
 import { useProspects } from '../hooks/useProspects'
 import AppSidebar from '../components/layout/AppSidebar'
 import type { NavItem } from '../components/layout/AppSidebar'
-import KanbanBoard from '../components/dashboard/KanbanBoard'
 import SalesPage from './SalesPage'
 import DemoDetailPage from './DemoDetailPage'
 import { Badge } from '@/components/ui/badge'
@@ -69,7 +68,6 @@ export default function DashboardPage() {
         {page === 'dashboard' && (
           <div className="space-y-6">
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            <KanbanBoard onSelectBusiness={openDetail} />
           </div>
         )}
 
