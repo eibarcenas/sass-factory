@@ -27,11 +27,11 @@ docs/
 
 | File | Contents |
 |------|----------|
-| [architecture/system-overview.md](architecture/system-overview.md) | GCP diagram, CI/CD pipeline, request flows, business status states |
-| [architecture/database.md](architecture/database.md) | Firestore schema, indexes, vector search, MongoDB compat layer |
-| [architecture/multi-tenancy.md](architecture/multi-tenancy.md) | Multi-tenant routing, custom domains, middleware |
-| [architecture/backend.md](architecture/backend.md) | Hexagonal architecture, FastAPI layers, Dockerfile, Python 3.13 + uvloop |
-| [architecture/microservices.md](architecture/microservices.md) | Modular monolith vs microservices decision and extraction path |
+| [architecture/system-overview.md](architecture/system-overview.md) | ✅ Source of truth — monorepo, request flows, auth, Firestore schema, state machine, CI/CD |
+| [architecture/database.md](architecture/database.md) | Firestore schema detail (partially stale — system-overview.md is authoritative) |
+| [architecture/auth-firebase-iap.md](architecture/auth-firebase-iap.md) | Firebase + IAP decision record |
+| [architecture/multi-tenancy.md](architecture/multi-tenancy.md) | Multi-tenant routing, custom domains |
+| [architecture/error-handling.md](architecture/error-handling.md) | Error handling strategy |
 | [architecture/rbac.md](architecture/rbac.md) | @sass-factory/rbac library: permissions, Guard, Gate, middleware |
 | [architecture/event-driven.md](architecture/event-driven.md) | Cloud Run + Eventarc, CloudEvents format, 3 async workers |
 | [architecture/error-handling.md](architecture/error-handling.md) | Error code catalog, DomainError, fastapi.status enums, frontend translation |
