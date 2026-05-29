@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 function getInitials(email: string | null): string {
@@ -12,10 +13,11 @@ export interface SidebarProfileProps {
   email: string | null
   displayName?: string | null
   photoURL?: string | null
+  role?: string
   onSettings?: () => void
 }
 
-export function SidebarProfile({ email, displayName, photoURL, onSettings }: SidebarProfileProps) {
+export function SidebarProfile({ email, displayName, photoURL, role, onSettings }: SidebarProfileProps) {
   const initials = getInitials(email)
   const label = displayName ?? (email ? email.split('@')[0] : '')
 
@@ -27,7 +29,14 @@ export function SidebarProfile({ email, displayName, photoURL, onSettings }: Sid
           : initials
         }
       </div>
-      <span className="text-sm text-foreground flex-1 truncate">{label}</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm text-foreground block truncate leading-tight">{label}</span>
+        {role && (
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide leading-tight">
+            {role}
+          </span>
+        )}
+      </div>
       {onSettings && (
         <button
           onClick={onSettings}
@@ -43,7 +52,7 @@ export function SidebarProfile({ email, displayName, photoURL, onSettings }: Sid
 
 export interface NavItem<T extends string = string> {
   key: T
-  icon: string
+  icon: React.ReactNode
   label: string
   badge?: number
 }
@@ -69,45 +78,56 @@ export default function AppSidebar<T extends string>({
 
   return (
     <aside
-      className={`${collapsed ? 'w-14' : 'w-48'} bg-background border-r flex flex-col h-screen sticky top-0 transition-all duration-200`}
+      className={`${collapsed ? 'w-14' : 'w-[220px]'} bg-background border-r border-border flex flex-col h-screen sticky top-0 transition-all duration-200 shadow-sm`}
     >
-      <div className="px-3 py-4 border-b flex items-center justify-between gap-2">
-        {!collapsed && <span className="font-bold text-lg truncate">catalog.mx</span>}
-        {!collapsed && headerSlot}
+      {/* Header */}
+      <div className="px-3 py-4 border-b border-border flex items-center justify-between gap-2 min-h-[57px]">
+        {!collapsed && (
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-bold text-base text-primary truncate">catalog.mx</span>
+            {headerSlot}
+          </div>
+        )}
         <button
           onClick={() => setCollapsed(c => !c)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="ml-auto shrink-0 flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors text-xs"
+          className="ml-auto shrink-0 flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
-          {collapsed ? '→' : '←'}
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
       </div>
 
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+      {/* Nav */}
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {nav.map(item => (
           <button
             key={item.key}
             onClick={() => onNavigate(item.key)}
             title={collapsed ? item.label : undefined}
-            className={`w-full text-left flex items-center justify-between px-2.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+            className={`w-full text-left flex items-center justify-between px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${
               active === item.key
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
           >
-            <span className="flex items-center gap-2">
-              <span className="shrink-0">{item.icon}</span>
+            <span className="flex items-center gap-2.5">
+              <span className={`shrink-0 flex items-center ${active === item.key ? 'text-primary' : ''}`}>
+                {item.icon}
+              </span>
               {!collapsed && <span className="truncate">{item.label}</span>}
             </span>
             {!collapsed && (item.badge ?? 0) > 0 && (
-              <Badge className="bg-green-500 text-white text-xs h-5">{item.badge}</Badge>
+              <Badge className="bg-primary text-primary-foreground text-[10px] h-4 px-1.5 min-w-4 flex items-center justify-center">
+                {item.badge}
+              </Badge>
             )}
           </button>
         ))}
         {children}
       </nav>
 
-<div className={`px-3 py-4 border-t ${collapsed ? 'hidden' : ''}`}>
+      {/* Footer */}
+      <div className={`px-3 py-3 border-t border-border ${collapsed ? 'hidden' : ''}`}>
         {footerSlot}
       </div>
     </aside>
