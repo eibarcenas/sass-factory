@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import { useImpersonationStore } from '../store/impersonation'
 import { Check } from 'lucide-react'
 import { useBusinesses, useBusinessAction } from '../hooks/useBusinesses'
 import ProductEditor from '../components/demos/ProductEditor'
@@ -89,6 +90,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 export default function DemoDetailPage() {
   const { businessId } = useParams<{ businessId: string }>()
   const navigate = useNavigate()
+  const { startImpersonation } = useImpersonationStore()
   const action = useBusinessAction()
 
   const { data, isLoading } = useBusinesses()
@@ -209,6 +211,13 @@ export default function DemoDetailPage() {
           onClick={() => navigate(`/owner/preview/${business.slug}`)}
         >
           Ver panel del cliente
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => { startImpersonation(business.slug, business.name); navigate('/owner') }}
+        >
+          Act as Owner
         </Button>
         {next && (
           <Button
