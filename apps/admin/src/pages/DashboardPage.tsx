@@ -1,19 +1,15 @@
-import { useState } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Settings, Plus } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { useProspects } from '../hooks/useProspects'
 import { useBusinesses } from '../hooks/useBusinesses'
 import AppSidebar, { SidebarProfile } from '../components/layout/AppSidebar'
-import type { NavItem } from '../components/layout/AppSidebar'
-import SalesPage from './SalesPage'
-import DemoDetailPage from './DemoDetailPage'
-import SettingsPage from './settings/SettingsPage'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { BusinessStatus, type Business } from '@eguru/core'
+import { BusinessStatus } from '@eguru/core'
 
-type Page = 'dashboard' | 'sales' | 'demo-detail' | 'settings'
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -24,6 +20,8 @@ function timeAgo(iso: string): string {
   if (hours < 24) return `${hours}h ago`
   return `${Math.floor(hours / 24)}d ago`
 }
+
+// ── Metric card ───────────────────────────────────────────────────────────────
 
 function MetricCard({ label, value, highlight, loading }: {
   label: string
@@ -52,8 +50,11 @@ function MetricCard({ label, value, highlight, loading }: {
   )
 }
 
-function DashboardContent({ onNavigate }: { onNavigate: (p: Page) => void }) {
+// ── Dashboard content (rendered at /dashboard) ────────────────────────────────
+
+export function DashboardContent() {
   const { user } = useAuthStore()
+  const navigate = useNavigate()
   const { data: bizData, isLoading } = useBusinesses()
   const { data: prospectData } = useProspects()
 
@@ -72,7 +73,7 @@ function DashboardContent({ onNavigate }: { onNavigate: (p: Page) => void }) {
     .slice(0, 5)
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-8">
       {/* Greeting */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -85,7 +86,7 @@ function DashboardContent({ onNavigate }: { onNavigate: (p: Page) => void }) {
               : 'Todo en orden.'}
           </p>
         </div>
-        <Button onClick={() => onNavigate('sales')} className="shrink-0">
+        <Button onClick={() => navigate('/clientes')} className="shrink-0">
           <Plus className="w-4 h-4 mr-1.5" />
           Nueva demo
         </Button>
@@ -139,24 +140,42 @@ function DashboardContent({ onNavigate }: { onNavigate: (p: Page) => void }) {
   )
 }
 
-function AdminSidebar({ active, onNavigate, newProspects }: {
-  active: Page
-  onNavigate: (p: Page) => void
-  newProspects: number
-}) {
-  const { user, mockMode } = useAuthStore()
+// ── Sidebar ───────────────────────────────────────────────────────────────────
 
-  const nav: NavItem<Page>[] = [
-    { key: 'dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard' },
-    { key: 'sales',     icon: <Users size={16} />,           label: 'Clientes', badge: newProspects },
-    { key: 'settings',  icon: <Settings size={16} />,        label: 'Ajustes' },
-  ]
+const NAV_ITEMS = [
+  { key: 'dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard', path: '/dashboard' },
+  { key: 'clientes',  icon: <Users size={16} />,           label: 'Clientes',  path: '/clientes' },
+  { key: 'ajustes',   icon: <Settings size={16} />,        label: 'Ajustes',   path: '/ajustes' },
+] as const
+
+type NavKey = typeof NAV_ITEMS[number]['key']
+
+function AdminSidebar({ newProspects }: { newProspects: number }) {
+  const { user, mockMode } = useAuthStore()
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const active: NavKey = location.pathname.startsWith('/clientes')
+    ? 'clientes'
+    : location.pathname.startsWith('/ajustes')
+    ? 'ajustes'
+    : 'dashboard'
+
+  const nav = NAV_ITEMS.map(n => ({
+    key: n.key,
+    icon: n.icon,
+    label: n.label,
+    badge: n.key === 'clientes' ? newProspects : undefined,
+  }))
 
   return (
     <AppSidebar
       nav={nav}
       active={active}
-      onNavigate={onNavigate}
+      onNavigate={(key) => {
+        const item = NAV_ITEMS.find(n => n.key === key)
+        if (item) navigate(item.path)
+      }}
       headerSlot={mockMode && <Badge variant="secondary" className="text-[10px] px-1.5 h-4">mock</Badge>}
       footerSlot={
         <SidebarProfile
@@ -170,56 +189,17 @@ function AdminSidebar({ active, onNavigate, newProspects }: {
   )
 }
 
-export default function DashboardPage() {
-  const [page, setPage] = useState<Page>('dashboard')
-  const [prevPage, setPrevPage] = useState<Page>('dashboard')
-  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
+// ── Admin layout (wraps all admin routes) ─────────────────────────────────────
+
+export default function AdminLayout() {
   const { data: prospectData } = useProspects()
   const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
 
-  function navigateTo(p: Page) {
-    setPrevPage(page)
-    setPage(p)
-  }
-
-  function openDetail(business: Business) {
-    setSelectedBusiness(business)
-    setPrevPage(page)
-    setPage('demo-detail')
-  }
-
-  function goBack() {
-    setPage(prevPage)
-    setSelectedBusiness(null)
-  }
-
-  const sidebarActive = page === 'demo-detail' ? prevPage : page
-
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
-      <AdminSidebar
-        active={sidebarActive}
-        onNavigate={navigateTo}
-        newProspects={newProspects}
-      />
+      <AdminSidebar newProspects={newProspects} />
       <main className="flex-1 overflow-y-auto p-8">
-
-        {page === 'dashboard' && (
-          <DashboardContent onNavigate={navigateTo} />
-        )}
-
-        {page === 'sales' && (
-          <SalesPage onSelectBusiness={openDetail} />
-        )}
-
-        {page === 'demo-detail' && selectedBusiness && (
-          <DemoDetailPage business={selectedBusiness} onBack={goBack} />
-        )}
-
-        {page === 'settings' && (
-          <SettingsPage />
-        )}
-
+        <Outlet />
       </main>
     </div>
   )

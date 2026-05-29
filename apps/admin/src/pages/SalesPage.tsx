@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useProspects } from '../hooks/useProspects'
 import KanbanBoard from '../components/dashboard/KanbanBoard'
 import CreateDemoForm from '../components/demos/CreateDemoForm'
@@ -81,11 +82,16 @@ function ProspectsTab() {
   )
 }
 
-export default function SalesPage({ onSelectBusiness }: { onSelectBusiness: (b: Business) => void }) {
+export default function SalesPage() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<'demos' | 'prospects'>('demos')
   const [showForm, setShowForm] = useState(false)
   const { data: prospectData } = useProspects()
   const newCount = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
+
+  function handleSelectBusiness(b: Business) {
+    navigate(`/clientes/${b.id}`)
+  }
 
   return (
     <div className="space-y-6">
@@ -129,7 +135,7 @@ export default function SalesPage({ onSelectBusiness }: { onSelectBusiness: (b: 
         ))}
       </div>
 
-      {tab === 'demos' && <KanbanBoard onSelectBusiness={onSelectBusiness} />}
+      {tab === 'demos' && <KanbanBoard onSelectBusiness={handleSelectBusiness} />}
       {tab === 'prospects' && <ProspectsTab />}
     </div>
   )

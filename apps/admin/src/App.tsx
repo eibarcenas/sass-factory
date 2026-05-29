@@ -1,7 +1,10 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useFirebaseAuthRestore } from '@eguru/auth'
 import LoginPage from './pages/LoginPage'
-import DashboardPage from './pages/DashboardPage'
+import AdminLayout, { DashboardContent } from './pages/DashboardPage'
+import SalesPage from './pages/SalesPage'
+import DemoDetailPage from './pages/DemoDetailPage'
+import SettingsPage from './pages/settings/SettingsPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'
 import { useAuthStore, type UserRole } from './store/auth'
 
@@ -80,17 +83,24 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/redirect" element={<RoleRedirect />} />
 
+      {/* Admin section — shared layout with nested page routes */}
       <Route
-        path="/*"
         element={
           <RequireAuth>
             <RequireSuperAdmin>
-              <DashboardPage />
+              <AdminLayout />
             </RequireSuperAdmin>
           </RequireAuth>
         }
-      />
+      >
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardContent />} />
+        <Route path="/clientes" element={<SalesPage />} />
+        <Route path="/clientes/:businessId" element={<DemoDetailPage />} />
+        <Route path="/ajustes" element={<SettingsPage />} />
+      </Route>
 
+      {/* Owner preview (admin viewing a business as owner) */}
       <Route
         path="/owner/preview/:slug"
         element={
@@ -102,6 +112,7 @@ export default function App() {
         }
       />
 
+      {/* Owner panel */}
       <Route
         path="/owner/*"
         element={

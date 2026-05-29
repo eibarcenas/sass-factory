@@ -1,11 +1,11 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Check } from 'lucide-react'
-import { useBusinessAction } from '../hooks/useBusinesses'
+import { useBusinesses, useBusinessAction } from '../hooks/useBusinesses'
 import ProductEditor from '../components/demos/ProductEditor'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { BusinessStatus, type Business } from '@eguru/core'
+import { BusinessStatus } from '@eguru/core'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
@@ -18,11 +18,11 @@ const PIPELINE_STEPS: { status: BusinessStatus; label: string; desc: string }[] 
 ]
 
 const NEXT_ACTION: Partial<Record<BusinessStatus, { label: string; verb: string }>> = {
-  [BusinessStatus.Draft]:    { label: 'Publicar demo',           verb: 'publish' },
-  [BusinessStatus.Demo]:     { label: 'Marcar como enviada',     verb: 'send' },
-  [BusinessStatus.Sent]:     { label: 'Marcar como aceptada',    verb: 'accept' },
-  [BusinessStatus.Accepted]: { label: 'Activar cuenta →',        verb: 'activate' },
-  [BusinessStatus.Active]:   { label: 'Suspender',               verb: 'suspend' },
+  [BusinessStatus.Draft]:    { label: 'Publicar demo',        verb: 'publish' },
+  [BusinessStatus.Demo]:     { label: 'Marcar como enviada',  verb: 'send' },
+  [BusinessStatus.Sent]:     { label: 'Marcar como aceptada', verb: 'accept' },
+  [BusinessStatus.Accepted]: { label: 'Activar cuenta →',     verb: 'activate' },
+  [BusinessStatus.Active]:   { label: 'Suspender',            verb: 'suspend' },
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -62,7 +62,7 @@ function PipelineProgress({ status }: { status: BusinessStatus }) {
                 <div className={`w-0.5 h-7 mt-1 ${isCompleted ? 'bg-primary/30' : 'bg-border'}`} />
               )}
             </div>
-            <div className={`pb-6 ${isLast ? 'pb-0' : ''}`}>
+            <div className={`${isLast ? 'pb-0' : 'pb-6'}`}>
               <p className={`text-sm font-medium leading-tight ${isCurrent ? 'text-foreground' : isCompleted ? 'text-foreground/70' : 'text-muted-foreground'}`}>
                 {label}
               </p>
@@ -86,18 +86,48 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-export default function DemoDetailPage({ business, onBack }: { business: Business; onBack: () => void }) {
-  const action = useBusinessAction()
+export default function DemoDetailPage() {
+  const { businessId } = useParams<{ businessId: string }>()
   const navigate = useNavigate()
+  const action = useBusinessAction()
+
+  const { data, isLoading } = useBusinesses()
+  const business = data?.businesses.find(b => b.id === businessId)
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 w-48 bg-muted rounded" />
+        <div className="h-16 bg-muted rounded-xl" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-48 bg-muted rounded-xl" />
+          <div className="h-48 bg-muted rounded-xl" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!business) {
+    return (
+      <div className="text-center py-20 text-muted-foreground">
+        <p className="text-4xl mb-3">🔍</p>
+        <p className="font-medium">Demo no encontrada</p>
+        <button onClick={() => navigate('/clientes')} className="mt-4 text-sm text-primary hover:underline">
+          Volver a Clientes
+        </button>
+      </div>
+    )
+  }
+
   const next = NEXT_ACTION[business.status]
   const typeLabel = TYPE_LABELS[business.type] ?? business.type
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6">
       {/* Back + header */}
       <div>
         <button
-          onClick={onBack}
+          onClick={() => navigate('/clientes')}
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 mb-5 transition-colors"
         >
           ← Volver a clientes
@@ -118,7 +148,6 @@ export default function DemoDetailPage({ business, onBack }: { business: Busines
 
       {/* Two-column grid: info + progress */}
       <div className="grid grid-cols-2 gap-4">
-        {/* Info card */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -145,7 +174,6 @@ export default function DemoDetailPage({ business, onBack }: { business: Busines
           </CardContent>
         </Card>
 
-        {/* Progress card */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
