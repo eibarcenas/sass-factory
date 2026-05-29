@@ -2,7 +2,7 @@
 Business lifecycle API tests.
 Firestore is mocked — no GCP credentials required in CI.
 Auth is bypassed via DEV_USER_EMAIL + ENVIRONMENT=local.
-Patch the local import reference (app.routers.businesses.get_db),
+Patch the local import reference (app.services.business_service.get_db),
 not app.db.get_db, to avoid lru_cache and local-reference issues.
 """
 import os
@@ -77,7 +77,7 @@ def test_list_businesses_returns_all(client):
         {"slug": "a", "name": "A", "status": "draft",  "plan": "free"},
         {"slug": "b", "name": "B", "status": "active", "plan": "pro"},
     ])
-    with patch("app.routers.businesses.get_db", return_value=db):
+    with patch("app.services.business_service.get_db", return_value=db):
         resp = client.get("/api/v1/admin/businesses")
     assert resp.status_code == 200
     assert resp.json()["total"] == 2
@@ -88,7 +88,7 @@ def test_list_businesses_requires_auth():
         from main import app
         c = TestClient(app)
         db = _db_with([])
-        with patch("app.routers.businesses.get_db", return_value=db):
+        with patch("app.services.business_service.get_db", return_value=db):
             resp = c.get("/api/v1/admin/businesses")
     assert resp.status_code == 401
 
@@ -110,7 +110,7 @@ VALID_TRANSITIONS = [
 @pytest.mark.parametrize("from_status,action", VALID_TRANSITIONS)
 def test_valid_status_transition(client, from_status, action):
     db = _db_with([{"slug": "biz-1", "name": "B", "status": from_status, "plan": "free"}])
-    with patch("app.routers.businesses.get_db", return_value=db):
+    with patch("app.services.business_service.get_db", return_value=db):
         resp = client.post(f"/api/v1/admin/businesses/biz-1/{action}")
     assert resp.status_code == 200
 
@@ -130,13 +130,13 @@ INVALID_TRANSITIONS = [
 @pytest.mark.parametrize("from_status,action", INVALID_TRANSITIONS)
 def test_invalid_status_transition_returns_422(client, from_status, action):
     db = _db_with([{"slug": "biz-1", "name": "B", "status": from_status, "plan": "free"}])
-    with patch("app.routers.businesses.get_db", return_value=db):
+    with patch("app.services.business_service.get_db", return_value=db):
         resp = client.post(f"/api/v1/admin/businesses/biz-1/{action}")
     assert resp.status_code == 422
 
 
 def test_unknown_business_returns_404(client):
     db = _db_with([])
-    with patch("app.routers.businesses.get_db", return_value=db):
+    with patch("app.services.business_service.get_db", return_value=db):
         resp = client.post("/api/v1/admin/businesses/nonexistent/publish")
     assert resp.status_code == 404

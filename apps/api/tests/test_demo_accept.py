@@ -47,7 +47,7 @@ def public_client():
 
 def test_accept_demo_creates_pending_owner(public_client):
     db, biz_ref = _db_with_biz("demo")
-    with patch("app.routers.demos.get_db", return_value=db):
+    with patch("app.services.demo_service.get_db", return_value=db):
         resp = public_client.post(
             "/api/v1/demos/heladeria-test/accept",
             json={"email": "owner@example.com", "name": "María"},
@@ -67,7 +67,7 @@ def test_accept_demo_creates_pending_owner(public_client):
 
 def test_accept_demo_404_when_slug_missing(public_client):
     db = _db_missing()
-    with patch("app.routers.demos.get_db", return_value=db):
+    with patch("app.services.demo_service.get_db", return_value=db):
         resp = public_client.post(
             "/api/v1/demos/no-such-slug/accept",
             json={"email": "owner@example.com"},
@@ -77,7 +77,7 @@ def test_accept_demo_404_when_slug_missing(public_client):
 
 def test_accept_demo_idempotent_when_already_active(public_client):
     db, biz_ref = _db_with_biz("active")
-    with patch("app.routers.demos.get_db", return_value=db):
+    with patch("app.services.demo_service.get_db", return_value=db):
         resp = public_client.post(
             "/api/v1/demos/heladeria-test/accept",
             json={"email": "owner@example.com"},

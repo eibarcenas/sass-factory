@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '../lib/api'
+import { api } from '@/lib/api'
+import { businessApi } from '@/infrastructure/api/businessApi'
 import type { Business } from '@eguru/core'
 
 interface BusinessListResponse {
@@ -8,10 +9,9 @@ interface BusinessListResponse {
 }
 
 export function useBusinesses(status?: string) {
-  const path = `/api/v1/admin/businesses${status ? `?status=${status}` : ''}`
   return useQuery<BusinessListResponse>({
     queryKey: ['businesses', status],
-    queryFn: () => api.get(path),
+    queryFn: () => businessApi.list(status),
   })
 }
 
@@ -34,7 +34,7 @@ export function useBusinessAction() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, action }: { id: string; action: string }) =>
-      api.post(`/api/v1/admin/businesses/${id}/${action}`, {}),
+      businessApi.action(id, action),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['businesses'] }),
   })
 }
