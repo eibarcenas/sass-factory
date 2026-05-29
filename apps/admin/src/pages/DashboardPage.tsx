@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useAuthStore } from '../store/auth'
 import { useProspects } from '../hooks/useProspects'
-import AppSidebar from '../components/layout/AppSidebar'
+import AppSidebar, { SidebarProfile } from '../components/layout/AppSidebar'
 import type { NavItem } from '../components/layout/AppSidebar'
 import SalesPage from './SalesPage'
 import DemoDetailPage from './DemoDetailPage'
 import { Badge } from '@/components/ui/badge'
 import type { Business } from '@eguru/core'
 
-type Page = 'dashboard' | 'sales' | 'demo-detail'
+type Page = 'dashboard' | 'sales' | 'demo-detail' | 'settings'
 
 function AdminSidebar({ active, onNavigate, newProspects }: {
   active: Page
@@ -28,7 +28,14 @@ function AdminSidebar({ active, onNavigate, newProspects }: {
       active={active}
       onNavigate={onNavigate}
       headerSlot={mockMode && <Badge variant="secondary" className="ml-2 text-xs">mock</Badge>}
-      footerSlot={<p className="text-xs text-muted-foreground truncate">{user?.email}</p>}
+      footerSlot={
+        <SidebarProfile
+          email={user?.email ?? null}
+          displayName={user?.displayName}
+          photoURL={user?.photoURL}
+          onSettings={() => onNavigate('settings')}
+        />
+      }
     />
   )
 }
@@ -59,7 +66,7 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
       <AdminSidebar
-        active={page === 'demo-detail' ? prevPage : page}
+        active={page === 'demo-detail' || page === 'settings' ? prevPage : page}
         onNavigate={navigateTo}
         newProspects={newProspects}
       />
@@ -77,6 +84,12 @@ export default function DashboardPage() {
 
         {page === 'demo-detail' && selectedBusiness && (
           <DemoDetailPage business={selectedBusiness} onBack={goBack} />
+        )}
+
+        {page === 'settings' && (
+          <div className="space-y-6">
+            <h1 className="text-2xl font-bold">Settings</h1>
+          </div>
         )}
 
       </main>

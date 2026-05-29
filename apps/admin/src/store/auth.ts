@@ -13,12 +13,13 @@ function mockUser(): AuthUser {
     return {
       uid: 'mock-owner',
       email: 'owner@catalog.mx',
+      displayName: 'Owner Demo',
       role: 'OWNER',
       businessId: MOCK_BUSINESS_ID ?? 'heladeria-el-pinguino',
       modules: ['CATALOG', 'APPEARANCE'],
     }
   }
-  return { uid: 'mock-admin', email: 'admin@catalog.mx', role: 'SUPER_ADMIN', modules: [] }
+  return { uid: 'mock-admin', email: 'admin@catalog.mx', displayName: 'Admin Demo', role: 'SUPER_ADMIN', modules: [] }
 }
 
 export const useAuthStore = createAuthStore({

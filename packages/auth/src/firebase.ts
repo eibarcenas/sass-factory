@@ -13,7 +13,7 @@ export interface FirebaseAuthRestoreOptions {
     setUser: AuthStore['setUser']
   }
   firebaseConfig: FirebaseConfig | null
-  buildUser: (uid: string, email: string | null, claims: Record<string, unknown>) => AuthUser | null
+  buildUser: (uid: string, email: string | null, claims: Record<string, unknown>, displayName?: string | null, photoURL?: string | null) => AuthUser | null
   resolveClaimsUrl?: string
 }
 
@@ -59,7 +59,7 @@ export function useFirebaseAuthRestore({ store, firebaseConfig, buildUser, resol
               }
             }
 
-            const user = buildUser(fbUser.uid, fbUser.email, tokenResult.claims)
+            const user = buildUser(fbUser.uid, fbUser.email, tokenResult.claims, fbUser.displayName, fbUser.photoURL)
             store.setUser(user)
           } else {
             store.setUser(null)
