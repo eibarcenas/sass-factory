@@ -24,6 +24,7 @@ export function useCreateDemo() {
       whatsapp: string
       city: string
       tagline?: string
+      contactName?: string
     }) => api.post<Business>('/api/v1/admin/demos', data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['businesses'] }),
   })

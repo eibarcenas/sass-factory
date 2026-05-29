@@ -28,43 +28,46 @@ function ProspectsTab() {
   return (
     <div className="space-y-4">
       {newCount > 0 && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3">
+        <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center gap-3">
           <span className="text-xl">🎉</span>
-          <p className="text-sm font-medium text-green-800">
-            {newCount} new prospect{newCount > 1 ? 's' : ''} — reach out now
+          <p className="text-sm font-medium text-foreground">
+            {newCount} prospecto{newCount > 1 ? 's' : ''} nuevo{newCount > 1 ? 's' : ''} — contacta ahora
           </p>
         </div>
       )}
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-16 bg-muted rounded-xl animate-pulse" />)}
         </div>
       ) : prospects.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
-          <p className="text-3xl mb-2">👥</p>
-          <p className="text-sm">No prospects yet — share your demos!</p>
+          <p className="text-4xl mb-3">👥</p>
+          <p className="font-medium text-sm">Sin prospectos todavía</p>
+          <p className="text-xs mt-1">Comparte tus demos para que lleguen.</p>
         </div>
       ) : (
-        <div className="space-y-0 rounded-2xl border overflow-hidden bg-background">
+        <div className="rounded-xl border border-border overflow-hidden bg-background">
           {prospects.map((p, i) => (
             <div key={p.id}>
               {i > 0 && <Separator />}
-              <div className="px-4 py-3 flex items-start justify-between gap-3">
+              <div className="px-4 py-3.5 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${p.status === 'new' ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
-                    <p className="font-medium text-sm">{p.contactName ?? 'Anonymous'}</p>
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${p.status === 'new' ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                    <p className="font-medium text-sm">{p.contactName ?? 'Anónimo'}</p>
                     {p.status === 'new' && (
-                      <Badge className="bg-green-500 text-white text-xs h-4 px-1.5">New</Badge>
+                      <Badge className="text-[10px] h-4 px-1.5">Nuevo</Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 ml-4">
                     {[p.phone, p.email].filter(Boolean).join(' · ')}
-                    {p.businessId && <span className="ml-1">· via <span className="font-mono">{p.businessId}</span></span>}
+                    {p.businessId && (
+                      <span className="ml-1 text-muted-foreground/70">· via <span className="font-mono">{p.businessId}</span></span>
+                    )}
                   </p>
                 </div>
-                <span className="text-xs text-muted-foreground shrink-0">{timeAgo(p.createdAt)}</span>
+                <span className="text-xs text-muted-foreground shrink-0 mt-0.5">{timeAgo(p.createdAt)}</span>
               </div>
             </div>
           ))}
@@ -72,7 +75,7 @@ function ProspectsTab() {
       )}
 
       <p className="text-xs text-muted-foreground text-right">
-        {data?.total ?? 0} total · refreshes every 30s
+        {data?.total ?? 0} total · actualiza c/30s
       </p>
     </div>
   )
@@ -87,10 +90,10 @@ export default function SalesPage({ onSelectBusiness }: { onSelectBusiness: (b: 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Sales</h1>
+        <h1 className="text-2xl font-bold">Clientes</h1>
         {tab === 'demos' && (
           <Button size="sm" variant={showForm ? 'ghost' : 'default'} onClick={() => setShowForm(f => !f)}>
-            {showForm ? 'Cancel' : '+ New demo'}
+            {showForm ? 'Cancelar' : '+ Nueva demo'}
           </Button>
         )}
       </div>
@@ -106,20 +109,21 @@ export default function SalesPage({ onSelectBusiness }: { onSelectBusiness: (b: 
         </Card>
       )}
 
-      <div className="flex gap-0 border-b">
+      {/* Tabs */}
+      <div className="flex gap-0 border-b border-border">
         {(['demos', 'prospects'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${
               tab === t
-                ? 'border-foreground text-foreground'
+                ? 'border-primary text-foreground'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t === 'demos' ? 'Demos' : 'Prospects'}
+            {t === 'demos' ? 'Demos' : 'Prospectos'}
             {t === 'prospects' && newCount > 0 && (
-              <Badge className="bg-green-500 text-white text-xs h-4 px-1.5">{newCount}</Badge>
+              <Badge className="text-[10px] h-4 px-1.5">{newCount}</Badge>
             )}
           </button>
         ))}
