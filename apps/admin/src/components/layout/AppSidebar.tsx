@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 
 function getInitials(email: string | null): string {
   if (!email) return '?'
@@ -53,8 +52,6 @@ interface AppSidebarProps<T extends string = string> {
   nav: NavItem<T>[]
   active: T
   onNavigate: (key: T) => void
-  onSettings?: () => void
-  settingsActive?: boolean
   headerSlot?: React.ReactNode
   footerSlot?: React.ReactNode
   children?: React.ReactNode
@@ -64,8 +61,6 @@ export default function AppSidebar<T extends string>({
   nav,
   active,
   onNavigate,
-  onSettings,
-  settingsActive = false,
   headerSlot,
   footerSlot,
   children,
@@ -95,7 +90,7 @@ export default function AppSidebar<T extends string>({
             onClick={() => onNavigate(item.key)}
             title={collapsed ? item.label : undefined}
             className={`w-full text-left flex items-center justify-between px-2.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              active === item.key && !settingsActive
+              active === item.key
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
@@ -112,27 +107,7 @@ export default function AppSidebar<T extends string>({
         {children}
       </nav>
 
-      {onSettings && (
-        <>
-          <Separator />
-          <div className="px-2 py-3">
-            <button
-              onClick={onSettings}
-              title={collapsed ? 'Settings' : undefined}
-              className={`w-full text-left flex items-center gap-2 px-2.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                settingsActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <span className="shrink-0">⚙</span>
-              {!collapsed && <span className="truncate">Settings</span>}
-            </button>
-          </div>
-        </>
-      )}
-
-      <div className={`px-3 py-4 border-t ${collapsed ? 'hidden' : ''}`}>
+<div className={`px-3 py-4 border-t ${collapsed ? 'hidden' : ''}`}>
         {footerSlot}
       </div>
     </aside>

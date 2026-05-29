@@ -28,8 +28,6 @@ function AdminSidebar({ active, onNavigate, newProspects }: {
       nav={nav}
       active={active}
       onNavigate={onNavigate}
-      onSettings={() => onNavigate('settings')}
-      settingsActive={active === 'settings'}
       headerSlot={mockMode && <Badge variant="secondary" className="ml-2 text-xs">mock</Badge>}
       footerSlot={
         <SidebarProfile
