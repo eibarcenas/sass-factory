@@ -3,6 +3,7 @@ import { useFirebaseAuthRestore } from '@eguru/auth'
 import LoginPage from './pages/LoginPage'
 import AdminLayout, { DashboardContent } from './pages/DashboardPage'
 import SalesPage from './pages/SalesPage'
+import NewDemoPage from './pages/NewDemoPage'
 import DemoDetailPage from './pages/DemoDetailPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'
@@ -96,6 +97,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardContent />} />
         <Route path="/clientes" element={<SalesPage />} />
+        <Route path="/clientes/new" element={<NewDemoPage />} />
         <Route path="/clientes/:businessId" element={<DemoDetailPage />} />
         <Route path="/ajustes" element={<SettingsPage />} />
       </Route>
