@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { BusinessStatus } from '@eguru/core'
+import SettingsPage from '../settings/SettingsPage'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
@@ -167,6 +168,8 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         nav={OWNER_NAV}
         active={page}
         onNavigate={setPage}
+        onSettings={() => setPage('settings')}
+        settingsActive={page === 'settings'}
         headerSlot={bizData?.name && <p className="text-xs text-muted-foreground mt-0.5 truncate">{bizData.name}</p>}
         footerSlot={
           <div className="space-y-2">
@@ -207,9 +210,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
           <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} />
         )}
         {page === 'settings' && (
-          <div className="space-y-6">
-            <h1 className="text-2xl font-bold">Settings</h1>
-          </div>
+          <SettingsPage />
         )}
       </main>
     </div>
