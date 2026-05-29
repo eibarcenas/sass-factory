@@ -2,14 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProspects } from '../hooks/useProspects'
 import KanbanBoard from '../components/dashboard/KanbanBoard'
-import CreateDemoForm from '../components/demos/CreateDemoForm'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import type { Business } from '@eguru/core'
-
-const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -85,7 +81,6 @@ function ProspectsTab() {
 export default function SalesPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<'demos' | 'prospects'>('demos')
-  const [showForm, setShowForm] = useState(false)
   const { data: prospectData } = useProspects()
   const newCount = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
 
@@ -98,22 +93,11 @@ export default function SalesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Clientes</h1>
         {tab === 'demos' && (
-          <Button size="sm" variant={showForm ? 'ghost' : 'default'} onClick={() => setShowForm(f => !f)}>
-            {showForm ? 'Cancelar' : '+ Nueva demo'}
+          <Button size="sm" onClick={() => navigate('/clientes/new')}>
+            + Nueva demo
           </Button>
         )}
       </div>
-
-      {showForm && tab === 'demos' && (
-        <Card>
-          <CardContent className="pt-5">
-            <CreateDemoForm onSuccess={(slug) => {
-              setShowForm(false)
-              window.open(`${STOREFRONT_URL}/demo/${slug}`, '_blank')
-            }} />
-          </CardContent>
-        </Card>
-      )}
 
       {/* Tabs */}
       <div className="flex gap-0 border-b border-border">
