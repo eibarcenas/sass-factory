@@ -9,16 +9,17 @@ interface RowProps {
   businessId: string
   scope: Scope
   readonly?: boolean
+  impersonateSlug?: string
   onSaved: () => void
 }
 
-function ItemRow({ item, businessId, scope, readonly = false, onSaved }: RowProps) {
+function ItemRow({ item, businessId, scope, readonly = false, impersonateSlug, onSaved }: RowProps) {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ name: item.name, price: item.price, description: item.description ?? '', image: item.image ?? '' })
   const adminUpdate = useUpdateItem(businessId)
-  const ownerUpdate = useOwnerUpdateItem(businessId)
+  const ownerUpdate = useOwnerUpdateItem(businessId, impersonateSlug)
   const adminDelete = useDeleteItem(businessId)
-  const ownerDelete = useOwnerDeleteItem(businessId)
+  const ownerDelete = useOwnerDeleteItem(businessId, impersonateSlug)
   const updateItem = scope === 'owner' ? ownerUpdate : adminUpdate
   const deleteItem = scope === 'owner' ? ownerDelete : adminDelete
 
@@ -144,11 +145,11 @@ function ItemRow({ item, businessId, scope, readonly = false, onSaved }: RowProp
   )
 }
 
-function AddItemForm({ businessId, scope, onAdded }: { businessId: string; scope: Scope; onAdded: () => void }) {
+function AddItemForm({ businessId, scope, impersonateSlug, onAdded }: { businessId: string; scope: Scope; impersonateSlug?: string; onAdded: () => void }) {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ name: '', price: '', description: '' })
   const adminAdd = useAddItem(businessId)
-  const ownerAdd = useOwnerAddItem(businessId)
+  const ownerAdd = useOwnerAddItem(businessId, impersonateSlug)
   const addItem = scope === 'owner' ? ownerAdd : adminAdd
 
   async function submit(e: React.FormEvent) {
@@ -227,15 +228,16 @@ function AddItemForm({ businessId, scope, onAdded }: { businessId: string; scope
   )
 }
 
-export default function ProductEditor({ businessId, businessSlug, scope = 'admin', previewSlug, readonly = false }: {
+export default function ProductEditor({ businessId, businessSlug, scope = 'admin', previewSlug, impersonateSlug, readonly = false }: {
   businessId: string
   businessSlug: string
   scope?: Scope
   previewSlug?: string
+  impersonateSlug?: string
   readonly?: boolean
 }) {
   const adminData = useItems(businessId)
-  const ownerData = useOwnerItems(businessId, previewSlug)
+  const ownerData = useOwnerItems(businessId, previewSlug ?? impersonateSlug)
   const { data, isLoading, refetch } = scope === 'owner' ? ownerData : adminData
   const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
@@ -262,9 +264,9 @@ export default function ProductEditor({ businessId, businessSlug, scope = 'admin
       ) : (
         <div className="space-y-2">
           {data?.items.map(item => (
-            <ItemRow key={item.id} item={item} businessId={businessId} scope={scope} readonly={readonly} onSaved={() => refetch()} />
+            <ItemRow key={item.id} item={item} businessId={businessId} scope={scope} readonly={readonly} impersonateSlug={impersonateSlug} onSaved={() => refetch()} />
           ))}
-          {!readonly && <AddItemForm businessId={businessId} scope={scope} onAdded={() => refetch()} />}
+          {!readonly && <AddItemForm businessId={businessId} scope={scope} impersonateSlug={impersonateSlug} onAdded={() => refetch()} />}
         </div>
       )}
     </div>

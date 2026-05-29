@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
+import { useImpersonationStore } from '../../store/impersonation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import AppSidebar, { SidebarProfile } from '../../components/layout/AppSidebar'
@@ -24,11 +26,12 @@ const OWNER_NAV: NavItem<Page>[] = [
 ]
 
 // ── Catalog page (link + products) ───────────────────────────────────────────
-function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, whatsappClicks }: {
+function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, impersonateSlug, whatsappClicks }: {
   businessId: string
   previewSlug?: string
   catalogUrl: string
   isPreview: boolean
+  impersonateSlug?: string
   whatsappClicks?: number
 }) {
   function copyLink() { navigator.clipboard.writeText(catalogUrl) }
@@ -78,6 +81,7 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, whatsappC
             businessSlug={previewSlug ?? businessId}
             scope="owner"
             previewSlug={previewSlug}
+            impersonateSlug={impersonateSlug}
             readonly={isPreview}
           />
         </CardContent>
@@ -87,11 +91,12 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, whatsappC
 }
 
 // ── Appearance page ───────────────────────────────────────────────────────────
-function AppearancePage({ businessId, currentTagline, currentWhatsapp, readonly = false }: {
+function AppearancePage({ businessId, currentTagline, currentWhatsapp, readonly = false, impersonateSlug }: {
   businessId: string
   currentTagline?: string
   currentWhatsapp?: string
   readonly?: boolean
+  impersonateSlug?: string
 }) {
   const [tagline, setTagline] = useState(currentTagline ?? '')
   const [whatsapp, setWhatsapp] = useState(currentWhatsapp ?? '')
@@ -106,8 +111,9 @@ function AppearancePage({ businessId, currentTagline, currentWhatsapp, readonly 
     if (currentWhatsapp !== undefined) setWhatsapp(currentWhatsapp)
   }, [currentWhatsapp])
 
+  const qs = impersonateSlug ? `?business=${impersonateSlug}` : ''
   const save = useMutation({
-    mutationFn: () => api.patch(`/api/v1/owner/business`, { tagline, whatsapp }),
+    mutationFn: () => api.patch(`/api/v1/owner/business${qs}`, { tagline, whatsapp }),
     onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); qc.invalidateQueries({ queryKey: ['owner-business'] }) },
   })
 
@@ -151,8 +157,11 @@ interface OwnerDashboardProps {
 
 export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps) {
   const { user } = useAuthStore()
+  const { impersonating, stopImpersonation } = useImpersonationStore()
+  const navigate = useNavigate()
   const isPreview = !!previewSlug
-  const businessId = previewSlug ?? user?.businessId ?? 'heladeria-el-pinguino'
+  const isImpersonating = !!impersonating && !isPreview
+  const businessId = impersonating?.businessId ?? previewSlug ?? user?.businessId ?? 'heladeria-el-pinguino'
   const [page, setPage] = useState<Page>('catalog')
 
   const { data: bizData } = useQuery({
@@ -194,6 +203,17 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
       />
 
       <main className="flex-1 overflow-y-auto p-8">
+        {isImpersonating && (
+          <div data-testid="impersonation-banner" className="mb-6 flex items-center justify-between gap-2 p-3 rounded-lg border border-orange-200 bg-orange-50 text-sm text-orange-800">
+            <span>⚠️ <strong>Acting as owner</strong> — You are impersonating <strong>{impersonating!.businessName}</strong>. Changes are real.</span>
+            <button
+              onClick={() => { stopImpersonation(); navigate('/clientes') }}
+              className="shrink-0 px-3 py-1 rounded-md border border-orange-300 bg-orange-100 hover:bg-orange-200 text-xs font-medium transition-colors"
+            >
+              Exit ↩
+            </button>
+          </div>
+        )}
         {isPreview && (
           <div data-testid="preview-banner" className="mb-6 flex items-center gap-2 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
             <span>🔍</span>
@@ -202,10 +222,10 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         )}
 
         {page === 'catalog' && (
-          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} whatsappClicks={bizData?.whatsappClicks} />
+          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
         )}
         {page === 'appearance' && (
-          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} />
+          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} impersonateSlug={isImpersonating ? businessId : undefined} />
         )}
         {page === 'settings' && (
           <SettingsPage />

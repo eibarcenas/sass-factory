@@ -8,6 +8,7 @@ import DemoDetailPage from './pages/DemoDetailPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'
 import { useAuthStore, type UserRole } from './store/auth'
+import { useImpersonationStore } from './store/impersonation'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 const RESOLVE_CLAIMS_URL = `${API_URL}/api/v1/auth/resolve-claims`
@@ -34,7 +35,8 @@ function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
 
 function RequireOwner({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
-  if (user?.role !== 'OWNER') return <Navigate to="/" replace />
+  const { impersonating } = useImpersonationStore()
+  if (user?.role !== 'OWNER' && !impersonating) return <Navigate to="/" replace />
   return <>{children}</>
 }
 

@@ -61,29 +61,32 @@ export function useOwnerItems(businessId: string, previewSlug?: string) {
   })
 }
 
-export function useOwnerAddItem(businessId: string) {
+export function useOwnerAddItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
+  const qs = businessOverride ? `?business=${businessOverride}` : ''
   return useMutation({
     mutationFn: (data: Partial<Item>) =>
-      api.post<Item>('/api/v1/owner/business/items', data),
+      api.post<Item>(`/api/v1/owner/business/items${qs}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
 
-export function useOwnerUpdateItem(businessId: string) {
+export function useOwnerUpdateItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
+  const qs = businessOverride ? `?business=${businessOverride}` : ''
   return useMutation({
     mutationFn: ({ itemId, patch }: { itemId: string; patch: Partial<Item> }) =>
-      api.patch<Item>(`/api/v1/owner/business/items/${itemId}`, patch),
+      api.patch<Item>(`/api/v1/owner/business/items/${itemId}${qs}`, patch),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
 
-export function useOwnerDeleteItem(businessId: string) {
+export function useOwnerDeleteItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
+  const qs = businessOverride ? `?business=${businessOverride}` : ''
   return useMutation({
     mutationFn: (itemId: string) =>
-      api.del(`/api/v1/owner/business/items/${itemId}`),
+      api.del(`/api/v1/owner/business/items/${itemId}${qs}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
