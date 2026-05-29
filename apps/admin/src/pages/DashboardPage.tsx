@@ -5,10 +5,11 @@ import AppSidebar from '../components/layout/AppSidebar'
 import type { NavItem } from '../components/layout/AppSidebar'
 import SalesPage from './SalesPage'
 import DemoDetailPage from './DemoDetailPage'
+import SettingsPage from './settings/SettingsPage'
 import { Badge } from '@/components/ui/badge'
 import type { Business } from '@eguru/core'
 
-type Page = 'dashboard' | 'sales' | 'demo-detail'
+type Page = 'dashboard' | 'sales' | 'demo-detail' | 'settings'
 
 function AdminSidebar({ active, onNavigate, newProspects }: {
   active: Page
@@ -27,6 +28,8 @@ function AdminSidebar({ active, onNavigate, newProspects }: {
       nav={nav}
       active={active}
       onNavigate={onNavigate}
+      onSettings={() => onNavigate('settings')}
+      settingsActive={active === 'settings'}
       headerSlot={mockMode && <Badge variant="secondary" className="ml-2 text-xs">mock</Badge>}
       footerSlot={<p className="text-xs text-muted-foreground truncate">{user?.email}</p>}
     />
@@ -56,10 +59,12 @@ export default function DashboardPage() {
     setSelectedBusiness(null)
   }
 
+  const sidebarActive = page === 'demo-detail' ? prevPage : page
+
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
       <AdminSidebar
-        active={page === 'demo-detail' ? prevPage : page}
+        active={sidebarActive}
         onNavigate={navigateTo}
         newProspects={newProspects}
       />
@@ -77,6 +82,10 @@ export default function DashboardPage() {
 
         {page === 'demo-detail' && selectedBusiness && (
           <DemoDetailPage business={selectedBusiness} onBack={goBack} />
+        )}
+
+        {page === 'settings' && (
+          <SettingsPage />
         )}
 
       </main>

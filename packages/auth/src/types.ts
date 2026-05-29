@@ -3,6 +3,7 @@ export interface AuthUser {
   email: string | null
   role: string
   businessId?: string
+  displayName?: string
   modules: string[]
 }
 
