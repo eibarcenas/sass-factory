@@ -168,8 +168,6 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         nav={OWNER_NAV}
         active={page}
         onNavigate={setPage}
-        onSettings={() => setPage('settings')}
-        settingsActive={page === 'settings'}
         headerSlot={bizData?.name && <p className="text-xs text-muted-foreground mt-0.5 truncate">{bizData.name}</p>}
         footerSlot={
           <div className="space-y-2">
