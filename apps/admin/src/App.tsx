@@ -52,12 +52,14 @@ export default function App() {
     store,
     firebaseConfig: FIREBASE_CONFIG,
     resolveClaimsUrl: RESOLVE_CLAIMS_URL,
-    buildUser: (uid, email, claims) => {
+    buildUser: (uid, email, claims, displayName, photoURL) => {
       const role = claims.role as UserRole | undefined
       if (!role) return null
       return {
         uid,
         email,
+        displayName: displayName ?? null,
+        photoURL: photoURL ?? null,
         role,
         businessId: claims.business_id as string | undefined,
         modules: (claims.modules as string[]) ?? [],

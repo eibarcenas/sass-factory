@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuthStore } from '../store/auth'
 import { useProspects } from '../hooks/useProspects'
-import AppSidebar from '../components/layout/AppSidebar'
+import AppSidebar, { SidebarProfile } from '../components/layout/AppSidebar'
 import type { NavItem } from '../components/layout/AppSidebar'
 import SalesPage from './SalesPage'
 import DemoDetailPage from './DemoDetailPage'
@@ -31,7 +31,14 @@ function AdminSidebar({ active, onNavigate, newProspects }: {
       onSettings={() => onNavigate('settings')}
       settingsActive={active === 'settings'}
       headerSlot={mockMode && <Badge variant="secondary" className="ml-2 text-xs">mock</Badge>}
-      footerSlot={<p className="text-xs text-muted-foreground truncate">{user?.email}</p>}
+      footerSlot={
+        <SidebarProfile
+          email={user?.email ?? null}
+          displayName={user?.displayName}
+          photoURL={user?.photoURL}
+          onSettings={() => onNavigate('settings')}
+        />
+      }
     />
   )
 }

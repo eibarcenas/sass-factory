@@ -2,6 +2,46 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 
+function getInitials(email: string | null): string {
+  if (!email) return '?'
+  const parts = email.split('@')[0].split(/[._-]/).filter(Boolean)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return email.slice(0, 2).toUpperCase()
+}
+
+export interface SidebarProfileProps {
+  email: string | null
+  displayName?: string | null
+  photoURL?: string | null
+  onSettings?: () => void
+}
+
+export function SidebarProfile({ email, displayName, photoURL, onSettings }: SidebarProfileProps) {
+  const initials = getInitials(email)
+  const label = displayName ?? (email ? email.split('@')[0] : '')
+
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center shrink-0 overflow-hidden">
+        {photoURL
+          ? <img src={photoURL} alt={label} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          : initials
+        }
+      </div>
+      <span className="text-sm text-foreground flex-1 truncate">{label}</span>
+      {onSettings && (
+        <button
+          onClick={onSettings}
+          className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
+          aria-label="Settings"
+        >
+          ⚙
+        </button>
+      )}
+    </div>
+  )
+}
+
 export interface NavItem<T extends string = string> {
   key: T
   icon: string

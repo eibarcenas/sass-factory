@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/auth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
-import AppSidebar from '../../components/layout/AppSidebar'
+import AppSidebar, { SidebarProfile } from '../../components/layout/AppSidebar'
 import ProductEditor from '../../components/demos/ProductEditor'
 import type { NavItem } from '../../components/layout/AppSidebar'
 import { Button } from '@/components/ui/button'
@@ -178,10 +178,13 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
                 Preview mode
               </Badge>
             )}
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs text-muted-foreground truncate">
-                {isPreview ? `Previewing: ${businessId}` : user?.email}
-              </p>
+            <div className="flex items-center gap-2">
+              <SidebarProfile
+                email={user?.email ?? null}
+                displayName={user?.displayName}
+                photoURL={user?.photoURL}
+                onSettings={isPreview ? undefined : () => setPage('settings')}
+              />
               {bizData?.status && (
                 <Badge variant={bizData.status === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">
                   {bizData.status}
