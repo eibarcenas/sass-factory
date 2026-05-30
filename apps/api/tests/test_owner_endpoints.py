@@ -94,7 +94,7 @@ def owner_client():
 def test_super_admin_with_business_slug_returns_200(super_admin_client):
     db = _db_with_business("heladeria-el-pinguino")
     with (
-        patch("app.routers.businesses.get_db", return_value=db),
+        patch("app.services.business_service.get_db", return_value=db),
         patch("app.services.item_service.get_db", return_value=db),
     ):
         resp = super_admin_client.get("/api/v1/owner/business/items?business=heladeria-el-pinguino")
@@ -104,7 +104,7 @@ def test_super_admin_with_business_slug_returns_200(super_admin_client):
 
 def test_super_admin_without_business_slug_returns_400(super_admin_client):
     db = _db_with_business("heladeria-el-pinguino")
-    with patch("app.routers.businesses.get_db", return_value=db):
+    with patch("app.services.business_service.get_db", return_value=db):
         resp = super_admin_client.get("/api/v1/owner/business/items")
     assert resp.status_code == 400
     assert "SUPER_ADMIN must provide" in resp.json()["detail"]
@@ -117,7 +117,7 @@ def test_super_admin_without_business_slug_returns_400(super_admin_client):
 def test_owner_reads_from_jwt_claims_returns_200(owner_client):
     db = _db_with_business("heladeria-el-pinguino")
     with (
-        patch("app.routers.businesses.get_db", return_value=db),
+        patch("app.services.business_service.get_db", return_value=db),
         patch("app.services.item_service.get_db", return_value=db),
     ):
         resp = owner_client.get("/api/v1/owner/business/items")
@@ -129,7 +129,7 @@ def test_owner_ignores_business_query_param(owner_client):
     """OWNER: ?business= param is ignored; always uses JWT claims slug."""
     db = _db_with_business("heladeria-el-pinguino")
     with (
-        patch("app.routers.businesses.get_db", return_value=db),
+        patch("app.services.business_service.get_db", return_value=db),
         patch("app.services.item_service.get_db", return_value=db),
     ):
         resp = owner_client.get("/api/v1/owner/business/items?business=other-business")
@@ -142,7 +142,7 @@ def test_owner_ignores_business_query_param(owner_client):
 
 def test_super_admin_patch_business_with_slug_returns_200(super_admin_client):
     db = _db_with_business("heladeria-el-pinguino")
-    with patch("app.routers.businesses.get_db", return_value=db):
+    with patch("app.services.business_service.get_db", return_value=db):
         resp = super_admin_client.patch(
             "/api/v1/owner/business?business=heladeria-el-pinguino",
             json={"tagline": "La mejor heladería"},
@@ -152,6 +152,6 @@ def test_super_admin_patch_business_with_slug_returns_200(super_admin_client):
 
 def test_super_admin_patch_business_without_slug_returns_400(super_admin_client):
     db = _db_with_business("heladeria-el-pinguino")
-    with patch("app.routers.businesses.get_db", return_value=db):
+    with patch("app.services.business_service.get_db", return_value=db):
         resp = super_admin_client.patch("/api/v1/owner/business", json={"tagline": "test"})
     assert resp.status_code == 400

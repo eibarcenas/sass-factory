@@ -92,10 +92,10 @@ def mock_firestore():
     """
     db = make_mock_db()
     with (
-        patch("app.routers.storefront.get_db", return_value=db),
-        patch("app.routers.businesses.get_db", return_value=db),
-        patch("app.routers.prospects.get_db",  return_value=db),
-        patch("app.routers.images.storage",    MagicMock()),
+        patch("app.routers.storefront.get_db",       return_value=db),
+        patch("app.services.business_service.get_db", return_value=db),
+        patch("app.services.prospect_service.get_db", return_value=db),
+        patch("app.routers.images.storage",           MagicMock()),
     ):
         yield
 

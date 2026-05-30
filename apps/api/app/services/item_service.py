@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from app.db import get_db
+from app.domain.item import ALLOWED_PATCH_FIELDS, build_new_item
 
 COLL = "businesses"
-ALLOWED_PATCH_FIELDS = ("name", "price", "description", "image", "visible", "order")
 
 
 def list_items(business_id: str) -> list[dict]:
@@ -22,17 +22,7 @@ def add_item(business_id: str, item: dict) -> dict:
     items_ref = ref.collection("items")
     count = len(list(items_ref.stream()))
     now = datetime.now(timezone.utc).isoformat()
-    new_item = {
-        "businessId": business_id,
-        "name": item.get("name", ""),
-        "price": float(item.get("price", 0)),
-        "currency": "MXN",
-        "description": item.get("description"),
-        "visible": item.get("visible", True),
-        "order": count + 1,
-        "createdAt": now,
-        "updatedAt": now,
-    }
+    new_item = build_new_item(business_id, item, count + 1, now)
     doc_ref = items_ref.document()
     doc_ref.set(new_item)
     ref.update({"updatedAt": now})

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from app.db import get_db
-from app.models.enums import BusinessStatus
+from app.domain.business import BusinessStatus
 
 router = APIRouter(tags=["storefront"])
 

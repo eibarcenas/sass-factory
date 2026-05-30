@@ -1,22 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '../lib/api'
+import { itemApi } from '@/infrastructure/api/itemApi'
+import type { Item } from '@eguru/core'
 
-export interface Item {
-  id: string
-  businessId: string
-  name: string
-  price: number
-  currency: string
-  description?: string
-  image?: string
-  visible: boolean
-  order: number
-}
+export type { Item }
 
 export function useItems(businessId: string) {
   return useQuery<{ items: Item[] }>({
     queryKey: ['items', businessId],
-    queryFn: () => api.get(`/api/v1/admin/businesses/${businessId}/items`),
+    queryFn: () => itemApi.list(businessId),
     enabled: !!businessId,
   })
 }
@@ -24,8 +15,7 @@ export function useItems(businessId: string) {
 export function useAddItem(businessId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Partial<Item>) =>
-      api.post<Item>(`/api/v1/admin/businesses/${businessId}/items`, data),
+    mutationFn: (data: Partial<Item>) => itemApi.add(businessId, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
@@ -34,7 +24,7 @@ export function useUpdateItem(businessId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ itemId, patch }: { itemId: string; patch: Partial<Item> }) =>
-      api.patch<Item>(`/api/v1/admin/businesses/${businessId}/items/${itemId}`, patch),
+      itemApi.update(businessId, itemId, patch),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
@@ -42,8 +32,7 @@ export function useUpdateItem(businessId: string) {
 export function useDeleteItem(businessId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (itemId: string) =>
-      api.del(`/api/v1/admin/businesses/${businessId}/items/${itemId}`),
+    mutationFn: (itemId: string) => itemApi.delete(businessId, itemId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
@@ -51,42 +40,34 @@ export function useDeleteItem(businessId: string) {
 // ── Owner-scoped hooks (call /owner/business/items — auth via JWT) ────────────
 
 export function useOwnerItems(businessId: string, previewSlug?: string) {
-  const url = previewSlug
-    ? `/api/v1/owner/business/items?business=${previewSlug}`
-    : '/api/v1/owner/business/items'
   return useQuery<{ items: Item[] }>({
     queryKey: ['owner-items', businessId, previewSlug ?? null],
-    queryFn: () => api.get(url),
+    queryFn: () => itemApi.ownerList(previewSlug),
     enabled: !!businessId,
   })
 }
 
 export function useOwnerAddItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
-  const qs = businessOverride ? `?business=${businessOverride}` : ''
   return useMutation({
-    mutationFn: (data: Partial<Item>) =>
-      api.post<Item>(`/api/v1/owner/business/items${qs}`, data),
+    mutationFn: (data: Partial<Item>) => itemApi.ownerAdd(data, businessOverride),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
 
 export function useOwnerUpdateItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
-  const qs = businessOverride ? `?business=${businessOverride}` : ''
   return useMutation({
     mutationFn: ({ itemId, patch }: { itemId: string; patch: Partial<Item> }) =>
-      api.patch<Item>(`/api/v1/owner/business/items/${itemId}${qs}`, patch),
+      itemApi.ownerUpdate(itemId, patch, businessOverride),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
 
 export function useOwnerDeleteItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
-  const qs = businessOverride ? `?business=${businessOverride}` : ''
   return useMutation({
-    mutationFn: (itemId: string) =>
-      api.del(`/api/v1/owner/business/items/${itemId}${qs}`),
+    mutationFn: (itemId: string) => itemApi.ownerDelete(itemId, businessOverride),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }

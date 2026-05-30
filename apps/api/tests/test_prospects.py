@@ -45,7 +45,7 @@ def authed_client():
 # ---------------------------------------------------------------------------
 
 def test_create_prospect_no_auth_succeeds(public_client, db):
-    with patch("app.routers.prospects.get_db", return_value=db):
+    with patch("app.services.prospect_service.get_db", return_value=db):
         resp = public_client.post("/api/v1/prospects", json={
             "businessId": "biz-123",
             "contactName": "Maria",
@@ -55,7 +55,7 @@ def test_create_prospect_no_auth_succeeds(public_client, db):
 
 
 def test_create_prospect_missing_contact_returns_400(public_client, db):
-    with patch("app.routers.prospects.get_db", return_value=db):
+    with patch("app.services.prospect_service.get_db", return_value=db):
         resp = public_client.post("/api/v1/prospects", json={
             "businessId": "biz-123",
             "contactName": "Maria",
@@ -64,7 +64,7 @@ def test_create_prospect_missing_contact_returns_400(public_client, db):
 
 
 def test_create_prospect_email_only_succeeds(public_client, db):
-    with patch("app.routers.prospects.get_db", return_value=db):
+    with patch("app.services.prospect_service.get_db", return_value=db):
         resp = public_client.post("/api/v1/prospects", json={
             "businessId": "biz-123",
             "email": "maria@example.com",
@@ -77,12 +77,12 @@ def test_create_prospect_email_only_succeeds(public_client, db):
 # ---------------------------------------------------------------------------
 
 def test_list_prospects_no_auth_returns_401(public_client, db):
-    with patch("app.routers.prospects.get_db", return_value=db):
+    with patch("app.services.prospect_service.get_db", return_value=db):
         resp = public_client.get("/api/v1/admin/prospects")
     assert resp.status_code == 401
 
 
 def test_list_prospects_authed_returns_list(authed_client, db):
-    with patch("app.routers.prospects.get_db", return_value=db):
+    with patch("app.services.prospect_service.get_db", return_value=db):
         resp = authed_client.get("/api/v1/admin/prospects")
     assert resp.status_code == 200
