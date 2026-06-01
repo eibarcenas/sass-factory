@@ -44,7 +44,7 @@ export default async function Hero() {
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
-                href={`${ADMIN_URL}/login`}
+                href={`${ADMIN_URL}/register`}
                 className="btn rounded-xl bg-zinc-900 px-6 py-3 text-sm font-semibold text-white hover:bg-zinc-700"
               >
                 {t('cta_primary')}

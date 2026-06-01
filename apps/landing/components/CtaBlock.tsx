@@ -14,7 +14,7 @@ export default async function CtaBlock() {
         <p className="mt-4 text-zinc-400">{t('sub')}</p>
 
         <a
-          href={`${ADMIN_URL}/login`}
+          href={`${ADMIN_URL}/register`}
           className="btn mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-zinc-900 hover:bg-zinc-100"
         >
           {t('button')}
