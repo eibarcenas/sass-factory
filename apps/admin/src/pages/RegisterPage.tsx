@@ -78,8 +78,14 @@ export default function RegisterPage() {
       })
 
       if (res.status === 409) {
-        setSlugStatus('taken')
-        await auth.signOut()
+        const errData = await res.json().catch(() => ({}))
+        if (errData.detail === 'Account already active') {
+          await auth.signOut()
+          setError('Ya tienes una cuenta activa. Inicia sesión en lugar de registrarte.')
+        } else {
+          setSlugStatus('taken')
+          await auth.signOut()
+        }
         setLoading(false)
         return
       }
