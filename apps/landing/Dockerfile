@@ -35,7 +35,6 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/landing/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /repo/apps/landing/.next/static ./apps/landing/.next/static
-COPY --from=builder --chown=nextjs:nodejs /repo/apps/landing/public ./apps/landing/public 2>/dev/null || true
 
 USER nextjs
 EXPOSE 8080
