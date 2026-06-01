@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "cta": "Get started free"
+  },
+  "hero": {
+    "badge": "For local businesses in Mexico",
+    "headline1": "Create today.",
+    "headline2": "Sell tomorrow.",
+    "sub": "Your digital catalog, ready in minutes. We review and activate it in under 24 hours.",
+    "free_tier": "7 weeks free, no credit card required.",
+    "cta_primary": "Create my catalog free",
+    "cta_secondary": "See an example"
+  },
+  "strip": {
+    "label": "For any type of business",
+    "items": [
+      "Restaurants",
+      "Clothing stores",
+      "Bakeries",
+      "Beauty & spa",
+      "Grocery stores",
+      "Crafts & artisans"
+    ]
+  },
+  "features": {
+    "headline": "Everything your business needs.",
+    "sub": "No contracts, no sales commissions.",
+    "items": [
+      {
+        "n": "01",
+        "title": "Online in minutes",
+        "body": "No code, no designers. Set it up from your phone and it's ready the same day."
+      },
+      {
+        "n": "02",
+        "title": "Orders via WhatsApp",
+        "body": "Customers pick what they want and send you the order as a message. No apps, no sign-ups."
+      },
+      {
+        "n": "03",
+        "title": "Your brand, your style",
+        "body": "Your logo, colors, and business name. Your catalog looks like yours, not a generic template."
+      }
+    ]
+  },
+  "how": {
+    "headline": "That easy.",
+    "sub": "Three steps. Nothing more.",
+    "steps": [
+      {
+        "n": "01",
+        "title": "Create your account",
+        "body": "Just your email and your business name. Two minutes, for real."
+      },
+      {
+        "n": "02",
+        "title": "Add your products",
+        "body": "Photos, prices, categories. All from your phone. Like posting on Instagram, but better."
+      },
+      {
+        "n": "03",
+        "title": "Share and sell",
+        "body": "Copy your link and put it wherever you already are: WhatsApp, Instagram, Google Maps."
+      }
+    ]
+  },
+  "cta": {
+    "headline": "7 weeks free.",
+    "sub": "No card. No contract.",
+    "button": "Create my catalog now",
+    "note": "Your catalog goes live in under 24 hours."
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact",
+    "copyright": "© 2024 catalog.mx"
+  },
+  "mockup": {
+    "business_name": "Pingüino Ice Cream",
+    "business_sub": "Artisan ice cream · CDMX",
+    "category_all": "All",
+    "category_1": "Popsicles",
+    "category_2": "Ice cream",
+    "wa_button": "Order via WhatsApp",
+    "time": "9:41",
+    "products": [
+      { "name": "Creamy vanilla", "price": "$45" },
+      { "name": "Strawberry cream", "price": "$45" },
+      { "name": "Mango chili", "price": "$50" },
+      { "name": "Dark chocolate", "price": "$50" }
+    ]
+  }
+}
