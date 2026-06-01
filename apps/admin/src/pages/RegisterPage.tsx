@@ -78,9 +78,7 @@ export default function RegisterPage() {
       })
 
       if (res.status === 409) {
-        // Name got taken between check and submit — ask to choose another
         setSlugStatus('taken')
-        setError('Ese nombre ya fue tomado. Elige otro.')
         await auth.signOut()
         setLoading(false)
         return

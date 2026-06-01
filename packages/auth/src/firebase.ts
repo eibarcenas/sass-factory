@@ -60,7 +60,10 @@ export function useFirebaseAuthRestore({ store, firebaseConfig, buildUser, resol
             }
 
             const user = buildUser(fbUser.uid, fbUser.email, tokenResult.claims, fbUser.displayName, fbUser.photoURL)
-            store.setUser(user)
+            // Only update store when we can build a valid user. If buildUser returns null
+            // (authenticated but claims not propagated yet), leave any in-flight setUser alone —
+            // otherwise a race with RegisterPage's explicit setUser would boot the user to /login.
+            if (user !== null) store.setUser(user)
           } else {
             store.setUser(null)
           }
