@@ -19,6 +19,58 @@ const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:
 
 type Page = 'catalog' | 'appearance' | 'settings'
 
+// ── Draft onboarding banner ───────────────────────────────────────────────────
+function DraftBanner({ businessId, onSubmitted }: { businessId: string; onSubmitted: () => void }) {
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone] = useState(false)
+
+  async function submitForReview() {
+    setSubmitting(true)
+    try {
+      await api.post(`/api/v1/admin/businesses/${businessId}/publish`, {})
+      setDone(true)
+      onSubmitted()
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="mb-6 flex items-center gap-3 p-4 rounded-lg border border-green-200 bg-green-50">
+        <svg viewBox="0 0 20 20" className="h-5 w-5 text-green-600 shrink-0" fill="currentColor">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+        </svg>
+        <div>
+          <p className="text-sm font-medium text-green-900">¡Solicitud enviada!</p>
+          <p className="text-xs text-green-700">Revisamos tu catálogo y lo activamos en menos de 24 horas.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-blue-900">Tu catálogo está en borrador</p>
+          <p className="text-xs text-blue-700 mt-0.5">
+            Agrega tus productos y personaliza tu página. Cuando esté listo, envíalo para que lo activemos en menos de 24 horas.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          className="shrink-0"
+          onClick={submitForReview}
+          disabled={submitting}
+        >
+          {submitting ? 'Enviando...' : 'Enviar para revisión'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // ── Product row ───────────────────────────────────────────────────────────────
 const OWNER_NAV: NavItem<Page>[] = [
   { key: 'catalog',    icon: '🛍️', label: 'My Products' },
@@ -164,6 +216,8 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
   const businessId = impersonating?.businessId ?? previewSlug ?? user?.businessId ?? 'heladeria-el-pinguino'
   const [page, setPage] = useState<Page>('catalog')
 
+  const queryClient = useQueryClient()
+
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
     queryFn: () => api.get<{ name: string; slug: string; tagline?: string; whatsapp?: string; status: BusinessStatus; whatsappClicks?: number }>(`/api/v1/storefront/${businessId}`),
@@ -203,6 +257,10 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
       />
 
       <main className="flex-1 overflow-y-auto p-8">
+        {bizData?.status === BusinessStatus.Draft && !isPreview && !isImpersonating && (
+          <DraftBanner businessId={businessId} onSubmitted={() => queryClient.invalidateQueries({ queryKey: ['owner-business', businessId] })} />
+        )}
+
         {isImpersonating && (
           <div data-testid="impersonation-banner" className="mb-6 flex items-center justify-between gap-2 p-3 rounded-lg border border-orange-200 bg-orange-50 text-sm text-orange-800">
             <span>⚠️ <strong>Acting as owner</strong> — You are impersonating <strong>{impersonating!.businessName}</strong>. Changes are real.</span>

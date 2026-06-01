@@ -4,6 +4,9 @@ import { useAuthStore, type UserRole } from '../store/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
+const API_URL    = import.meta.env.VITE_API_URL    ?? 'http://localhost:8000'
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
+
 export default function LoginPage() {
   const { mockMode, setUser } = useAuthStore()
   const navigate = useNavigate()
@@ -40,7 +43,6 @@ export default function LoginPage() {
 
       if (!role) {
         // No role yet — call resolve-claims in case admin just activated them
-        const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
         const freshToken = await cred.user.getIdToken(true)
         const resolved = await fetch(`${API_URL}/api/v1/auth/resolve-claims`, {
           method: 'POST',
@@ -77,7 +79,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 px-4">
+      <a
+        href={LANDING_URL}
+        className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M10 12L6 8l4-4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        catalog.mx
+      </a>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold">catalog.mx</h1>

@@ -35,6 +35,7 @@ app.add_middleware(
         "/api/v1/prospects",
         "/api/v1/demos/",
         "/auth/",
+        "/api/v1/auth/check-slug",
     ),
 )
 

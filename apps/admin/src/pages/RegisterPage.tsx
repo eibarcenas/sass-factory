@@ -1,39 +1,59 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
 
-const BUSINESS_TYPES = [
-  { value: 'restaurante', label: 'Restaurante' },
-  { value: 'panaderia',   label: 'Panadería' },
-  { value: 'heladeria',   label: 'Heladería' },
-  { value: 'barberia',    label: 'Barbería' },
-  { value: 'estetica',    label: 'Estética / Spa' },
-  { value: 'gym',         label: 'Gimnasio' },
-  { value: 'mecanico',    label: 'Mecánico' },
-  { value: 'otro',        label: 'Otro' },
-]
-
-type Step = 'form' | 'loading' | 'success' | 'error'
+type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
 
 export default function RegisterPage() {
-  const [step, setStep] = useState<Step>('form')
-  const [error, setError] = useState('')
+  const store = useAuthStore()
+  const navigate = useNavigate()
 
-  const [ownerName, setOwnerName]       = useState('')
   const [businessName, setBusinessName] = useState('')
-  const [businessType, setBusinessType] = useState('')
-  const [phone, setPhone]               = useState('')
+  const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle')
+  const [slug, setSlug] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+
+  // Live slug availability check — debounced 400ms
+  useEffect(() => {
+    clearTimeout(debounceRef.current)
+    if (!businessName.trim()) {
+      setSlugStatus('idle')
+      setSlug('')
+      return
+    }
+    setSlugStatus('checking')
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/v1/auth/check-slug?name=${encodeURIComponent(businessName.trim())}`
+        )
+        const data = await res.json()
+        setSlug(data.slug ?? '')
+        if (data.reason === 'invalid_name') setSlugStatus('invalid')
+        else setSlugStatus(data.available ? 'available' : 'taken')
+      } catch {
+        setSlugStatus('idle')
+      }
+    }, 400)
+    return () => clearTimeout(debounceRef.current)
+  }, [businessName])
+
+  const canSubmit = slugStatus === 'available' && !loading
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!businessName.trim() || !businessType) return
-
+    if (!canSubmit) return
     setError('')
-    setStep('loading')
+    setLoading(true)
 
     try {
       const { getAuth, signInWithPopup, GoogleAuthProvider } = await import('firebase/auth')
@@ -51,16 +71,18 @@ export default function RegisterPage() {
       const cred = await signInWithPopup(auth, new GoogleAuthProvider())
       const token = await cred.user.getIdToken()
 
-      const res = await fetch(`${API_URL}/api/v1/auth/register`, {
+      const res = await fetch(`${API_URL}/api/v1/auth/auto-provision`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ businessName, businessType, ownerName: ownerName || null, phone: phone || null }),
+        body: JSON.stringify({ businessName: businessName.trim() }),
       })
 
       if (res.status === 409) {
-        // Already registered — sign out and show pending screen
+        // Name got taken between check and submit — ask to choose another
+        setSlugStatus('taken')
+        setError('Ese nombre ya fue tomado. Elige otro.')
         await auth.signOut()
-        setStep('success')
+        setLoading(false)
         return
       }
 
@@ -69,113 +91,116 @@ export default function RegisterPage() {
         throw new Error(data.detail ?? `Error ${res.status}`)
       }
 
-      await auth.signOut()
-      setStep('success')
+      const data = await res.json()
+
+      // Force token refresh to pick up new OWNER claims
+      await cred.user.getIdToken(true)
+
+      store.setUser({
+        uid:         cred.user.uid,
+        email:       cred.user.email,
+        displayName: cred.user.displayName ?? null,
+        photoURL:    cred.user.photoURL ?? null,
+        role:        'OWNER',
+        businessId:  data.slug,
+        modules:     ['CATALOG', 'APPEARANCE'],
+      })
+
+      navigate('/owner', { replace: true })
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
-        setStep('form')
+        setLoading(false)
         return
       }
       setError(err.message ?? 'Ocurrió un error. Intenta de nuevo.')
-      setStep('error')
+      setLoading(false)
     }
   }
 
-  if (step === 'success') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
-        <div className="w-full max-w-sm text-center space-y-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-            <svg className="h-7 w-7 text-green-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold">¡Solicitud recibida!</h1>
-          <p className="text-muted-foreground text-sm">
-            Revisamos tu catálogo y lo activamos en <strong>menos de 24 horas</strong>.
-            Te avisaremos por correo cuando esté listo.
-          </p>
-          <p className="text-xs text-muted-foreground">¿Dudas? Escríbenos a hola@catalog.mx</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 px-4">
+      {/* Back to landing */}
+      <a
+        href={LANDING_URL}
+        className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M10 12L6 8l4-4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        catalog.mx
+      </a>
+
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold">catalog.mx</h1>
-          <p className="text-muted-foreground text-sm mt-1">Crea tu catálogo digital</p>
+          <h1 className="text-2xl font-bold">Crea tu catálogo</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Empieza gratis · 7 semanas de prueba
+          </p>
         </div>
 
         <Card>
           <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="ownerName">Tu nombre</Label>
-                <Input
-                  id="ownerName"
-                  placeholder="María García"
-                  value={ownerName}
-                  onChange={e => setOwnerName(e.target.value)}
-                />
-              </div>
-
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
                 <Label htmlFor="businessName">
-                  Nombre de tu negocio <span className="text-destructive">*</span>
+                  ¿Cómo se llama tu negocio? <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="businessName"
-                  placeholder="Heladería Pingüino"
-                  required
-                  value={businessName}
-                  onChange={e => setBusinessName(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="businessName"
+                    placeholder="Heladería Pingüino"
+                    required
+                    autoFocus
+                    value={businessName}
+                    onChange={e => setBusinessName(e.target.value)}
+                    className={
+                      slugStatus === 'taken' || slugStatus === 'invalid'
+                        ? 'border-destructive focus-visible:ring-destructive'
+                        : slugStatus === 'available'
+                        ? 'border-green-500 focus-visible:ring-green-500'
+                        : ''
+                    }
+                  />
+                  {/* Status indicator */}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {slugStatus === 'checking' && (
+                      <span className="h-4 w-4 block rounded-full border-2 border-muted-foreground border-t-transparent animate-spin" />
+                    )}
+                    {slugStatus === 'available' && (
+                      <svg viewBox="0 0 16 16" className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M3 8l3.5 3.5L13 4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    {(slugStatus === 'taken' || slugStatus === 'invalid') && (
+                      <svg viewBox="0 0 16 16" className="h-4 w-4 text-destructive" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+
+                {/* Slug preview / status messages */}
+                {slugStatus === 'available' && slug && (
+                  <p className="text-xs text-green-600">
+                    Tu link: <span className="font-medium">catalog.mx/{slug}</span>
+                  </p>
+                )}
+                {slugStatus === 'taken' && (
+                  <p className="text-xs text-destructive">Ese nombre ya está en uso. Prueba con otro.</p>
+                )}
+                {slugStatus === 'invalid' && (
+                  <p className="text-xs text-destructive">El nombre no es válido. Usa letras y números.</p>
+                )}
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="businessType">
-                  Tipo de negocio <span className="text-destructive">*</span>
-                </Label>
-                <select
-                  id="businessType"
-                  required
-                  value={businessType}
-                  onChange={e => setBusinessType(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="">Selecciona uno...</option>
-                  {BUSINESS_TYPES.map(t => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="phone">WhatsApp del negocio</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+52 55 1234 5678"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                />
-              </div>
-
-              {(step === 'error') && (
+              {error && (
                 <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
                   <p className="text-sm text-destructive">{error}</p>
                 </div>
               )}
 
-              <Button
-                type="submit"
-                className="w-full gap-2"
-                disabled={step === 'loading'}
-              >
-                {step === 'loading' ? (
+              <Button type="submit" className="w-full gap-2" disabled={!canSubmit}>
+                {loading ? (
                   <>
                     <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
                     Conectando con Google...
@@ -194,8 +219,6 @@ export default function RegisterPage() {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
-                Tu catálogo se activa en menos de 24 horas.
-                <br />
                 ¿Ya tienes cuenta?{' '}
                 <a href="/login" className="underline underline-offset-2">Inicia sesión</a>
               </p>
