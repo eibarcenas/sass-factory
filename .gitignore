@@ -77,6 +77,11 @@ apps/admin/server/service-account.json
 .mcp.json
 .claude/worktrees/
 
+# Claude Code tooling
+.agents/
+.claude/skills/
+skills-lock.json
+
 # Python
 __pycache__/
 *.pyc
@@ -108,3 +113,4 @@ infrastructure/iterraform/**/terraform.tfstate*
 # E2E screenshots (local artifacts)
 *.png
 !docs/screenshots/**/*.png
+docs/screenshots/screenshots-backup/

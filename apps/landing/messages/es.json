@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "cta": "Empieza gratis"
+  },
+  "hero": {
+    "badge": "Para negocios locales en México",
+    "headline1": "Crea hoy.",
+    "headline2": "Vende mañana.",
+    "sub": "Tu catálogo digital, listo en minutos. Lo revisamos y activamos en menos de 24 horas.",
+    "free_tier": "7 semanas gratis, sin tarjeta de crédito.",
+    "cta_primary": "Crear mi catálogo gratis",
+    "cta_secondary": "Ver un ejemplo"
+  },
+  "strip": {
+    "label": "Para cualquier tipo de negocio",
+    "items": [
+      "Restaurantes",
+      "Tiendas de ropa",
+      "Panaderías",
+      "Belleza y spa",
+      "Abarrotes",
+      "Artesanías"
+    ]
+  },
+  "features": {
+    "headline": "Todo lo que necesita tu negocio.",
+    "sub": "Sin contratos, sin comisiones por venta.",
+    "items": [
+      {
+        "n": "01",
+        "title": "En línea en minutos",
+        "body": "Sin código ni diseñadores. Lo configuras desde tu celular y queda listo ese mismo día."
+      },
+      {
+        "n": "02",
+        "title": "Pedidos por WhatsApp",
+        "body": "Tus clientes eligen qué quieren y te mandan el pedido por mensaje. Sin apps, sin registros."
+      },
+      {
+        "n": "03",
+        "title": "Tu marca, tu estilo",
+        "body": "Logo, colores y nombre de tu negocio. Tu catálogo se ve como tuyo, no como un template."
+      }
+    ]
+  },
+  "how": {
+    "headline": "Así de fácil.",
+    "sub": "Tres pasos. Nada más.",
+    "steps": [
+      {
+        "n": "01",
+        "title": "Crea tu cuenta",
+        "body": "Solo necesitas tu email y el nombre de tu negocio. Dos minutos, en serio."
+      },
+      {
+        "n": "02",
+        "title": "Agrega tus productos",
+        "body": "Fotos, precios, categorías. Todo desde tu celular. Como publicar en Instagram, pero mejor."
+      },
+      {
+        "n": "03",
+        "title": "Comparte y vende",
+        "body": "Copia tu link y ponlo donde ya estás: WhatsApp, Instagram, Google Maps, lo que uses."
+      }
+    ]
+  },
+  "cta": {
+    "headline": "7 semanas gratis.",
+    "sub": "Sin tarjeta. Sin contrato.",
+    "button": "Crear mi catálogo ahora",
+    "note": "Tu catálogo se activa en menos de 24 horas."
+  },
+  "footer": {
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "contact": "Contacto",
+    "copyright": "© 2024 catalog.mx"
+  },
+  "mockup": {
+    "business_name": "Heladería Pingüino",
+    "business_sub": "Helados artesanales · CDMX",
+    "category_all": "Todos",
+    "category_1": "Paletas",
+    "category_2": "Helados",
+    "wa_button": "Pedir por WhatsApp",
+    "time": "9:41",
+    "products": [
+      { "name": "Vainilla cremosa", "price": "$45" },
+      { "name": "Fresa con crema", "price": "$45" },
+      { "name": "Mango con chile", "price": "$50" },
+      { "name": "Chocolate obscuro", "price": "$50" }
+    ]
+  }
+}
