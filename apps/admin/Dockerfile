@@ -26,6 +26,7 @@ ENV VITE_FIREBASE_API_KEY=AIzaSyCIhK1icvEyOEYGZ2bn6yjbZt2Kc6YhILQ
 ENV VITE_FIREBASE_AUTH_DOMAIN=catalog-mx-dev.firebaseapp.com
 ENV VITE_FIREBASE_PROJECT_ID=catalog-mx-dev
 ENV VITE_ADMIN_URL=https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
+ENV VITE_LANDING_URL=https://catalog-mx-landing-dev-q3peeste7q-uc.a.run.app
 
 COPY packages/core/ ./packages/core/
 COPY packages/ui/ ./packages/ui/
