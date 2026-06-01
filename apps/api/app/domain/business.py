@@ -4,15 +4,16 @@ from enum import Enum
 
 
 class BusinessStatus(str, Enum):
-    DRAFT     = "draft"
-    DEMO      = "demo"
-    SENT      = "sent"
-    ACCEPTED  = "accepted"
-    ACTIVE    = "active"
-    SUSPENDED = "suspended"
-    EXPIRED   = "expired"
-    REJECTED  = "rejected"
-    ARCHIVED  = "archived"
+    DRAFT          = "draft"
+    PENDING_REVIEW = "pending_review"
+    DEMO           = "demo"
+    SENT           = "sent"
+    ACCEPTED       = "accepted"
+    ACTIVE         = "active"
+    SUSPENDED      = "suspended"
+    EXPIRED        = "expired"
+    REJECTED       = "rejected"
+    ARCHIVED       = "archived"
 
 
 class BusinessType(str, Enum):
@@ -27,18 +28,20 @@ class BusinessType(str, Enum):
 
 
 VALID_TRANSITIONS: dict[BusinessStatus, list[BusinessStatus]] = {
-    BusinessStatus.DRAFT:     [BusinessStatus.DEMO,      BusinessStatus.ARCHIVED],
-    BusinessStatus.DEMO:      [BusinessStatus.SENT,      BusinessStatus.ARCHIVED],
-    BusinessStatus.SENT:      [BusinessStatus.ACCEPTED,  BusinessStatus.REJECTED, BusinessStatus.EXPIRED],
-    BusinessStatus.ACCEPTED:  [BusinessStatus.ACTIVE,    BusinessStatus.ARCHIVED],
-    BusinessStatus.ACTIVE:    [BusinessStatus.SUSPENDED, BusinessStatus.ARCHIVED],
-    BusinessStatus.SUSPENDED: [BusinessStatus.ACTIVE,    BusinessStatus.ARCHIVED],
-    BusinessStatus.EXPIRED:   [BusinessStatus.ARCHIVED],
-    BusinessStatus.REJECTED:  [BusinessStatus.ARCHIVED],
-    BusinessStatus.ARCHIVED:  [],
+    BusinessStatus.DRAFT:          [BusinessStatus.PENDING_REVIEW, BusinessStatus.DEMO,     BusinessStatus.ARCHIVED],
+    BusinessStatus.PENDING_REVIEW: [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
+    BusinessStatus.DEMO:           [BusinessStatus.SENT,           BusinessStatus.ARCHIVED],
+    BusinessStatus.SENT:           [BusinessStatus.ACCEPTED,       BusinessStatus.REJECTED, BusinessStatus.EXPIRED],
+    BusinessStatus.ACCEPTED:       [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
+    BusinessStatus.ACTIVE:         [BusinessStatus.SUSPENDED,      BusinessStatus.ARCHIVED],
+    BusinessStatus.SUSPENDED:      [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
+    BusinessStatus.EXPIRED:        [BusinessStatus.ARCHIVED],
+    BusinessStatus.REJECTED:       [BusinessStatus.ARCHIVED],
+    BusinessStatus.ARCHIVED:       [],
 }
 
 ACTION_TO_STATUS: dict[str, BusinessStatus] = {
+    "submit":     BusinessStatus.PENDING_REVIEW,
     "publish":    BusinessStatus.DEMO,
     "send":       BusinessStatus.SENT,
     "accept":     BusinessStatus.ACCEPTED,
