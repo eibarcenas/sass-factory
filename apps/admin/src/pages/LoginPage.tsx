@@ -92,10 +92,31 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold">catalog.mx</h1>
-          <p className="text-muted-foreground text-sm mt-1">Sign in to continue</p>
+          <p className="text-muted-foreground text-sm mt-1">Sign in to manage your existing catalog</p>
         </div>
         <Card>
           <CardContent className="pt-6 space-y-4">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+              <p className="text-xs font-semibold text-blue-900">New here?</p>
+              <p className="mt-1 text-xs text-blue-800">
+                Create your free catalog first, then come back to sign in.
+              </p>
+              <div className="mt-2 flex gap-2">
+                <a
+                  href="/register"
+                  className="rounded-md bg-blue-700 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-800"
+                >
+                  Create free catalog
+                </a>
+                <a
+                  href={LANDING_URL}
+                  className="rounded-md border border-blue-300 bg-white px-2.5 py-1.5 text-xs font-medium text-blue-900 hover:bg-blue-100"
+                >
+                  View product site
+                </a>
+              </div>
+            </div>
+
             <Button
               className="w-full gap-3"
               variant="outline"
