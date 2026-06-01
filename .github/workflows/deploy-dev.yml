@@ -11,6 +11,7 @@ env:
   ENV_SUFFIX: dev
   ADMIN_URL: https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
   STOREFRONT_URL: https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app
+  LANDING_URL: https://catalog-mx-landing-dev-q3peeste7q-uc.a.run.app
 
 jobs:
   ci:
@@ -32,6 +33,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm -F @eguru/core typecheck
       - run: pnpm -F admin typecheck
+      - run: pnpm -F @catalog-mx/landing typecheck
       - run: pnpm -F @eguru/core test
       - run: pnpm -F admin test
       - name: Run API tests
@@ -107,10 +109,29 @@ jobs:
             --allow-unauthenticated \
             --quiet
 
+      - name: Deploy Landing (catalog-mx-landing-dev)
+        run: |
+          ADMIN_URL=$(gcloud run services describe catalog-mx-admin-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
+            --format='value(status.url)')
+          IMAGE="${{ env.AR_URL }}/catalog-mx-landing:${{ github.sha }}"
+          docker build \
+            --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
+            -t "$IMAGE" \
+            -f apps/landing/Dockerfile .
+          docker push "$IMAGE"
+          gcloud run deploy catalog-mx-landing-${{ env.ENV_SUFFIX }} \
+            --image "$IMAGE" \
+            --region "${{ env.REGION }}" \
+            --project "${{ env.PROJECT }}" \
+            --service-account "${{ vars.RUNTIME_SA_DEV }}" \
+            --allow-unauthenticated \
+            --quiet
+
       - name: Print URLs
         run: |
           echo "━━━ ei-catalog-dev URLs ━━━"
-          for svc in catalog-mx-api-dev catalog-mx-storefront-dev catalog-mx-admin-dev; do
+          for svc in catalog-mx-api-dev catalog-mx-storefront-dev catalog-mx-admin-dev catalog-mx-landing-dev; do
             URL=$(gcloud run services describe $svc \
               --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
               --format='value(status.url)' 2>/dev/null)
