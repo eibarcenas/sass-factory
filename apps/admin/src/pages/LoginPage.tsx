@@ -39,9 +39,23 @@ export default function LoginPage() {
       const role = claims.role as UserRole | undefined
 
       if (!role) {
-        // User signed in with Google but has no role assigned yet
-        setError('Access pending. Ask the admin to activate your account.')
+        // No role yet — call resolve-claims in case admin just activated them
+        const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+        const freshToken = await cred.user.getIdToken(true)
+        const resolved = await fetch(`${API_URL}/api/v1/auth/resolve-claims`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${freshToken}` },
+        }).then(r => r.json()).catch(() => ({ resolved: false }))
+
+        if (resolved.resolved) {
+          // Claims just set — force token refresh and retry
+          await cred.user.getIdToken(true)
+          window.location.reload()
+          return
+        }
+
         await auth.signOut()
+        setError('pending')
         return
       }
 
@@ -87,15 +101,28 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Continue with Google'}
             </Button>
 
-            {error && (
+            {error === 'pending' ? (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
+                <p className="text-sm font-medium text-amber-800">Tu cuenta está en revisión</p>
+                <p className="text-xs text-amber-700">
+                  Activamos tu catálogo en menos de 24 horas.
+                  ¿No solicitaste uno?{' '}
+                  <a href="/register" className="underline underline-offset-2 font-medium">
+                    Crea tu catálogo aquí
+                  </a>
+                </p>
+              </div>
+            ) : error ? (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
                 <p className="text-sm text-destructive">{error}</p>
               </div>
-            )}
+            ) : null}
 
             <p className="text-xs text-center text-muted-foreground">
-              Access is by invitation only.
-              <br />Contact your admin if you need access.
+              ¿No tienes cuenta?{' '}
+              <a href="/register" className="underline underline-offset-2">
+                Crea tu catálogo gratis
+              </a>
             </p>
           </CardContent>
         </Card>

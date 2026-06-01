@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useFirebaseAuthRestore } from '@eguru/auth'
 import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import AdminLayout, { DashboardContent } from './pages/DashboardPage'
 import SalesPage from './pages/SalesPage'
 import NewDemoPage from './pages/NewDemoPage'
@@ -84,6 +85,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/redirect" element={<RoleRedirect />} />
 
       {/* Admin section — shared layout with nested page routes */}
