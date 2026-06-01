@@ -21,6 +21,8 @@ COPY packages/ui/ ./packages/ui/
 COPY apps/storefront/ ./apps/storefront/
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_ADMIN_URL
+ENV NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
 RUN pnpm --filter storefront build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────

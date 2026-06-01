@@ -84,8 +84,13 @@ jobs:
           API_URL=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
+          ADMIN_URL=$(gcloud run services describe catalog-mx-admin-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
+            --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
-          docker build -t "$IMAGE" -f apps/storefront/Dockerfile .
+          docker build \
+            --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
+            -t "$IMAGE" -f apps/storefront/Dockerfile .
           docker push "$IMAGE"
           gcloud run deploy catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" \
@@ -114,9 +119,13 @@ jobs:
           ADMIN_URL=$(gcloud run services describe catalog-mx-admin-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
+          STOREFRONT_URL=$(gcloud run services describe catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
+            --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-landing:${{ github.sha }}"
           docker build \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
+            --build-arg NEXT_PUBLIC_STOREFRONT_URL="${STOREFRONT_URL}" \
             -t "$IMAGE" \
             -f apps/landing/Dockerfile .
           docker push "$IMAGE"

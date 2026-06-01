@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import PhoneMockup from './PhoneMockup'
 
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:5173'
+const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? 'http://localhost:3000'
 
 export default async function Hero() {
   const t = await getTranslations('hero')
@@ -50,7 +51,7 @@ export default async function Hero() {
                 {t('cta_primary')}
               </a>
               <a
-                href="/demo/heladeria-pinguino"
+                href={`${STOREFRONT_URL}/demo/heladeria-pinguino`}
                 className="text-sm font-medium text-zinc-500 underline-offset-4 transition-colors hover:text-zinc-700 hover:underline"
               >
                 {t('cta_secondary')} →

@@ -16,9 +16,11 @@ WORKDIR /repo
 
 COPY apps/landing/ ./apps/landing/
 
-# Inject the admin URL at build time
+# Inject URLs at build time
 ARG NEXT_PUBLIC_ADMIN_URL
 ENV NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
+ARG NEXT_PUBLIC_STOREFRONT_URL
+ENV NEXT_PUBLIC_STOREFRONT_URL=$NEXT_PUBLIC_STOREFRONT_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm --filter @catalog-mx/landing build

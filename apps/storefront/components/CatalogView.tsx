@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+
+const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'https://admin.catalog.mx'
 import type { Item } from '@eguru/core'
 import type { CatalogData } from '@/lib/api'
 import StorefrontHeader from './StorefrontHeader'
@@ -88,8 +90,11 @@ function DemoAcceptModal({ slug, onClose }: { slug: string; onClose: () => void 
             <div className="text-5xl mb-3">🎉</div>
             <h2 className="font-bold text-lg">Your catalog is reserved!</h2>
             <p className="text-sm text-muted-foreground mt-2">
-              Go to <span className="font-medium">admin.catalog.mx</span> and sign in
-              with Google using this email to activate your account.
+              Go to{' '}
+              <a href={ADMIN_URL} className="font-medium underline" target="_blank" rel="noopener noreferrer">
+                {ADMIN_URL.replace(/^https?:\/\//, '')}
+              </a>{' '}
+              and sign in with Google using this email to activate your account.
             </p>
             <Button className="mt-4 w-full" onClick={onClose}>Got it</Button>
           </div>
