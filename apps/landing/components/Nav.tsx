@@ -12,7 +12,7 @@ export default async function Nav() {
           catalog.mx
         </span>
         <a
-          href={`${ADMIN_URL}/register`}
+          href={`${ADMIN_URL}/login`}
           className="btn rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
         >
           {t('cta')}

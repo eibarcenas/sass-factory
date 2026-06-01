@@ -76,6 +76,36 @@
     "contact": "Contacto",
     "copyright": "© 2024 catalog.mx"
   },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "effective": "Vigente desde el 1 de junio de 2024",
+    "s1_title": "Datos que recopilamos",
+    "s1_body": "Recopilamos el nombre de tu negocio, correo electrónico, número de teléfono (opcional) y la información de los productos que agregas a tu catálogo. No recopilamos datos de pago ni accedemos a tu cuenta de WhatsApp.",
+    "s2_title": "Cómo usamos tus datos",
+    "s2_body": "Tus datos se usan únicamente para crear y mostrar tu catálogo digital, enviarte notificaciones relacionadas con tu cuenta y mejorar el servicio. No vendemos ni compartimos tu información con terceros.",
+    "s3_title": "Cookies",
+    "s3_body": "Usamos cookies esenciales para mantener tu sesión activa. No usamos cookies de seguimiento ni publicidad.",
+    "s4_title": "Tus derechos",
+    "s4_body": "Puedes solicitar la eliminación de tu cuenta y todos tus datos en cualquier momento escribiéndonos a hola@catalog.mx.",
+    "s5_title": "Contacto",
+    "s5_body": "Para cualquier duda sobre esta política escríbenos a hola@catalog.mx."
+  },
+  "terms": {
+    "title": "Términos de Servicio",
+    "effective": "Vigente desde el 1 de junio de 2024",
+    "s1_title": "El servicio",
+    "s1_body": "catalog.mx te permite crear un catálogo digital para compartir tus productos por WhatsApp. El servicio incluye 7 semanas de prueba gratuita sin tarjeta de crédito.",
+    "s2_title": "Tu cuenta",
+    "s2_body": "Eres responsable de la información que publicas en tu catálogo. No puedes publicar contenido ilegal, engañoso o que infrinja derechos de terceros.",
+    "s3_title": "Activación y aprobación",
+    "s3_body": "Después de crear tu cuenta, nuestro equipo revisa y activa tu catálogo en menos de 24 horas. Nos reservamos el derecho de rechazar cuentas que no cumplan con nuestras políticas.",
+    "s4_title": "Pagos y cancelación",
+    "s4_body": "Después del periodo gratuito, el servicio se factura mensualmente. Puedes cancelar en cualquier momento desde tu panel de configuración. No hacemos reembolsos de periodos parciales.",
+    "s5_title": "Limitación de responsabilidad",
+    "s5_body": "catalog.mx no es responsable de las transacciones que ocurran entre tú y tus clientes por WhatsApp. Somos un proveedor de catálogo, no de pagos.",
+    "s6_title": "Contacto",
+    "s6_body": "Para cualquier duda escríbenos a hola@catalog.mx."
+  }
   "mockup": {
     "business_name": "Heladería Pingüino",
     "business_sub": "Helados artesanales · CDMX",

@@ -76,6 +76,36 @@
     "contact": "Contact",
     "copyright": "© 2024 catalog.mx"
   },
+  "privacy": {
+    "title": "Privacy Policy",
+    "effective": "Effective June 1, 2024",
+    "s1_title": "Data we collect",
+    "s1_body": "We collect your business name, email address, phone number (optional), and the product information you add to your catalog. We do not collect payment data or access your WhatsApp account.",
+    "s2_title": "How we use your data",
+    "s2_body": "Your data is used solely to create and display your digital catalog, send you account-related notifications, and improve the service. We do not sell or share your information with third parties.",
+    "s3_title": "Cookies",
+    "s3_body": "We use essential cookies to keep your session active. We do not use tracking or advertising cookies.",
+    "s4_title": "Your rights",
+    "s4_body": "You can request deletion of your account and all your data at any time by emailing us at hola@catalog.mx.",
+    "s5_title": "Contact",
+    "s5_body": "For any questions about this policy, write to us at hola@catalog.mx."
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "effective": "Effective June 1, 2024",
+    "s1_title": "The service",
+    "s1_body": "catalog.mx lets you create a digital catalog to share your products via WhatsApp. The service includes a 7-week free trial with no credit card required.",
+    "s2_title": "Your account",
+    "s2_body": "You are responsible for the information you publish in your catalog. You may not publish illegal, misleading, or third-party rights-infringing content.",
+    "s3_title": "Activation and approval",
+    "s3_body": "After creating your account, our team reviews and activates your catalog within 24 hours. We reserve the right to reject accounts that do not meet our policies.",
+    "s4_title": "Payments and cancellation",
+    "s4_body": "After the free period, the service is billed monthly. You can cancel at any time from your settings panel. We do not issue refunds for partial periods.",
+    "s5_title": "Limitation of liability",
+    "s5_body": "catalog.mx is not responsible for transactions between you and your customers via WhatsApp. We are a catalog provider, not a payments provider.",
+    "s6_title": "Contact",
+    "s6_body": "For any questions, write to us at hola@catalog.mx."
+  }
   "mockup": {
     "business_name": "Pingüino Ice Cream",
     "business_sub": "Artisan ice cream · CDMX",
