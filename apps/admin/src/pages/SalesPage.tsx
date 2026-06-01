@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProspects } from '../hooks/useProspects'
+import { useBusinesses } from '../hooks/useBusinesses'
 import KanbanBoard from '../components/dashboard/KanbanBoard'
+import SolicitudesList from '../components/demos/SolicitudesList'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import type { Business } from '@eguru/core'
+import { BusinessStatus, type Business } from '@eguru/core'
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -80,9 +82,11 @@ function ProspectsTab() {
 
 export default function SalesPage() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<'demos' | 'prospects'>('demos')
+  const [tab, setTab] = useState<'solicitudes' | 'demos' | 'prospects'>('solicitudes')
   const { data: prospectData } = useProspects()
+  const { data: solicitudesData } = useBusinesses(BusinessStatus.PendingReview)
   const newCount = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
+  const solicitudesCount = solicitudesData?.total ?? 0
 
   function handleSelectBusiness(b: Business) {
     navigate(`/clientes/${b.id}`)
@@ -101,24 +105,45 @@ export default function SalesPage() {
 
       {/* Tabs */}
       <div className="flex gap-0 border-b border-border">
-        {(['demos', 'prospects'] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${
-              tab === t
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t === 'demos' ? 'Demos' : 'Prospectos'}
-            {t === 'prospects' && newCount > 0 && (
-              <Badge className="text-[10px] h-4 px-1.5">{newCount}</Badge>
-            )}
-          </button>
-        ))}
+        <button
+          onClick={() => setTab('solicitudes')}
+          className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${
+            tab === 'solicitudes'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Solicitudes
+          {solicitudesCount > 0 && (
+            <Badge className="text-[10px] h-4 px-1.5 bg-blue-600">{solicitudesCount}</Badge>
+          )}
+        </button>
+        <button
+          onClick={() => setTab('demos')}
+          className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${
+            tab === 'demos'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Demos
+        </button>
+        <button
+          onClick={() => setTab('prospects')}
+          className={`px-4 py-2.5 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${
+            tab === 'prospects'
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Prospectos
+          {newCount > 0 && (
+            <Badge className="text-[10px] h-4 px-1.5">{newCount}</Badge>
+          )}
+        </button>
       </div>
 
+      {tab === 'solicitudes' && <SolicitudesList />}
       {tab === 'demos' && <KanbanBoard onSelectBusiness={handleSelectBusiness} />}
       {tab === 'prospects' && <ProspectsTab />}
     </div>

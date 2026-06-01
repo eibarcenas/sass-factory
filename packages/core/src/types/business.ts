@@ -1,13 +1,14 @@
 export enum BusinessStatus {
-  Draft     = 'draft',
-  Demo      = 'demo',
-  Sent      = 'sent',
-  Accepted  = 'accepted',
-  Active    = 'active',
-  Suspended = 'suspended',
-  Expired   = 'expired',
-  Rejected  = 'rejected',
-  Archived  = 'archived',
+  Draft         = 'draft',
+  PendingReview = 'pending_review',
+  Demo          = 'demo',
+  Sent          = 'sent',
+  Accepted      = 'accepted',
+  Active        = 'active',
+  Suspended     = 'suspended',
+  Expired       = 'expired',
+  Rejected      = 'rejected',
+  Archived      = 'archived',
 }
 
 export enum BusinessType {
@@ -45,6 +46,8 @@ export interface Business {
   plan: 'free' | 'pro' | 'growth'
   ownerId?: string
   domain?: string
+  ownerEmail?: string
+  submittedAt?: string
   demoGeneratedAt?: string
   sentAt?: string
   acceptedAt?: string
