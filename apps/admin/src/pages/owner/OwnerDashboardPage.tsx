@@ -245,6 +245,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
+  const isUnderReview = !isImpersonating && !isPreview && bizData?.status === BusinessStatus.Review
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
@@ -305,10 +306,10 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         )}
 
         {page === 'catalog' && (
-          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
+          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview || isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
         )}
         {page === 'appearance' && (
-          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} impersonateSlug={isImpersonating ? businessId : undefined} />
+          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview || isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} />
         )}
         {page === 'settings' && (
           <SettingsPage onSignOut={isPreview ? undefined : handleSignOut} />

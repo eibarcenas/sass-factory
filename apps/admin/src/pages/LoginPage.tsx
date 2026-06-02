@@ -96,34 +96,12 @@ export default function LoginPage() {
         </div>
         <Card>
           <CardContent className="pt-6 space-y-4">
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <p className="text-xs font-semibold text-blue-900">New here?</p>
-              <p className="mt-1 text-xs text-blue-800">
-                Create your free catalog first, then come back to sign in.
-              </p>
-              <div className="mt-2 flex gap-2">
-                <a
-                  href="/register"
-                  className="rounded-md bg-blue-700 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-blue-800"
-                >
-                  Create free catalog
-                </a>
-                <a
-                  href={LANDING_URL}
-                  className="rounded-md border border-blue-300 bg-white px-2.5 py-1.5 text-xs font-medium text-blue-900 hover:bg-blue-100"
-                >
-                  View product site
-                </a>
-              </div>
-            </div>
-
             <Button
               className="w-full gap-3"
               variant="outline"
               onClick={signInWithGoogle}
               disabled={loading}
             >
-              {/* Google icon */}
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -135,13 +113,9 @@ export default function LoginPage() {
 
             {error === 'pending' ? (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
-                <p className="text-sm font-medium text-amber-800">Tu cuenta está en revisión</p>
+                <p className="text-sm font-medium text-amber-800">Your account is under review</p>
                 <p className="text-xs text-amber-700">
-                  Activamos tu catálogo en menos de 24 horas.
-                  ¿No solicitaste uno?{' '}
-                  <a href="/register" className="underline underline-offset-2 font-medium">
-                    Crea tu catálogo aquí
-                  </a>
+                  We activate your catalog within 24 hours.
                 </p>
               </div>
             ) : error ? (
@@ -151,9 +125,9 @@ export default function LoginPage() {
             ) : null}
 
             <p className="text-xs text-center text-muted-foreground">
-              ¿No tienes cuenta?{' '}
+              No account?{' '}
               <a href="/register" className="underline underline-offset-2">
-                Crea tu catálogo gratis
+                Create your free catalog
               </a>
             </p>
           </CardContent>
