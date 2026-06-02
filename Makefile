@@ -1,8 +1,6 @@
 .PHONY: help dev dev-admin dev-storefront dev-api \
         test test-unit test-api test-e2e typecheck lint \
-        install \
-        deploy-admin deploy-storefront deploy-api deploy-all \
-        email \
+        install deploy email \
         up down status logs clean
 
 help: ## Show available targets (run from repo root)
@@ -69,41 +67,54 @@ lint: ## Lint all packages
 	pnpm -r lint --if-present
 
 ## ─── Deploy (GCP Cloud Run) ──────────────────────────────────────────────────
+## Usage: make deploy layer=<admin|storefront|api|all> [project-id=...] [region=...]
 
-deploy-admin: ## Deploy React admin to Cloud Run. project-id=catalog-mx-dev
-	@[ -n "$(project-id)" ] || (echo "❌ Set project-id: make deploy-admin project-id=catalog-mx-dev"; exit 1)
-	gcloud run deploy catalog-mx-admin \
-	  --source apps/admin \
-	  --region $(region) \
-	  --allow-unauthenticated \
-	  --min-instances=0 --max-instances=5 --memory=256Mi \
-	  --set-build-env-vars="VITE_API_URL=https://catalog-mx-api-105288105956.us-central1.run.app,VITE_STOREFRONT_URL=https://catalog-mx-storefront-105288105956.us-central1.run.app" \
-	  --project=$(project-id) --quiet
-	@echo "✅ Admin: $$(gcloud run services describe catalog-mx-admin --region $(region) --project $(project-id) --format 'value(status.url)')"
+project-id ?= catalog-mx-dev
+region     ?= us-central1
 
-deploy-all: deploy-admin deploy-storefront deploy-api ## Deploy all services to Cloud Run
-
-deploy-storefront: ## Deploy Next.js storefront to Cloud Run. project-id=my-project
-	@[ -n "$(project-id)" ] || (echo "❌ Set project-id: make deploy-storefront project-id=my-project"; exit 1)
-	gcloud run deploy catalog-mx-storefront \
-	  --source apps/storefront \
-	  --region $(region) \
-	  --allow-unauthenticated \
-	  --set-env-vars="FIREBASE_PROJECT_ID=$(project-id)" \
-	  --min-instances=0 --max-instances=10 --memory=512Mi --quiet
-
-deploy-api: ## Deploy FastAPI to Cloud Run. project-id=my-project
-	@[ -n "$(project-id)" ] || (echo "❌ Set project-id: make deploy-api project-id=my-project"; exit 1)
-	gcloud run deploy catalog-mx-api \
-	  --source apps/api \
-	  --region $(region) \
-	  --set-secrets="ANTHROPIC_API_KEY=anthropic-api-key:latest" \
-	  --min-instances=0 --max-instances=10 --memory=512Mi --quiet
+deploy: ## Deploy to Cloud Run. layer=admin|storefront|api|all
+	@[ -n "$(layer)" ] || (echo "❌ layer is required. Usage: make deploy layer=admin|storefront|api|all"; exit 1)
+	@if [ "$(layer)" = "admin" ] || [ "$(layer)" = "all" ]; then \
+	  echo "▶ Deploying admin..."; \
+	  gcloud run deploy catalog-mx-admin \
+	    --source apps/admin \
+	    --region $(region) \
+	    --allow-unauthenticated \
+	    --min-instances=0 --max-instances=5 --memory=256Mi \
+	    --set-build-env-vars="VITE_API_URL=https://catalog-mx-api-105288105956.us-central1.run.app,VITE_STOREFRONT_URL=https://catalog-mx-storefront-105288105956.us-central1.run.app" \
+	    --project=$(project-id) --quiet; \
+	  echo "✅ Admin: $$(gcloud run services describe catalog-mx-admin --region $(region) --project $(project-id) --format 'value(status.url)')"; \
+	fi
+	@if [ "$(layer)" = "storefront" ] || [ "$(layer)" = "all" ]; then \
+	  echo "▶ Deploying storefront..."; \
+	  gcloud run deploy catalog-mx-storefront \
+	    --source apps/storefront \
+	    --region $(region) \
+	    --allow-unauthenticated \
+	    --set-env-vars="FIREBASE_PROJECT_ID=$(project-id)" \
+	    --min-instances=0 --max-instances=10 --memory=512Mi \
+	    --project=$(project-id) --quiet; \
+	  echo "✅ Storefront: $$(gcloud run services describe catalog-mx-storefront --region $(region) --project $(project-id) --format 'value(status.url)')"; \
+	fi
+	@if [ "$(layer)" = "api" ] || [ "$(layer)" = "all" ]; then \
+	  echo "▶ Deploying api..."; \
+	  gcloud run deploy catalog-mx-api \
+	    --source apps/api \
+	    --region $(region) \
+	    --set-secrets="ANTHROPIC_API_KEY=anthropic-api-key:latest" \
+	    --min-instances=0 --max-instances=10 --memory=512Mi \
+	    --project=$(project-id) --quiet; \
+	  echo "✅ API: $$(gcloud run services describe catalog-mx-api --region $(region) --project $(project-id) --format 'value(status.url)')"; \
+	fi
+	@if [ "$(layer)" != "admin" ] && [ "$(layer)" != "storefront" ] && [ "$(layer)" != "api" ] && [ "$(layer)" != "all" ]; then \
+	  echo "❌ Unknown layer=$(layer). Use layer=admin|storefront|api|all"; \
+	  exit 1; \
+	fi
 
 ## ─── Setup ───────────────────────────────────────────────────────────────────
 
-action ?= check
-email: ## Manage SMTP email config. action=setup (configure) | action=check (verify, default)
+email: ## Manage SMTP email config. action=setup|check
+	@[ -n "$(action)" ] || (echo "❌ action is required. Usage: make email action=setup|check"; exit 1)
 	@if [ "$(action)" = "setup" ]; then \
 	  bash scripts/setup-email-vars.sh; \
 	elif [ "$(action)" = "check" ]; then \
@@ -120,8 +131,3 @@ email: ## Manage SMTP email config. action=setup (configure) | action=check (ver
 	  echo "❌ Unknown action=$(action). Use action=setup or action=check"; \
 	  exit 1; \
 	fi
-
-## ─── Vars ────────────────────────────────────────────────────────────────────
-
-project-id ?= $(GOOGLE_CLOUD_PROJECT)
-region     ?= us-central1
