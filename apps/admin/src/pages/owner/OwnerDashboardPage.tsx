@@ -268,7 +268,6 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
                 displayName={user?.displayName}
                 photoURL={user?.photoURL}
                 onSettings={isPreview ? undefined : () => setPage('settings')}
-                onSignOut={isPreview ? undefined : handleSignOut}
               />
               {bizData?.status && (
                 <Badge variant={bizData.status === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">

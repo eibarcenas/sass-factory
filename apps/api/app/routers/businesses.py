@@ -2,12 +2,16 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from factory_auth import require_role, Role, UserContext
 from app.services import item_service, business_service
+from app.db import get_db
 
 def require_super_admin():
     return require_role(Role.SUPER_ADMIN)
 
 def require_owner_or_admin():
     return require_role(Role.SUPER_ADMIN, Role.OWNER)
+
+def require_owner():
+    return require_role(Role.OWNER)
 
 router = APIRouter(tags=["businesses"])
 
@@ -146,3 +150,31 @@ def owner_delete_item(
 ):
     slug = _resolve_owner_slug(user, business)
     return item_service.delete_item(slug, item_id)
+
+
+@router.delete("/owner/account")
+def owner_delete_account(
+    user: Annotated[UserContext, Depends(require_owner())] = None,
+):
+    """Owner permanently deletes their account and business catalog."""
+    if not user.business_id:
+        raise HTTPException(status_code=400, detail="No business associated with this account")
+
+    db = get_db()
+
+    items_ref = db.collection("businesses").document(user.business_id).collection("items")
+    for doc in items_ref.stream():
+        doc.reference.delete()
+
+    db.collection("businesses").document(user.business_id).delete()
+
+    try:
+        import firebase_admin
+        from firebase_admin import auth as fa
+        if not firebase_admin._apps:
+            get_db()
+        fa.delete_user(user.firebase_uid)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete Firebase user: {e}")
+
+    return {"deleted": True}
