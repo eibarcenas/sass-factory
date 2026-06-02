@@ -2,6 +2,7 @@
         test test-unit test-api test-e2e typecheck lint \
         install \
         deploy-admin deploy-storefront deploy-api deploy-all \
+        setup-email \
         up down status logs clean
 
 help: ## Show available targets (run from repo root)
@@ -98,6 +99,11 @@ deploy-api: ## Deploy FastAPI to Cloud Run
 	  --region $(REGION) \
 	  --set-secrets="ANTHROPIC_API_KEY=anthropic-api-key:latest" \
 	  --min-instances=0 --max-instances=10 --memory=512Mi --quiet
+
+## ─── Setup ───────────────────────────────────────────────────────────────────
+
+setup-email: ## Set GitHub Variables + GCP Secret Manager for SMTP email
+	@bash scripts/setup-email-vars.sh
 
 ## ─── Vars ────────────────────────────────────────────────────────────────────
 
