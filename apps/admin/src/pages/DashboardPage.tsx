@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Settings, Plus } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
+import { useSignOut } from '../hooks/useSignOut'
 import { useProspects } from '../hooks/useProspects'
 import { useBusinesses } from '../hooks/useBusinesses'
 import AppSidebar, { SidebarProfile } from '../components/layout/AppSidebar'
@@ -193,17 +194,9 @@ function AdminSidebar({ newProspects, onSignOut }: { newProspects: number; onSig
 // ── Admin layout (wraps all admin routes) ─────────────────────────────────────
 
 export default function AdminLayout() {
-  const store = useAuthStore()
-  const navigate = useNavigate()
+  const handleSignOut = useSignOut()
   const { data: prospectData } = useProspects()
   const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
-
-  async function handleSignOut() {
-    const { getAuth, signOut } = await import('firebase/auth')
-    await signOut(getAuth())
-    store.setUser(null)
-    navigate('/register', { replace: true })
-  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">

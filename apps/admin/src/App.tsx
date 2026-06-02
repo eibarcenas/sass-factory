@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useFirebaseAuthRestore } from '@eguru/auth'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -9,6 +9,7 @@ import DemoDetailPage from './pages/DemoDetailPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'
 import { useAuthStore, type UserRole } from './store/auth'
+import { useSignOut } from './hooks/useSignOut'
 import { useImpersonationStore } from './store/impersonation'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
@@ -60,17 +61,7 @@ function ExternalLandingRedirect() {
 }
 
 function AdminSettingsPage() {
-  const store = useAuthStore()
-  const navigate = useNavigate()
-
-  async function handleSignOut() {
-    const { getAuth, signOut } = await import('firebase/auth')
-    await signOut(getAuth())
-    store.setUser(null)
-    navigate('/register', { replace: true })
-  }
-
-  return <SettingsPage onSignOut={handleSignOut} />
+  return <SettingsPage onSignOut={useSignOut()} />
 }
 
 export default function App() {

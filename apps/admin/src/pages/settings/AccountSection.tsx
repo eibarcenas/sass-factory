@@ -7,7 +7,7 @@ import type { AuthUser } from '@eguru/auth'
 
 interface AccountSectionProps {
   user: AuthUser
-  onSignOut: () => void
+  onSignOut?: () => void
 }
 
 export default function AccountSection({ user, onSignOut }: AccountSectionProps) {
@@ -40,9 +40,11 @@ export default function AccountSection({ user, onSignOut }: AccountSectionProps)
             <Badge variant="secondary">{user.role}</Badge>
           </div>
         </div>
-        <Button variant="outline" className="w-full mt-2" onClick={onSignOut}>
-          Sign out
-        </Button>
+        {onSignOut && (
+          <Button variant="outline" className="w-full mt-2" onClick={onSignOut}>
+            Sign out
+          </Button>
+        )}
       </CardContent>
     </Card>
   )

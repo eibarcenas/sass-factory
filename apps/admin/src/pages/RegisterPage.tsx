@@ -15,11 +15,6 @@ function clientSlugify(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '')
 }
 
-function parseJwtPayload(token: string): Record<string, unknown> {
-  const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-  return JSON.parse(atob(base64))
-}
-
 export default function RegisterPage() {
   const store = useAuthStore()
   const navigate = useNavigate()
@@ -48,7 +43,7 @@ export default function RegisterPage() {
           `${API_URL}/api/v1/auth/check-slug?name=${encodeURIComponent(businessName.trim())}`
         )
         const data = await res.json()
-        setSlug(data.slug ?? clientSlugify(businessName))
+        setSlug(data.slug ?? slug)
         if (data.reason === 'invalid_name') setSlugStatus('invalid')
         else setSlugStatus(data.available ? 'available' : 'taken')
       } catch {
@@ -92,8 +87,7 @@ export default function RegisterPage() {
         const errData = await res.json().catch(() => ({}))
         if (errData.detail === 'Account already active') {
           // existing account — log them in directly
-          const freshToken = await cred.user.getIdToken(true)
-          const claims = parseJwtPayload(freshToken)
+          const { claims } = await cred.user.getIdTokenResult(true)
           const role = (claims.role as string) ?? 'OWNER'
           const businessId = (claims.business_id as string) ?? ''
           store.setUser({
@@ -103,7 +97,7 @@ export default function RegisterPage() {
             photoURL: cred.user.photoURL ?? null,
             role,
             businessId,
-            modules: ['CATALOG', 'APPEARANCE'],
+            modules: (claims.modules as string[]) ?? [],
           })
           navigate(role === 'SUPER_ADMIN' ? '/dashboard' : '/owner', { replace: true })
         } else {
@@ -121,17 +115,16 @@ export default function RegisterPage() {
 
       const data = await res.json()
 
-      // Force token refresh to pick up new OWNER claims
-      await cred.user.getIdToken(true)
+      const { claims } = await cred.user.getIdTokenResult(true)
 
       store.setUser({
         uid:         cred.user.uid,
         email:       cred.user.email,
         displayName: cred.user.displayName ?? null,
         photoURL:    cred.user.photoURL ?? null,
-        role:        'OWNER',
+        role:        (claims.role as string) ?? 'OWNER',
         businessId:  data.slug,
-        modules:     ['CATALOG', 'APPEARANCE'],
+        modules:     (claims.modules as string[]) ?? [],
       })
 
       navigate('/owner', { replace: true })

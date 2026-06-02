@@ -6,7 +6,7 @@ import BusinessSection from './BusinessSection'
 import { BusinessStatus } from '@eguru/core'
 
 interface SettingsPageProps {
-  onSignOut: () => void
+  onSignOut?: () => void
 }
 
 export default function SettingsPage({ onSignOut }: SettingsPageProps) {

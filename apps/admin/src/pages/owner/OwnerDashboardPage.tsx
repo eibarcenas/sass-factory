@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
+import { useSignOut } from '../../hooks/useSignOut'
 import { useImpersonationStore } from '../../store/impersonation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
@@ -227,8 +228,8 @@ interface OwnerDashboardProps {
 }
 
 export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps) {
-  const store = useAuthStore()
-  const { user } = store
+  const { user } = useAuthStore()
+  const handleSignOut = useSignOut()
   const { impersonating, stopImpersonation } = useImpersonationStore()
   const navigate = useNavigate()
   const isPreview = !!previewSlug
@@ -244,13 +245,6 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
-
-  async function handleSignOut() {
-    const { getAuth, signOut } = await import('firebase/auth')
-    await signOut(getAuth())
-    store.setUser(null)
-    navigate('/register', { replace: true })
-  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
@@ -317,7 +311,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
           <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} impersonateSlug={isImpersonating ? businessId : undefined} />
         )}
         {page === 'settings' && (
-          <SettingsPage onSignOut={handleSignOut} />
+          <SettingsPage onSignOut={isPreview ? undefined : handleSignOut} />
         )}
       </main>
     </div>
