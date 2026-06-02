@@ -24,6 +24,15 @@ RUN --mount=type=secret,id=gh_pat \
 COPY . .
 
 ENV PORT=8080
+
+# SMTP email config — set real values in Cloud Run env vars, never here
+ENV SMTP_HOST=""
+ENV SMTP_PORT="587"
+ENV SMTP_USER=""
+ENV SMTP_PASS=""
+ENV SMTP_FROM=""
+ENV ADMIN_NOTIFY_EMAIL=""
+
 EXPOSE 8080
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

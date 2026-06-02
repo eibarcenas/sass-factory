@@ -75,7 +75,8 @@ jobs:
             --region "${{ env.REGION }}" \
             --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_DEV }}" \
-            --set-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev,ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=catalog-mx-dev" \
+            --set-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev,ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=catalog-mx-dev,STOREFRONT_URL=${{ env.STOREFRONT_URL }},ADMIN_URL=${{ env.ADMIN_URL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }}" \
+            --update-secrets="SMTP_PASS=SMTP_PASS:latest" \
             --allow-unauthenticated \
             --quiet
 
