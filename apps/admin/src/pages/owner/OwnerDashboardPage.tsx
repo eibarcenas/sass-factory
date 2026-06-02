@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
+import { useSignOut } from '../../hooks/useSignOut'
 import { useImpersonationStore } from '../../store/impersonation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
@@ -228,6 +229,7 @@ interface OwnerDashboardProps {
 
 export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps) {
   const { user } = useAuthStore()
+  const handleSignOut = useSignOut()
   const { impersonating, stopImpersonation } = useImpersonationStore()
   const navigate = useNavigate()
   const isPreview = !!previewSlug
@@ -264,6 +266,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
                 displayName={user?.displayName}
                 photoURL={user?.photoURL}
                 onSettings={isPreview ? undefined : () => setPage('settings')}
+                onSignOut={isPreview ? undefined : handleSignOut}
               />
               {bizData?.status && (
                 <Badge variant={bizData.status === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">
@@ -308,7 +311,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
           <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} impersonateSlug={isImpersonating ? businessId : undefined} />
         )}
         {page === 'settings' && (
-          <SettingsPage />
+          <SettingsPage onSignOut={isPreview ? undefined : handleSignOut} />
         )}
       </main>
     </div>

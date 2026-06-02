@@ -9,6 +9,7 @@ import DemoDetailPage from './pages/DemoDetailPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import OwnerDashboardPage from './pages/owner/OwnerDashboardPage'
 import { useAuthStore, type UserRole } from './store/auth'
+import { useSignOut } from './hooks/useSignOut'
 import { useImpersonationStore } from './store/impersonation'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
@@ -57,6 +58,10 @@ function RoleRedirect() {
 function ExternalLandingRedirect() {
   window.location.replace(LANDING_URL)
   return null
+}
+
+function AdminSettingsPage() {
+  return <SettingsPage onSignOut={useSignOut()} />
 }
 
 export default function App() {
@@ -109,7 +114,7 @@ export default function App() {
         <Route path="/clientes" element={<SalesPage />} />
         <Route path="/clientes/new" element={<NewDemoPage />} />
         <Route path="/clientes/:businessId" element={<DemoDetailPage />} />
-        <Route path="/ajustes" element={<SettingsPage />} />
+        <Route path="/ajustes" element={<AdminSettingsPage />} />
       </Route>
 
       {/* Owner preview (admin viewing a business as owner) */}

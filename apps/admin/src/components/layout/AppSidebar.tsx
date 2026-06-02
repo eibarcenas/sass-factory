@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 function getInitials(email: string | null): string {
@@ -15,9 +15,10 @@ export interface SidebarProfileProps {
   photoURL?: string | null
   role?: string
   onSettings?: () => void
+  onSignOut?: () => void
 }
 
-export function SidebarProfile({ email, displayName, photoURL, role, onSettings }: SidebarProfileProps) {
+export function SidebarProfile({ email, displayName, photoURL, role, onSettings, onSignOut }: SidebarProfileProps) {
   const initials = getInitials(email)
   const label = displayName ?? (email ? email.split('@')[0] : '')
 
@@ -44,6 +45,15 @@ export function SidebarProfile({ email, displayName, photoURL, role, onSettings 
           aria-label="Settings"
         >
           ⚙
+        </button>
+      )}
+      {onSignOut && (
+        <button
+          onClick={onSignOut}
+          className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
+          aria-label="Sign out"
+        >
+          <LogOut size={14} />
         </button>
       )}
     </div>
