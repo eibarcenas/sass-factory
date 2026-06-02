@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from app.db import get_db
 from app.domain.business import resolve_new_status, BusinessStatus, OWNER_PATCH_FIELDS
+from app.services import email_service
 
 COLL = "businesses"
 
@@ -28,6 +29,15 @@ def transition_status(business_id: str, action: str) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     extra = {"submittedAt": now} if new_status in {BusinessStatus.PENDING_REVIEW, BusinessStatus.REVIEW} else {}
     ref.update({"status": new_status, "updatedAt": now, **extra})
+
+    # Fire-and-forget emails — never block or raise
+    owner_email = business.get("ownerEmail", "")
+    name = business.get("name", business_id)
+    if new_status == BusinessStatus.ACTIVE and owner_email:
+        email_service.send_catalog_activated(owner_email, name, business_id)
+    elif new_status in {BusinessStatus.REVIEW, BusinessStatus.PENDING_REVIEW}:
+        email_service.send_review_submitted(name, business_id, owner_email)
+
     return {**business, "id": business_id, "status": new_status, "updatedAt": now, **extra}
 
 
