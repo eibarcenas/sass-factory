@@ -2,7 +2,7 @@
         test test-unit test-api test-e2e typecheck lint \
         install \
         deploy-admin deploy-storefront deploy-api deploy-all \
-        setup-email \
+        setup-email check-email \
         up down status logs clean
 
 help: ## Show available targets (run from repo root)
@@ -102,8 +102,19 @@ deploy-api: ## Deploy FastAPI to Cloud Run
 
 ## ─── Setup ───────────────────────────────────────────────────────────────────
 
-setup-email: ## Set GitHub Variables + GCP Secret Manager for SMTP email
+setup-email: ## Set GitHub Variables + GCP Secret Manager for SMTP email (run once)
 	@bash scripts/setup-email-vars.sh
+
+check-email: ## Verify SMTP config — GitHub Variables + GCP secret status
+	@echo ""
+	@echo "━━━ GitHub Variables ━━━"
+	@gh variable list --repo eibarcenas/sass-factory | grep -E "SMTP|ADMIN_NOTIFY" || echo "  (none set)"
+	@echo ""
+	@echo "━━━ GCP Secret Manager ━━━"
+	@gcloud secrets describe SMTP_PASS --project=ei-catalog-dev 2>/dev/null \
+	  && echo "  SMTP_PASS: ✓ exists" \
+	  || echo "  SMTP_PASS: ✗ not found — run make setup-email"
+	@echo ""
 
 ## ─── Vars ────────────────────────────────────────────────────────────────────
 
