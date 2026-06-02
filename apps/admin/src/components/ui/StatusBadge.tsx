@@ -1,9 +1,10 @@
 import { BusinessStatus } from '@eguru/core'
 
 const CONFIG: Record<BusinessStatus, { label: string; classes: string }> = {
-  [BusinessStatus.Draft]:         { label: 'Draft',     classes: 'bg-slate-100 text-slate-600' },
-  [BusinessStatus.PendingReview]: { label: 'En revisión', classes: 'bg-blue-100 text-blue-700' },
-  [BusinessStatus.Demo]:          { label: 'Demo',      classes: 'bg-indigo-100 text-indigo-700' },
+  [BusinessStatus.Draft]:         { label: 'Draft',        classes: 'bg-slate-100 text-slate-600'   },
+  [BusinessStatus.PendingReview]: { label: 'En revisión',  classes: 'bg-blue-100 text-blue-700'    },
+  [BusinessStatus.Review]:        { label: 'En revisión',  classes: 'bg-blue-100 text-blue-700'    },
+  [BusinessStatus.Demo]:          { label: 'Demo',         classes: 'bg-indigo-100 text-indigo-700'},
   [BusinessStatus.Sent]:      { label: 'Sent',      classes: 'bg-yellow-100 text-yellow-700' },
   [BusinessStatus.Accepted]:  { label: 'Accepted',  classes: 'bg-green-100 text-green-700' },
   [BusinessStatus.Active]:    { label: 'Active',    classes: 'bg-emerald-100 text-emerald-700' },

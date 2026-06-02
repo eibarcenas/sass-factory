@@ -84,7 +84,7 @@ export default function SalesPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<'solicitudes' | 'demos' | 'prospects'>('solicitudes')
   const { data: prospectData } = useProspects()
-  const { data: solicitudesData } = useBusinesses(BusinessStatus.PendingReview)
+  const { data: solicitudesData } = useBusinesses(BusinessStatus.Review)
   const newCount = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
   const solicitudesCount = solicitudesData?.total ?? 0
 

@@ -17,7 +17,7 @@ function timeAgo(iso: string): string {
 }
 
 export default function SolicitudesList() {
-  const { data, isLoading } = useBusinesses(BusinessStatus.PendingReview)
+  const { data, isLoading } = useBusinesses(BusinessStatus.Review)
   const action = useBusinessAction()
 
   const solicitudes = data?.businesses ?? []
@@ -70,6 +70,11 @@ export default function SolicitudesList() {
                   Enviado {biz.submittedAt ? timeAgo(biz.submittedAt) : timeAgo(biz.updatedAt)}
                   {biz.city ? ` · ${biz.city}` : ''}
                 </p>
+                {biz.ownerApprovedAt && (
+                  <p className="text-xs text-emerald-600 font-medium mt-0.5">
+                    Owner aprobó ✓
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-2 shrink-0">

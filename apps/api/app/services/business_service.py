@@ -26,7 +26,7 @@ def transition_status(business_id: str, action: str) -> dict:
         code = 400 if "Unknown action" in str(e) else 422
         raise HTTPException(status_code=code, detail=str(e))
     now = datetime.now(timezone.utc).isoformat()
-    extra = {"submittedAt": now} if new_status == BusinessStatus.PENDING_REVIEW else {}
+    extra = {"submittedAt": now} if new_status in {BusinessStatus.PENDING_REVIEW, BusinessStatus.REVIEW} else {}
     ref.update({"status": new_status, "updatedAt": now, **extra})
     return {**business, "id": business_id, "status": new_status, "updatedAt": now, **extra}
 
