@@ -3,59 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
 from pydantic import BaseModel, field_validator
 from app.db import get_db
-from app.services import registration_service
-from app.domain.business import BusinessType, BusinessStatus, slugify
+from app.domain.business import BusinessStatus, slugify
 from factory_auth import get_current_user, UserContext
 
 router = APIRouter(tags=["auth"])
-
-
-class RegisterRequest(BaseModel):
-    businessName: str
-    businessType: str
-    ownerName: str | None = None
-    phone: str | None = None
-
-    @field_validator("businessName")
-    @classmethod
-    def name_not_empty(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("businessName cannot be empty")
-        return v.strip()
-
-    @field_validator("businessType")
-    @classmethod
-    def valid_type(cls, v: str) -> str:
-        valid = {t.value for t in BusinessType}
-        if v not in valid:
-            raise ValueError(f"businessType must be one of {sorted(valid)}")
-        return v
-
-
-@router.post("/auth/register")
-def register(
-    body: RegisterRequest,
-    user: Annotated[UserContext, Depends(get_current_user)],
-):
-    """
-    Self-service registration. Called after Google sign-in when the user
-    has no role yet. Creates a registration_requests/{uid} document for
-    the admin team to review and activate within 24 hours.
-    """
-    if not user.email:
-        raise HTTPException(status_code=400, detail="No email on token")
-
-    if user.role:
-        raise HTTPException(status_code=409, detail="Account already active")
-
-    return registration_service.create_registration(
-        uid=user.firebase_uid,
-        email=user.email,
-        business_name=body.businessName,
-        business_type=body.businessType,
-        owner_name=body.ownerName,
-        phone=body.phone,
-    )
 
 
 @router.post("/auth/resolve-claims")
