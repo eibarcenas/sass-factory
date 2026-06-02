@@ -1,6 +1,7 @@
 export enum BusinessStatus {
   Draft         = 'draft',
   PendingReview = 'pending_review',
+  Review        = 'review',
   Demo          = 'demo',
   Sent          = 'sent',
   Accepted      = 'accepted',
@@ -48,6 +49,7 @@ export interface Business {
   domain?: string
   ownerEmail?: string
   submittedAt?: string
+  ownerApprovedAt?: string
   demoGeneratedAt?: string
   sentAt?: string
   acceptedAt?: string

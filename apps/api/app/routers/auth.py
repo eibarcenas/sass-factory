@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pydantic import BaseModel, field_validator
 from app.db import get_db
 from app.services import registration_service
-from app.domain.business import BusinessType, slugify
+from app.domain.business import BusinessType, BusinessStatus, slugify
 from factory_auth import get_current_user, UserContext
 
 router = APIRouter(tags=["auth"])
@@ -161,7 +161,7 @@ def auto_provision(
     biz_ref.set({
         "name": body.businessName,
         "slug": slug,
-        "status": "draft",
+        "status": BusinessStatus.REVIEW,
         "ownerEmail": user.email,
         "ownerUid": user.firebase_uid,
         "createdAt": now,

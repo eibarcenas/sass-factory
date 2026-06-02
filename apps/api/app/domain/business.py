@@ -6,6 +6,7 @@ from enum import Enum
 class BusinessStatus(str, Enum):
     DRAFT          = "draft"
     PENDING_REVIEW = "pending_review"
+    REVIEW         = "review"
     DEMO           = "demo"
     SENT           = "sent"
     ACCEPTED       = "accepted"
@@ -30,6 +31,7 @@ class BusinessType(str, Enum):
 VALID_TRANSITIONS: dict[BusinessStatus, list[BusinessStatus]] = {
     BusinessStatus.DRAFT:          [BusinessStatus.PENDING_REVIEW, BusinessStatus.DEMO,     BusinessStatus.ARCHIVED],
     BusinessStatus.PENDING_REVIEW: [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
+    BusinessStatus.REVIEW:         [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
     BusinessStatus.DEMO:           [BusinessStatus.SENT,           BusinessStatus.ARCHIVED],
     BusinessStatus.SENT:           [BusinessStatus.ACCEPTED,       BusinessStatus.REJECTED, BusinessStatus.EXPIRED],
     BusinessStatus.ACCEPTED:       [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
@@ -41,7 +43,7 @@ VALID_TRANSITIONS: dict[BusinessStatus, list[BusinessStatus]] = {
 }
 
 ACTION_TO_STATUS: dict[str, BusinessStatus] = {
-    "submit":     BusinessStatus.PENDING_REVIEW,
+    "submit":     BusinessStatus.REVIEW,
     "publish":    BusinessStatus.DEMO,
     "send":       BusinessStatus.SENT,
     "accept":     BusinessStatus.ACCEPTED,
