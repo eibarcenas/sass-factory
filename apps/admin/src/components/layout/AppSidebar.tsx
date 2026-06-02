@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 function getInitials(email: string | null): string {
@@ -15,15 +15,14 @@ export interface SidebarProfileProps {
   photoURL?: string | null
   role?: string
   onSettings?: () => void
-  onSignOut?: () => void
 }
 
-export function SidebarProfile({ email, displayName, photoURL, role, onSettings, onSignOut }: SidebarProfileProps) {
+export function SidebarProfile({ email, displayName, photoURL, role, onSettings }: SidebarProfileProps) {
   const initials = getInitials(email)
   const label = displayName ?? (email ? email.split('@')[0] : '')
 
-  return (
-    <div className="flex items-center gap-2.5">
+  const inner = (
+    <>
       <div className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center shrink-0 overflow-hidden">
         {photoURL
           ? <img src={photoURL} alt={label} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -38,26 +37,22 @@ export function SidebarProfile({ email, displayName, photoURL, role, onSettings,
           </span>
         )}
       </div>
-      {onSettings && (
-        <button
-          onClick={onSettings}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
-          aria-label="Settings"
-        >
-          ⚙
-        </button>
-      )}
-      {onSignOut && (
-        <button
-          onClick={onSignOut}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted"
-          aria-label="Sign out"
-        >
-          <LogOut size={14} />
-        </button>
-      )}
-    </div>
+    </>
   )
+
+  if (onSettings) {
+    return (
+      <button
+        onClick={onSettings}
+        className="w-full flex items-center gap-2.5 rounded-lg px-1 py-1 hover:bg-muted transition-colors text-left"
+        aria-label="Go to settings"
+      >
+        {inner}
+      </button>
+    )
+  }
+
+  return <div className="flex items-center gap-2.5 px-1 py-1">{inner}</div>
 }
 
 export interface NavItem<T extends string = string> {

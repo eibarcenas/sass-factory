@@ -1,7 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Settings, Plus } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
-import { useSignOut } from '../hooks/useSignOut'
 import { useProspects } from '../hooks/useProspects'
 import { useBusinesses } from '../hooks/useBusinesses'
 import AppSidebar, { SidebarProfile } from '../components/layout/AppSidebar'
@@ -151,7 +150,7 @@ const NAV_ITEMS = [
 
 type NavKey = typeof NAV_ITEMS[number]['key']
 
-function AdminSidebar({ newProspects, onSignOut }: { newProspects: number; onSignOut: () => void }) {
+function AdminSidebar({ newProspects }: { newProspects: number }) {
   const { user, mockMode } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
@@ -184,7 +183,7 @@ function AdminSidebar({ newProspects, onSignOut }: { newProspects: number; onSig
           displayName={user?.displayName}
           photoURL={user?.photoURL}
           role="Admin"
-          onSignOut={onSignOut}
+          onSettings={() => navigate('/ajustes')}
         />
       }
     />
@@ -194,13 +193,12 @@ function AdminSidebar({ newProspects, onSignOut }: { newProspects: number; onSig
 // ── Admin layout (wraps all admin routes) ─────────────────────────────────────
 
 export default function AdminLayout() {
-  const handleSignOut = useSignOut()
   const { data: prospectData } = useProspects()
   const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
-      <AdminSidebar newProspects={newProspects} onSignOut={handleSignOut} />
+      <AdminSidebar newProspects={newProspects} />
       <main className="flex-1 overflow-y-auto p-8">
         <Outlet />
       </main>
