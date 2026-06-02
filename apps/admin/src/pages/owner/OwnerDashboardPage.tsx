@@ -27,7 +27,7 @@ function DraftBanner({ businessId, onSubmitted }: { businessId: string; onSubmit
   async function submitForReview() {
     setSubmitting(true)
     try {
-      await api.post(`/api/v1/admin/businesses/${businessId}/submit`, {})
+      await api.post(`/api/v1/owner/business/submit`, {})
       setDone(true)
       onSubmitted()
     } finally {

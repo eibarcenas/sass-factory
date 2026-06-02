@@ -3,6 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from factory_auth import require_role, Role, UserContext
 from app.services import item_service, business_service
 
+def require_super_admin():
+    return require_role(Role.SUPER_ADMIN)
+
 def require_owner_or_admin():
     return require_role(Role.SUPER_ADMIN, Role.OWNER)
 
@@ -21,35 +24,68 @@ def _resolve_owner_slug(user: UserContext, business: str | None) -> str:
 
 
 @router.get("/admin/businesses")
-def list_businesses(status: str | None = None):
+def list_businesses(
+    status: str | None = None,
+    _: Annotated[UserContext, Depends(require_super_admin())] = None,
+):
     return business_service.list_businesses(status)
 
 
 # ── Item CRUD — admin (specific routes BEFORE /{action}) ──────────────────────
 
 @router.get("/admin/businesses/{id}/items")
-def list_items(id: str):
+def list_items(
+    id: str,
+    _: Annotated[UserContext, Depends(require_super_admin())] = None,
+):
     return {"items": item_service.list_items(id)}
 
 @router.post("/admin/businesses/{id}/items")
-def add_item(id: str, item: dict):
+def add_item(
+    id: str,
+    item: dict,
+    _: Annotated[UserContext, Depends(require_super_admin())] = None,
+):
     return item_service.add_item(id, item)
 
 @router.patch("/admin/businesses/{id}/items/{item_id}")
-def update_item(id: str, item_id: str, patch: dict):
+def update_item(
+    id: str,
+    item_id: str,
+    patch: dict,
+    _: Annotated[UserContext, Depends(require_super_admin())] = None,
+):
     return item_service.update_item(id, item_id, patch)
 
 @router.delete("/admin/businesses/{id}/items/{item_id}")
-def delete_item(id: str, item_id: str):
+def delete_item(
+    id: str,
+    item_id: str,
+    _: Annotated[UserContext, Depends(require_super_admin())] = None,
+):
     return item_service.delete_item(id, item_id)
 
 # ── Business lifecycle action ──────────────────────────────────────────────────
 
 @router.post("/admin/businesses/{id}/{action}")
-def business_action(id: str, action: str):
+def business_action(
+    id: str,
+    action: str,
+    _: Annotated[UserContext, Depends(require_super_admin())] = None,
+):
     return business_service.transition_status(id, action)
 
 # ── Owner endpoints ────────────────────────────────────────────────────────────
+
+@router.post("/owner/business/submit")
+def owner_submit_for_review(
+    business: str | None = None,
+    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
+):
+    """Owner submits their draft catalog for admin review (DRAFT → REVIEW)."""
+    slug = _resolve_owner_slug(user, business)
+    return business_service.transition_status(slug, "submit")
+
 
 @router.patch("/owner/business/approve")
 def owner_approve_business(
