@@ -31,8 +31,8 @@ export default async function Hero() {
             </p>
 
             <h1 className="font-heading text-5xl font-bold leading-[1.06] tracking-tight text-zinc-900 sm:text-6xl">
-              {t('headline1')}{' '}
-              <span className="text-zinc-400">{t('headline2')}</span>
+              {t('headline1')}
+              <span className="block text-zinc-400">{t('headline2')}</span>
             </h1>
 
             <p className="mt-5 text-lg leading-relaxed text-zinc-500">
@@ -56,6 +56,17 @@ export default async function Hero() {
               >
                 {t('cta_secondary')} →
               </a>
+            </div>
+
+            <div className="mt-7 rounded-2xl border border-zinc-200 bg-white/90 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                {t('trust_label')}
+              </p>
+              <div className="mt-2 grid gap-2 text-sm text-zinc-700 sm:grid-cols-3">
+                <p>{t('trust_1')}</p>
+                <p>{t('trust_2')}</p>
+                <p>{t('trust_3')}</p>
+              </div>
             </div>
           </div>
 

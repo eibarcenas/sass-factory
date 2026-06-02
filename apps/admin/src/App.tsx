@@ -13,6 +13,7 @@ import { useImpersonationStore } from './store/impersonation'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 const RESOLVE_CLAIMS_URL = `${API_URL}/api/v1/auth/resolve-claims`
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
 
 const FIREBASE_CONFIG = import.meta.env.VITE_FIREBASE_API_KEY
   ? {
@@ -51,6 +52,11 @@ function RoleRedirect() {
   if (mockMode || user?.role === 'SUPER_ADMIN') return <Navigate to="/" replace />
   if (user?.role === 'OWNER') return <Navigate to="/owner" replace />
   return <Navigate to="/login" replace />
+}
+
+function ExternalLandingRedirect() {
+  window.location.replace(LANDING_URL)
+  return null
 }
 
 export default function App() {
@@ -129,6 +135,9 @@ export default function App() {
           </RequireAuth>
         }
       />
+
+      {/* Unknown routes should not trap cold visitors inside admin */}
+      <Route path="*" element={<ExternalLandingRedirect />} />
     </Routes>
   )
 }

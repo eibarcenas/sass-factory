@@ -4,12 +4,16 @@
   },
   "hero": {
     "badge": "For local businesses in Mexico",
-    "headline1": "Create today.",
-    "headline2": "Sell tomorrow.",
-    "sub": "Your digital catalog, ready in minutes. We review and activate it in under 24 hours.",
+    "headline1": "Turn your WhatsApp into a sales-ready catalog in minutes.",
+    "headline2": "Built for small businesses in Mexico.",
+    "sub": "Create a branded catalog, share one link, and convert chats into orders without technical setup.",
     "free_tier": "7 weeks free, no credit card required.",
-    "cta_primary": "Create my catalog free",
-    "cta_secondary": "See an example"
+    "cta_primary": "Start free in 2 minutes",
+    "cta_secondary": "See a live demo",
+    "trust_label": "Trusted by growing local businesses",
+    "trust_1": "No code setup",
+    "trust_2": "No card required",
+    "trust_3": "Activation in under 24 hours"
   },
   "strip": {
     "label": "For any type of business",
