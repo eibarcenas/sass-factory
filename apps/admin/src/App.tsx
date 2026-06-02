@@ -60,12 +60,9 @@ function ExternalLandingRedirect() {
   return null
 }
 
-function AdminSettingsPage() {
-  return <SettingsPage onSignOut={useSignOut()} />
-}
-
 export default function App() {
   const store = useAuthStore()
+  const handleAdminSignOut = useSignOut()
   const { checking } = useFirebaseAuthRestore({
     store,
     firebaseConfig: FIREBASE_CONFIG,
@@ -114,7 +111,7 @@ export default function App() {
         <Route path="/clientes" element={<SalesPage />} />
         <Route path="/clientes/new" element={<NewDemoPage />} />
         <Route path="/clientes/:businessId" element={<DemoDetailPage />} />
-        <Route path="/ajustes" element={<AdminSettingsPage />} />
+        <Route path="/ajustes" element={<SettingsPage onSignOut={handleAdminSignOut} />} />
       </Route>
 
       {/* Owner preview (admin viewing a business as owner) */}
