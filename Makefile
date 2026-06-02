@@ -70,43 +70,43 @@ lint: ## Lint all packages
 
 ## ─── Deploy (GCP Cloud Run) ──────────────────────────────────────────────────
 
-deploy-admin: ## Deploy React admin to Cloud Run
-	@[ -n "$(PROJECT_ID)" ] || (echo "❌ Set PROJECT_ID: make deploy-admin PROJECT_ID=catalog-mx-dev"; exit 1)
+deploy-admin: ## Deploy React admin to Cloud Run. project-id=catalog-mx-dev
+	@[ -n "$(project-id)" ] || (echo "❌ Set project-id: make deploy-admin project-id=catalog-mx-dev"; exit 1)
 	gcloud run deploy catalog-mx-admin \
 	  --source apps/admin \
-	  --region $(REGION) \
+	  --region $(region) \
 	  --allow-unauthenticated \
 	  --min-instances=0 --max-instances=5 --memory=256Mi \
 	  --set-build-env-vars="VITE_API_URL=https://catalog-mx-api-105288105956.us-central1.run.app,VITE_STOREFRONT_URL=https://catalog-mx-storefront-105288105956.us-central1.run.app" \
-	  --project=$(PROJECT_ID) --quiet
-	@echo "✅ Admin: $$(gcloud run services describe catalog-mx-admin --region $(REGION) --project $(PROJECT_ID) --format 'value(status.url)')"
+	  --project=$(project-id) --quiet
+	@echo "✅ Admin: $$(gcloud run services describe catalog-mx-admin --region $(region) --project $(project-id) --format 'value(status.url)')"
 
 deploy-all: deploy-admin deploy-storefront deploy-api ## Deploy all services to Cloud Run
 
-deploy-storefront: ## Deploy Next.js storefront to Cloud Run
-	@[ -n "$(PROJECT_ID)" ] || (echo "❌ Set PROJECT_ID: make deploy-storefront PROJECT_ID=my-project"; exit 1)
+deploy-storefront: ## Deploy Next.js storefront to Cloud Run. project-id=my-project
+	@[ -n "$(project-id)" ] || (echo "❌ Set project-id: make deploy-storefront project-id=my-project"; exit 1)
 	gcloud run deploy catalog-mx-storefront \
 	  --source apps/storefront \
-	  --region $(REGION) \
+	  --region $(region) \
 	  --allow-unauthenticated \
-	  --set-env-vars="FIREBASE_PROJECT_ID=$(PROJECT_ID)" \
+	  --set-env-vars="FIREBASE_PROJECT_ID=$(project-id)" \
 	  --min-instances=0 --max-instances=10 --memory=512Mi --quiet
 
-deploy-api: ## Deploy FastAPI to Cloud Run
-	@[ -n "$(PROJECT_ID)" ] || (echo "❌ Set PROJECT_ID: make deploy-api PROJECT_ID=my-project"; exit 1)
+deploy-api: ## Deploy FastAPI to Cloud Run. project-id=my-project
+	@[ -n "$(project-id)" ] || (echo "❌ Set project-id: make deploy-api project-id=my-project"; exit 1)
 	gcloud run deploy catalog-mx-api \
 	  --source apps/api \
-	  --region $(REGION) \
+	  --region $(region) \
 	  --set-secrets="ANTHROPIC_API_KEY=anthropic-api-key:latest" \
 	  --min-instances=0 --max-instances=10 --memory=512Mi --quiet
 
 ## ─── Setup ───────────────────────────────────────────────────────────────────
 
-ACTION ?= check
-email: ## Manage SMTP email config. ACTION=setup (configure) | check (verify, default)
-	@if [ "$(ACTION)" = "setup" ]; then \
+action ?= check
+email: ## Manage SMTP email config. action=setup (configure) | action=check (verify, default)
+	@if [ "$(action)" = "setup" ]; then \
 	  bash scripts/setup-email-vars.sh; \
-	elif [ "$(ACTION)" = "check" ]; then \
+	elif [ "$(action)" = "check" ]; then \
 	  echo ""; \
 	  echo "━━━ GitHub Variables ━━━"; \
 	  gh variable list --repo eibarcenas/sass-factory | grep -E "SMTP|ADMIN_NOTIFY" || echo "  (none set)"; \
@@ -114,14 +114,14 @@ email: ## Manage SMTP email config. ACTION=setup (configure) | check (verify, de
 	  echo "━━━ GCP Secret Manager ━━━"; \
 	  gcloud secrets describe SMTP_PASS --project=ei-catalog-dev 2>/dev/null \
 	    && echo "  SMTP_PASS: ✓ exists" \
-	    || echo "  SMTP_PASS: ✗ not found — run: make email ACTION=setup"; \
+	    || echo "  SMTP_PASS: ✗ not found — run: make email action=setup"; \
 	  echo ""; \
 	else \
-	  echo "❌ Unknown ACTION=$(ACTION). Use ACTION=setup or ACTION=check"; \
+	  echo "❌ Unknown action=$(action). Use action=setup or action=check"; \
 	  exit 1; \
 	fi
 
 ## ─── Vars ────────────────────────────────────────────────────────────────────
 
-PROJECT_ID ?= $(GOOGLE_CLOUD_PROJECT)
-REGION     ?= us-central1
+project-id ?= $(GOOGLE_CLOUD_PROJECT)
+region     ?= us-central1
