@@ -98,11 +98,12 @@ const OWNER_NAV: NavItem<Page>[] = [
 ]
 
 // ── Catalog page (link + products) ───────────────────────────────────────────
-function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, impersonateSlug, whatsappClicks }: {
+function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, readonly, impersonateSlug, whatsappClicks }: {
   businessId: string
   previewSlug?: string
   catalogUrl: string
   isPreview: boolean
+  readonly?: boolean
   impersonateSlug?: string
   whatsappClicks?: number
 }) {
@@ -154,7 +155,7 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, impersona
             scope="owner"
             previewSlug={previewSlug}
             impersonateSlug={impersonateSlug}
-            readonly={isPreview}
+            readonly={isPreview || readonly}
           />
         </CardContent>
       </Card>
@@ -306,7 +307,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         )}
 
         {page === 'catalog' && (
-          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview || isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
+          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} readonly={isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
         )}
         {page === 'appearance' && (
           <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview || isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} />
