@@ -51,6 +51,15 @@ def business_action(id: str, action: str):
 
 # ── Owner endpoints ────────────────────────────────────────────────────────────
 
+@router.patch("/owner/business/approve")
+def owner_approve_business(
+    business: str | None = None,
+    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
+):
+    slug = _resolve_owner_slug(user, business)
+    return business_service.owner_approve(slug)
+
+
 @router.patch("/owner/business")
 def owner_update_business(
     patch: dict,

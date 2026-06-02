@@ -1,24 +1,31 @@
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getCatalog } from '@/lib/api'
-import CatalogView from '@/components/CatalogView'
 import { BusinessStatus } from '@eguru/core'
+import DemoGate from '@/components/DemoGate'
 
 type Props = { params: Promise<{ slug: string }> }
-
-const LIVE_STATUSES = [BusinessStatus.Accepted, BusinessStatus.Active]
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const data = await getCatalog(slug, true)
-  if (!data) return { title: 'Demo' }
-  return { title: `${data.name} — Demo`, description: data.tagline ?? '' }
+  if (!data) return { title: 'Vista previa' }
+  return {
+    title: `${data.name} — Vista previa`,
+    description: data.tagline ?? '',
+    // Prevent search engines from indexing preview pages
+    robots: { index: false, follow: false },
+  }
 }
 
 export default async function DemoPage({ params }: Props) {
   const { slug } = await params
   const data = await getCatalog(slug, true)
+
   if (!data) notFound()
-  if (LIVE_STATUSES.includes(data.status)) redirect(`/${slug}`)
-  return <CatalogView data={data} isDemo />
+
+  // Active business — redirect to public URL
+  if (data.status === BusinessStatus.Active) redirect(`/${slug}`)
+
+  return <DemoGate slug={slug} data={data} />
 }
