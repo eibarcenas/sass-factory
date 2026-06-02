@@ -40,6 +40,16 @@ def update_business_fields(slug: str, patch: dict) -> dict:
     return {"updated": True, "slug": slug, **allowed}
 
 
+def owner_approve(slug: str) -> dict:
+    ref, business = get_business_or_404(slug)
+    current = business.get("status")
+    if current not in {BusinessStatus.REVIEW, BusinessStatus.PENDING_REVIEW}:
+        raise HTTPException(status_code=409, detail=f"Cannot approve from status '{current}'")
+    now = datetime.now(timezone.utc).isoformat()
+    ref.update({"ownerApprovedAt": now, "updatedAt": now})
+    return {"approved": True, "slug": slug, "ownerApprovedAt": now}
+
+
 def list_businesses(status: str | None) -> dict:
     db = get_db()
     q = db.collection(COLL)

@@ -21,8 +21,18 @@ COPY packages/ui/ ./packages/ui/
 COPY apps/storefront/ ./apps/storefront/
 
 ENV NEXT_TELEMETRY_DISABLED=1
+
 ARG NEXT_PUBLIC_ADMIN_URL
 ENV NEXT_PUBLIC_ADMIN_URL=$NEXT_PUBLIC_ADMIN_URL
+
+# Firebase public config — baked at build time (client-side, not secrets)
+ENV NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyCIhK1icvEyOEYGZ2bn6yjbZt2Kc6YhILQ
+ENV NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=catalog-mx-dev.firebaseapp.com
+ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=catalog-mx-dev
+
+# Client-side API URL for owner approve and admin action calls
+ENV NEXT_PUBLIC_API_URL=https://catalog-mx-api-dev-q3peeste7q-uc.a.run.app
+
 RUN pnpm --filter storefront build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
