@@ -150,7 +150,7 @@ const NAV_ITEMS = [
 
 type NavKey = typeof NAV_ITEMS[number]['key']
 
-function AdminSidebar({ newProspects }: { newProspects: number }) {
+function AdminSidebar({ newProspects, onSignOut }: { newProspects: number; onSignOut: () => void }) {
   const { user, mockMode } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
@@ -183,6 +183,7 @@ function AdminSidebar({ newProspects }: { newProspects: number }) {
           displayName={user?.displayName}
           photoURL={user?.photoURL}
           role="Admin"
+          onSignOut={onSignOut}
         />
       }
     />
@@ -192,12 +193,21 @@ function AdminSidebar({ newProspects }: { newProspects: number }) {
 // ── Admin layout (wraps all admin routes) ─────────────────────────────────────
 
 export default function AdminLayout() {
+  const store = useAuthStore()
+  const navigate = useNavigate()
   const { data: prospectData } = useProspects()
   const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
 
+  async function handleSignOut() {
+    const { getAuth, signOut } = await import('firebase/auth')
+    await signOut(getAuth())
+    store.setUser(null)
+    navigate('/register', { replace: true })
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
-      <AdminSidebar newProspects={newProspects} />
+      <AdminSidebar newProspects={newProspects} onSignOut={handleSignOut} />
       <main className="flex-1 overflow-y-auto p-8">
         <Outlet />
       </main>

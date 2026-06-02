@@ -11,6 +11,15 @@ const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
 
 type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
 
+function clientSlugify(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '')
+}
+
+function parseJwtPayload(token: string): Record<string, unknown> {
+  const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+  return JSON.parse(atob(base64))
+}
+
 export default function RegisterPage() {
   const store = useAuthStore()
   const navigate = useNavigate()
@@ -22,7 +31,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
-  // Live slug availability check — debounced 400ms
+  // Live slug availability check — debounced 200ms
   useEffect(() => {
     clearTimeout(debounceRef.current)
     if (!businessName.trim()) {
@@ -30,6 +39,8 @@ export default function RegisterPage() {
       setSlug('')
       return
     }
+    // Show client-side slug preview immediately
+    setSlug(clientSlugify(businessName))
     setSlugStatus('checking')
     debounceRef.current = setTimeout(async () => {
       try {
@@ -37,13 +48,13 @@ export default function RegisterPage() {
           `${API_URL}/api/v1/auth/check-slug?name=${encodeURIComponent(businessName.trim())}`
         )
         const data = await res.json()
-        setSlug(data.slug ?? '')
+        setSlug(data.slug ?? clientSlugify(businessName))
         if (data.reason === 'invalid_name') setSlugStatus('invalid')
         else setSlugStatus(data.available ? 'available' : 'taken')
       } catch {
         setSlugStatus('idle')
       }
-    }, 400)
+    }, 200)
     return () => clearTimeout(debounceRef.current)
   }, [businessName])
 
@@ -80,8 +91,21 @@ export default function RegisterPage() {
       if (res.status === 409) {
         const errData = await res.json().catch(() => ({}))
         if (errData.detail === 'Account already active') {
-          await auth.signOut()
-          setError('Ya tienes una cuenta activa. Inicia sesión en lugar de registrarte.')
+          // existing account — log them in directly
+          const freshToken = await cred.user.getIdToken(true)
+          const claims = parseJwtPayload(freshToken)
+          const role = (claims.role as string) ?? 'OWNER'
+          const businessId = (claims.business_id as string) ?? ''
+          store.setUser({
+            uid: cred.user.uid,
+            email: cred.user.email,
+            displayName: cred.user.displayName ?? null,
+            photoURL: cred.user.photoURL ?? null,
+            role,
+            businessId,
+            modules: ['CATALOG', 'APPEARANCE'],
+          })
+          navigate(role === 'SUPER_ADMIN' ? '/dashboard' : '/owner', { replace: true })
         } else {
           setSlugStatus('taken')
           await auth.signOut()
@@ -183,9 +207,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Slug preview / status messages */}
-                {slugStatus === 'available' && slug && (
-                  <p className="text-xs text-green-600">
+                {/* Slug preview — show immediately while checking, green checkmark only when available */}
+                {(slugStatus === 'checking' || slugStatus === 'available') && slug && (
+                  <p className={`text-xs ${slugStatus === 'available' ? 'text-green-600' : 'text-muted-foreground'}`}>
                     Tu link: <span className="font-medium">catalog.mx/{slug}</span>
                   </p>
                 )}

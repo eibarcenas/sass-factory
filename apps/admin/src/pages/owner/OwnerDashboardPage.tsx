@@ -227,7 +227,8 @@ interface OwnerDashboardProps {
 }
 
 export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps) {
-  const { user } = useAuthStore()
+  const store = useAuthStore()
+  const { user } = store
   const { impersonating, stopImpersonation } = useImpersonationStore()
   const navigate = useNavigate()
   const isPreview = !!previewSlug
@@ -243,6 +244,13 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
+
+  async function handleSignOut() {
+    const { getAuth, signOut } = await import('firebase/auth')
+    await signOut(getAuth())
+    store.setUser(null)
+    navigate('/register', { replace: true })
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
@@ -264,6 +272,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
                 displayName={user?.displayName}
                 photoURL={user?.photoURL}
                 onSettings={isPreview ? undefined : () => setPage('settings')}
+                onSignOut={isPreview ? undefined : handleSignOut}
               />
               {bizData?.status && (
                 <Badge variant={bizData.status === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">
@@ -308,7 +317,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
           <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview} impersonateSlug={isImpersonating ? businessId : undefined} />
         )}
         {page === 'settings' && (
-          <SettingsPage />
+          <SettingsPage onSignOut={handleSignOut} />
         )}
       </main>
     </div>

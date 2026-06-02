@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { useFirebaseAuthRestore } from '@eguru/auth'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -59,6 +59,20 @@ function ExternalLandingRedirect() {
   return null
 }
 
+function AdminSettingsPage() {
+  const store = useAuthStore()
+  const navigate = useNavigate()
+
+  async function handleSignOut() {
+    const { getAuth, signOut } = await import('firebase/auth')
+    await signOut(getAuth())
+    store.setUser(null)
+    navigate('/register', { replace: true })
+  }
+
+  return <SettingsPage onSignOut={handleSignOut} />
+}
+
 export default function App() {
   const store = useAuthStore()
   const { checking } = useFirebaseAuthRestore({
@@ -109,7 +123,7 @@ export default function App() {
         <Route path="/clientes" element={<SalesPage />} />
         <Route path="/clientes/new" element={<NewDemoPage />} />
         <Route path="/clientes/:businessId" element={<DemoDetailPage />} />
-        <Route path="/ajustes" element={<SettingsPage />} />
+        <Route path="/ajustes" element={<AdminSettingsPage />} />
       </Route>
 
       {/* Owner preview (admin viewing a business as owner) */}

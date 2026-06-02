@@ -2,13 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import type { AuthUser } from '@eguru/auth'
 
 interface AccountSectionProps {
   user: AuthUser
+  onSignOut: () => void
 }
 
-export default function AccountSection({ user }: AccountSectionProps) {
+export default function AccountSection({ user, onSignOut }: AccountSectionProps) {
   return (
     <Card>
       <CardHeader>
@@ -38,6 +40,9 @@ export default function AccountSection({ user }: AccountSectionProps) {
             <Badge variant="secondary">{user.role}</Badge>
           </div>
         </div>
+        <Button variant="outline" className="w-full mt-2" onClick={onSignOut}>
+          Sign out
+        </Button>
       </CardContent>
     </Card>
   )

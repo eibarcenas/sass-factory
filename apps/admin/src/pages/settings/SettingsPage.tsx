@@ -5,7 +5,11 @@ import AccountSection from './AccountSection'
 import BusinessSection from './BusinessSection'
 import { BusinessStatus } from '@eguru/core'
 
-export default function SettingsPage() {
+interface SettingsPageProps {
+  onSignOut: () => void
+}
+
+export default function SettingsPage({ onSignOut }: SettingsPageProps) {
   const { user } = useAuthStore()
 
   const { data: bizData } = useQuery({
@@ -25,7 +29,7 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground text-sm mt-1">Manage your account and preferences</p>
       </div>
-      <AccountSection user={user} />
+      <AccountSection user={user} onSignOut={onSignOut} />
       {user.role === 'OWNER' && (
         <BusinessSection currentWhatsapp={bizData?.whatsapp} />
       )}
