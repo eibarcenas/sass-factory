@@ -6,7 +6,12 @@ from app.domain.business import BusinessStatus
 router = APIRouter(tags=["storefront"])
 
 @router.get("/storefront/{slug}")
-def get_storefront(slug: str):
+def get_storefront(slug: str, demo: bool = False):
+    """
+    Public catalog endpoint.
+    - demo=true  → bypass status gate (used by /demo/{slug} preview route)
+    - demo=false → only serve ACTIVE businesses; anything else returns 403
+    """
     db = get_db()
     doc = db.collection("businesses").document(slug).get()
 
@@ -15,9 +20,16 @@ def get_storefront(slug: str):
 
     business = doc.to_dict()
     business["id"] = doc.id
+    status = business.get("status")
 
-    if business.get("status") == BusinessStatus.SUSPENDED:
+    if status == BusinessStatus.SUSPENDED:
         raise HTTPException(status_code=410, detail="This business is currently suspended")
+
+    if not demo and status != BusinessStatus.ACTIVE:
+        raise HTTPException(
+            status_code=403,
+            detail={"code": "inactive", "name": business.get("name", "")},
+        )
 
     # Fetch items sorted by order, filter visible in Python (no composite index needed)
     all_items = [

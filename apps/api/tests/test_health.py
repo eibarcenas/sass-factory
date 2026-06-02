@@ -19,7 +19,7 @@ def make_mock_db(businesses: list[dict] | None = None):
                 "city": "Monterrey",
                 "tagline": "La mejor heladería artesanal",
                 "theme": {"primary": "#06b6d4", "emoji": "🍦"},
-                "status": "demo",
+                "status": "active",
                 "plan": "free",
                 "createdAt": "2026-01-01T00:00:00Z",
                 "updatedAt": "2026-01-01T00:00:00Z",
