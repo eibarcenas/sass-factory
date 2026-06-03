@@ -8,11 +8,13 @@ import { api } from '../../lib/api'
 import AppSidebar, { SidebarProfile } from '../../components/layout/AppSidebar'
 import ProductEditor from '../../components/demos/ProductEditor'
 import type { NavItem } from '../../components/layout/AppSidebar'
+import { MobileSidebar } from '@eguru/ui'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Menu } from 'lucide-react'
 import { BusinessStatus } from '@eguru/core'
 import SettingsPage from '../settings/SettingsPage'
 
@@ -237,6 +239,12 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
   const isImpersonating = !!impersonating && !isPreview
   const businessId = impersonating?.businessId ?? previewSlug ?? user?.businessId ?? 'heladeria-el-pinguino'
   const [page, setPage] = useState<Page>('catalog')
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+  function navigate_to(p: Page) {
+    setPage(p)
+    setMobileSidebarOpen(false)
+  }
 
   const queryClient = useQueryClient()
 
@@ -248,38 +256,71 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
   const isUnderReview = !isImpersonating && !isPreview && bizData?.status === BusinessStatus.Review
 
+  const sidebarFooter = (
+    <div className="space-y-2">
+      {isPreview && (
+        <Badge variant="outline" className="w-full justify-center text-amber-700 border-amber-300 bg-amber-50">
+          Preview mode
+        </Badge>
+      )}
+      <div className="flex items-center gap-2">
+        <SidebarProfile
+          email={user?.email ?? null}
+          displayName={user?.displayName}
+          photoURL={user?.photoURL}
+          onSettings={isPreview ? undefined : () => navigate_to('settings')}
+        />
+        {bizData?.status && (
+          <Badge variant={bizData.status === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">
+            {bizData.status}
+          </Badge>
+        )}
+      </div>
+    </div>
+  )
+
+  const sidebarHeader = bizData?.name
+    ? <p className="text-xs text-muted-foreground mt-0.5 truncate">{bizData.name}</p>
+    : undefined
+
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
-      <AppSidebar
-        nav={OWNER_NAV}
-        active={page}
-        onNavigate={setPage}
-        headerSlot={bizData?.name && <p className="text-xs text-muted-foreground mt-0.5 truncate">{bizData.name}</p>}
-        footerSlot={
-          <div className="space-y-2">
-            {isPreview && (
-              <Badge variant="outline" className="w-full justify-center text-amber-700 border-amber-300 bg-amber-50">
-                Preview mode
-              </Badge>
-            )}
-            <div className="flex items-center gap-2">
-              <SidebarProfile
-                email={user?.email ?? null}
-                displayName={user?.displayName}
-                photoURL={user?.photoURL}
-                onSettings={isPreview ? undefined : () => setPage('settings')}
-              />
-              {bizData?.status && (
-                <Badge variant={bizData.status === BusinessStatus.Active ? 'default' : 'secondary'} className="text-xs shrink-0">
-                  {bizData.status}
-                </Badge>
-              )}
-            </div>
-          </div>
-        }
-      />
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">
+        <AppSidebar
+          nav={OWNER_NAV}
+          active={page}
+          onNavigate={setPage}
+          headerSlot={sidebarHeader}
+          footerSlot={sidebarFooter}
+        />
+      </div>
 
-      <main className="flex-1 overflow-y-auto p-8">
+      {/* Mobile drawer */}
+      <MobileSidebar open={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)}>
+        <AppSidebar
+          nav={OWNER_NAV}
+          active={page}
+          onNavigate={navigate_to}
+          headerSlot={sidebarHeader}
+          footerSlot={sidebarFooter}
+        />
+      </MobileSidebar>
+
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-background sticky top-0 z-30">
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            aria-label="Open menu"
+            className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <Menu size={20} />
+          </button>
+          <span className="font-semibold text-sm text-primary">catalog.mx</span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
         {bizData?.status === BusinessStatus.Draft && !isPreview && !isImpersonating && (
           <DraftBanner businessId={businessId} onSubmitted={() => queryClient.invalidateQueries({ queryKey: ['owner-business', businessId] })} />
         )}
@@ -314,6 +355,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         {page === 'settings' && (
           <SettingsPage onSignOut={isPreview ? undefined : handleSignOut} />
         )}
+        </div>
       </main>
     </div>
   )

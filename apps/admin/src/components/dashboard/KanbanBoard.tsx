@@ -3,6 +3,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   useDroppable,
@@ -185,7 +186,8 @@ export default function KanbanBoard({ onSelectBusiness }: { onSelectBusiness: (b
   const draggingBusiness = draggingId ? businesses.find(b => b.id === draggingId) : null
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
   )
 
   function canDrop(fromStatus: BusinessStatus, toStatus: BusinessStatus) {
@@ -219,7 +221,7 @@ export default function KanbanBoard({ onSelectBusiness }: { onSelectBusiness: (b
 
   if (isLoading) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex gap-3 overflow-x-auto pb-2 overscroll-x-contain">
         {COLUMNS.map(col => (
           <div key={col.status} className="flex-shrink-0 w-52 space-y-2">
             <div className="h-4 w-20 bg-muted rounded animate-pulse" />
@@ -237,7 +239,7 @@ export default function KanbanBoard({ onSelectBusiness }: { onSelectBusiness: (b
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex gap-3 overflow-x-auto pb-2 overscroll-x-contain">
         {COLUMNS.map(col => {
           const cards = businesses.filter(b => b.status === col.status)
           const isOver = overId === col.status
