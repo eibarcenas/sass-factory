@@ -1,19 +1,7 @@
-name: Deploy — Dev (ei-catalog-dev)
+name: Deploy Dev — all services (manual)
 
 on:
-  push:
-    branches: [develop]
-    paths:
-      - 'apps/admin-fe/**'
-      - 'apps/catalog-api/**'
-      - 'apps/identity-api/**'
-      - 'apps/demos-api/**'
-      - 'apps/prospects-api/**'
-      - 'apps/notifications-webhook/**'
-      - 'apps/storefront-fe/**'
-      - 'apps/landing-fe/**'
-      - 'packages/**'
-      - '.github/workflows/deploy-dev.yml'
+  workflow_dispatch:
 
 env:
   PROJECT: ei-catalog-dev

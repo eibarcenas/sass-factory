@@ -1,0 +1,191 @@
+name: Deploy Dev Service
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      kind:
+        required: true
+        type: string
+      image_name:
+        required: true
+        type: string
+      cloud_run_service:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: ${{ inputs.service }}
+    runs-on: ubuntu-latest
+    environment: dev
+    if: ${{ vars.WIF_PROVIDER_DEV != '' }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT: ei-catalog-dev
+      REGION: us-central1
+      AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/catalog-mx
+      ENV_SUFFIX: dev
+      ADMIN_URL: https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
+      STOREFRONT_URL: https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app
+      LANDING_URL: https://catalog-mx-landing-dev-q3peeste7q-uc.a.run.app
+      SERVICE: ${{ inputs.service }}
+      KIND: ${{ inputs.kind }}
+      IMAGE_NAME: ${{ inputs.image_name }}
+      CLOUD_RUN_SERVICE: ${{ inputs.cloud_run_service }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth GCP — ei-catalog-dev
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER_DEV }}
+          service_account: ${{ vars.DEPLOYER_SA_DEV }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Setup pnpm
+        if: ${{ inputs.kind != 'backend' }}
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        if: ${{ inputs.kind != 'backend' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Frontend typecheck
+        if: ${{ inputs.kind != 'backend' }}
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm -F "$SERVICE" typecheck
+
+      - name: Setup uv
+        if: ${{ inputs.kind == 'backend' }}
+        uses: astral-sh/setup-uv@v5
+
+      - name: Backend tests
+        if: ${{ inputs.kind == 'backend' }}
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DEV_USER_EMAIL: dev@test.local
+          ENVIRONMENT: local
+        run: |
+          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          cd "apps/${SERVICE}"
+          uv venv --python 3.13
+          uv pip install -e ".[dev]"
+          .venv/bin/pytest -q
+
+      - name: Build image
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DOCKER_BUILDKIT: "1"
+        run: |
+          IMAGE="${AR_URL}/${IMAGE_NAME}:${GITHUB_SHA}"
+
+          if [ "$KIND" = "backend" ]; then
+            docker build --secret id=gh_pat,env=GH_PAT -t "$IMAGE" "apps/${SERVICE}/"
+          elif [ "$KIND" = "admin-fe" ]; then
+            CATALOG_API_URL=$(gcloud run services describe catalog-mx-catalog-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            IDENTITY_API_URL=$(gcloud run services describe catalog-mx-identity-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            DEMOS_API_URL=$(gcloud run services describe catalog-mx-demos-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            PROSPECTS_API_URL=$(gcloud run services describe catalog-mx-prospects-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            docker build \
+              --build-arg VITE_API_URL="${CATALOG_API_URL}" \
+              --build-arg VITE_CATALOG_API_URL="${CATALOG_API_URL}" \
+              --build-arg VITE_IDENTITY_API_URL="${IDENTITY_API_URL}" \
+              --build-arg VITE_DEMOS_API_URL="${DEMOS_API_URL}" \
+              --build-arg VITE_PROSPECTS_API_URL="${PROSPECTS_API_URL}" \
+              --build-arg VITE_STOREFRONT_URL="${STOREFRONT_URL}" \
+              --build-arg VITE_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
+              --build-arg VITE_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
+              --build-arg VITE_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
+              --build-arg VITE_ADMIN_URL="${ADMIN_URL}" \
+              --build-arg VITE_LANDING_URL="${LANDING_URL}" \
+              -t "$IMAGE" -f apps/admin-fe/Dockerfile .
+          elif [ "$KIND" = "storefront-fe" ]; then
+            CATALOG_API_URL=$(gcloud run services describe catalog-mx-catalog-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            IDENTITY_API_URL=$(gcloud run services describe catalog-mx-identity-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            DEMOS_API_URL=$(gcloud run services describe catalog-mx-demos-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            PROSPECTS_API_URL=$(gcloud run services describe catalog-mx-prospects-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            docker build \
+              --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
+              --build-arg NEXT_PUBLIC_API_URL="${CATALOG_API_URL}" \
+              --build-arg NEXT_PUBLIC_CATALOG_API_URL="${CATALOG_API_URL}" \
+              --build-arg NEXT_PUBLIC_IDENTITY_API_URL="${IDENTITY_API_URL}" \
+              --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
+              --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
+              --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
+              --build-arg NEXT_PUBLIC_SUPPORT_WHATSAPP="${{ vars.SUPPORT_WHATSAPP }}" \
+              -t "$IMAGE" -f apps/storefront-fe/Dockerfile .
+          elif [ "$KIND" = "landing-fe" ]; then
+            ADMIN_RUN_URL=$(gcloud run services describe catalog-mx-admin-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)' 2>/dev/null || echo "$ADMIN_URL")
+            STOREFRONT_RUN_URL=$(gcloud run services describe catalog-mx-storefront-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)' 2>/dev/null || echo "$STOREFRONT_URL")
+            docker build \
+              --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_RUN_URL}" \
+              --build-arg NEXT_PUBLIC_STOREFRONT_URL="${STOREFRONT_RUN_URL}" \
+              -t "$IMAGE" -f apps/landing-fe/Dockerfile .
+          else
+            echo "Unknown service kind: $KIND" >&2
+            exit 1
+          fi
+
+          docker push "$IMAGE"
+
+      - name: Deploy Cloud Run service
+        run: |
+          IMAGE="${AR_URL}/${IMAGE_NAME}:${GITHUB_SHA}"
+          ENV_VARS=""
+          AUTH_FLAG="--allow-unauthenticated"
+          SECRET_FLAGS=()
+
+          if [ "$KIND" = "backend" ]; then
+            ENV_VARS="FIRESTORE_PROJECT_ID=${PROJECT},ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=catalog-mx-dev,CORS_ALLOWED_ORIGINS=*"
+            if [ "$SERVICE" = "catalog-api" ]; then
+              ENV_VARS="${ENV_VARS},PUBSUB_PROJECT_ID=${PROJECT},GCS_BUCKET=ei-catalog-images-dev"
+            elif [ "$SERVICE" = "demos-api" ] || [ "$SERVICE" = "prospects-api" ]; then
+              ENV_VARS="${ENV_VARS},PUBSUB_PROJECT_ID=${PROJECT}"
+            elif [ "$SERVICE" = "notifications-webhook" ]; then
+              AUTH_FLAG="--no-allow-unauthenticated"
+              ENV_VARS="${ENV_VARS},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},STOREFRONT_URL=${STOREFRONT_URL},ADMIN_URL=${ADMIN_URL}"
+              SECRET_FLAGS=(--update-secrets="SMTP_PASS=SMTP_PASS:latest")
+            fi
+          elif [ "$KIND" = "storefront-fe" ]; then
+            CATALOG_API_URL=$(gcloud run services describe catalog-mx-catalog-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            DEMOS_API_URL=$(gcloud run services describe catalog-mx-demos-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            PROSPECTS_API_URL=$(gcloud run services describe catalog-mx-prospects-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+            ENV_VARS="API_URL=${CATALOG_API_URL},CATALOG_API_URL=${CATALOG_API_URL},DEMOS_API_URL=${DEMOS_API_URL},PROSPECTS_API_URL=${PROSPECTS_API_URL}"
+          fi
+
+          command=(gcloud run deploy "$CLOUD_RUN_SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --project "$PROJECT" \
+            --service-account "${{ vars.RUNTIME_SA_DEV }}" \
+            "$AUTH_FLAG" \
+            --quiet)
+
+          if [ -n "$ENV_VARS" ]; then
+            command+=(--set-env-vars="$ENV_VARS")
+          fi
+
+          if [ ${#SECRET_FLAGS[@]} -gt 0 ]; then
+            command+=("${SECRET_FLAGS[@]}")
+          fi
+
+          "${command[@]}"
+
+      - name: Print URL
+        run: |
+          URL=$(gcloud run services describe "$CLOUD_RUN_SERVICE" \
+            --region="$REGION" --project="$PROJECT" \
+            --format='value(status.url)' 2>/dev/null)
+          echo "$CLOUD_RUN_SERVICE: $URL"

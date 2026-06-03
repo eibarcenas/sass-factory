@@ -1,0 +1,20 @@
+name: Deploy Dev — notifications-webhook
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/notifications-webhook/**'
+      - 'infrastructure/iterraform/notifications-webhook/**'
+      - '.github/workflows/_deploy-dev-service.yml'
+      - '.github/workflows/deploy-dev-notifications-webhook.yml'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-dev-service.yml
+    with:
+      service: notifications-webhook
+      kind: backend
+      image_name: catalog-mx-notifications-webhook
+      cloud_run_service: catalog-mx-notifications-webhook-dev
+    secrets: inherit

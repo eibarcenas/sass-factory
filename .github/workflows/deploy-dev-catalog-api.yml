@@ -1,0 +1,20 @@
+name: Deploy Dev — catalog-api
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/catalog-api/**'
+      - 'infrastructure/iterraform/catalog-api/**'
+      - '.github/workflows/_deploy-dev-service.yml'
+      - '.github/workflows/deploy-dev-catalog-api.yml'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-dev-service.yml
+    with:
+      service: catalog-api
+      kind: backend
+      image_name: catalog-mx-catalog-api
+      cloud_run_service: catalog-mx-catalog-api-dev
+    secrets: inherit

@@ -1,0 +1,20 @@
+name: Deploy Dev — demos-api
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/demos-api/**'
+      - 'infrastructure/iterraform/demos-api/**'
+      - '.github/workflows/_deploy-dev-service.yml'
+      - '.github/workflows/deploy-dev-demos-api.yml'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-dev-service.yml
+    with:
+      service: demos-api
+      kind: backend
+      image_name: catalog-mx-demos-api
+      cloud_run_service: catalog-mx-demos-api-dev
+    secrets: inherit
