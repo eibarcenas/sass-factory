@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, type UserRole } from '../store/auth'
+import { useGoogleAuth } from '../hooks/useGoogleAuth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -10,78 +11,75 @@ const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
 export default function LoginPage() {
   const { mockMode, setUser } = useAuthStore()
   const navigate = useNavigate()
-  const [error, setError]   = useState('')
-  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const landingAutoStarted = useRef(false)
 
-  const signInWithGoogle = useCallback(async () => {
-    setLoading(true)
+  const { signInWithGoogle, pending, redirectChecked } = useGoogleAuth(async (cred) => {
     setError('')
-    try {
-      const { getAuth, signInWithPopup, GoogleAuthProvider } = await import('firebase/auth')
-      const { initializeApp, getApps }                       = await import('firebase/app')
+    const { claims } = await cred.user.getIdTokenResult(true)
+    const role = claims.role as UserRole | undefined
 
-      if (!getApps().length) {
-        initializeApp({
-          apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
-          authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-          projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
-        })
-      }
+    if (!role) {
+      const freshToken = await cred.user.getIdToken(true)
+      const resolved = await fetch(`${API_URL}/api/v1/auth/resolve-claims`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${freshToken}` },
+      }).then(r => r.json()).catch(() => ({ resolved: false }))
 
-      const auth  = getAuth()
-      const cred  = await signInWithPopup(auth, new GoogleAuthProvider())
-
-      const { claims } = await cred.user.getIdTokenResult(true)
-      const role = claims.role as UserRole | undefined
-
-      if (!role) {
-        const freshToken = await cred.user.getIdToken(true)
-        const resolved = await fetch(`${API_URL}/api/v1/auth/resolve-claims`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${freshToken}` },
-        }).then(r => r.json()).catch(() => ({ resolved: false }))
-
-        if (resolved.resolved) {
-          await cred.user.getIdToken(true)
-          window.location.reload()
-          return
-        }
-
-        await auth.signOut()
-        setError('pending')
+      if (resolved.resolved) {
+        await cred.user.getIdToken(true)
+        window.location.reload()
         return
       }
 
-      setUser({
-        uid:        cred.user.uid,
-        email:      cred.user.email,
-        role,
-        businessId: claims.business_id as string | undefined,
-        modules:    (claims.modules as string[]) ?? [],
-      })
-
-      navigate(role === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
-    } catch (err: any) {
-      if (err.code === 'auth/popup-closed-by-user') return
-      setError(err.message ?? 'Sign in failed')
-    } finally {
-      setLoading(false)
+      const { getAuth } = await import('firebase/auth')
+      await getAuth().signOut()
+      setError('pending')
+      return
     }
-  }, [navigate, setUser])
 
-  // Must run before any early return — auto-trigger auth when redirected from landing
+    setUser({
+      uid:        cred.user.uid,
+      email:      cred.user.email,
+      role,
+      businessId: claims.business_id as string | undefined,
+      modules:    (claims.modules as string[]) ?? [],
+    })
+
+    navigate(role === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
+  })
+
   useEffect(() => {
     if (mockMode) {
       navigate('/', { replace: true })
       return
     }
+
     const params = new URLSearchParams(window.location.search)
-    if (params.get('from') === 'landing') {
-      signInWithGoogle()
+    if (
+      params.get('from') === 'landing' &&
+      redirectChecked &&
+      !landingAutoStarted.current
+    ) {
+      landingAutoStarted.current = true
+      signInWithGoogle().catch((err: any) => {
+        setError(err.message ?? 'Sign in failed')
+      })
     }
-  }, [mockMode, navigate, signInWithGoogle])
+  }, [mockMode, navigate, redirectChecked, signInWithGoogle])
+
+  async function handleGoogleSignIn() {
+    setError('')
+    try {
+      await signInWithGoogle()
+    } catch (err: any) {
+      setError(err.message ?? 'Sign in failed')
+    }
+  }
 
   if (mockMode) return null
+
+  const loading = pending || !redirectChecked
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 px-4">
@@ -106,7 +104,7 @@ export default function LoginPage() {
             <Button
               className="w-full gap-3"
               variant="outline"
-              onClick={signInWithGoogle}
+              onClick={handleGoogleSignIn}
               disabled={loading}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -122,6 +120,21 @@ export default function LoginPage() {
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
                 <p className="text-sm font-medium text-amber-800">Tu cuenta esta en revision</p>
                 <p className="text-xs text-amber-700">Activamos tu catalogo en menos de 24 horas.</p>
+              </div>
+            ) : error?.includes('Safari') ? (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+                <p className="text-sm font-medium text-blue-900">Abre en Safari para continuar</p>
+                <p className="text-xs text-blue-700">
+                  Tu navegador no permite iniciar sesión con Google. Ábrelo en Safari.
+                </p>
+                <a
+                  href={window.location.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center text-xs font-medium text-blue-700 underline underline-offset-2"
+                >
+                  Abrir en Safari →
+                </a>
               </div>
             ) : error ? (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">

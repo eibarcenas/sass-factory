@@ -101,7 +101,7 @@ export default function DemoDetailPage() {
       <div className="space-y-4 animate-pulse">
         <div className="h-8 w-48 bg-muted rounded" />
         <div className="h-16 bg-muted rounded-xl" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="h-48 bg-muted rounded-xl" />
           <div className="h-48 bg-muted rounded-xl" />
         </div>

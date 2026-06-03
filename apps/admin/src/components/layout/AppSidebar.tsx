@@ -66,6 +66,7 @@ interface AppSidebarProps<T extends string = string> {
   nav: NavItem<T>[]
   active: T
   onNavigate: (key: T) => void
+  onAfterNavigate?: () => void
   headerSlot?: React.ReactNode
   footerSlot?: React.ReactNode
   children?: React.ReactNode
@@ -75,6 +76,7 @@ export default function AppSidebar<T extends string>({
   nav,
   active,
   onNavigate,
+  onAfterNavigate,
   headerSlot,
   footerSlot,
   children,
@@ -107,7 +109,7 @@ export default function AppSidebar<T extends string>({
         {nav.map(item => (
           <button
             key={item.key}
-            onClick={() => onNavigate(item.key)}
+            onClick={() => { onNavigate(item.key); onAfterNavigate?.() }}
             title={collapsed ? item.label : undefined}
             className={`w-full text-left flex items-center justify-between px-2.5 py-2 rounded-lg text-sm font-medium transition-colors ${
               active === item.key

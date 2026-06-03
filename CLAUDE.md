@@ -28,6 +28,16 @@ pnpm -F admin test                   # admin Vitest tests
 cd apps/api && .venv/bin/pytest -q   # API tests
 ```
 
+## @eguru Packages
+All new UI components MUST go in `packages/ui/src/` and be exported from `packages/ui/src/index.ts`. Never create UI components directly inside `apps/`.
+
+| Package | Location | Exports |
+|---------|----------|---------|
+| `@eguru/ui` | `packages/ui/src/` | Badge, Button, Card, Dialog, Input, Label, Separator, MobileSidebar, cn |
+| `@eguru/core` | `packages/core/src/` | Business, Item, Prospect, Category, Click types; BusinessStatus, BusinessType enums; PLAN_LIMITS, PLAN_PRICES constants |
+| `@eguru/auth` | `packages/auth/src/` | createAuthStore, useFirebaseAuthRestore, AuthUser, FirebaseConfig |
+| `@eguru/client` | `packages/client/src/` | createApiClient, ApiClient, ApiClientConfig |
+
 ## Design System
 
 Source of truth: `apps/admin/src/components/ui/`
@@ -39,6 +49,7 @@ Components:
 - `Button (size + variant)` → all actions
 - `Badge` → status labels
 - `Separator` → visual dividers
+- `MobileSidebar` (from `@eguru/ui`) → mobile drawer wrapper for sidebar
 
 Tokens (never hardcode equivalent raw Tailwind):
 - `bg-muted`, `text-muted-foreground`, `border-input`, `ring-ring`
@@ -47,3 +58,28 @@ Tokens (never hardcode equivalent raw Tailwind):
 
 ## Architecture Notes
 Multi-tenant SaaS: businesses create catalog pages, customers browse and order via WhatsApp. Admin (SUPER_ADMIN role) manages businesses and demos. Owners (OWNER role) manage their own business catalog. Auth uses Firebase custom claims (`role`, `business_id`). API enforces RBAC via `require_role()` / `require_owner_or_admin()` FastAPI dependencies. Storefront is public (no auth). Mock mode: admin works without Firebase keys (Zustand mock user), useful for local dev without credentials.
+
+## Admin Layout Pattern
+- `AdminLayout` in `apps/admin/src/pages/DashboardPage.tsx` owns the full shell (sidebar + main)
+- `AppSidebar` in `apps/admin/src/components/layout/AppSidebar.tsx` is the shared sidebar (used by both admin and owner panels); accepts `onAfterNavigate` callback for closing mobile drawer after navigation
+- `MobileSidebar` from `@eguru/ui` wraps the sidebar as a mobile drawer (hidden on `md:` and above)
+- Desktop sidebar is wrapped in `hidden md:block`; mobile hamburger button is `md:hidden`
+- Content padding: `p-4 md:p-8`
+
+## Owner Panel
+- `OwnerDashboardPage` at `apps/admin/src/pages/owner/OwnerDashboardPage.tsx` is a single-file panel
+- Uses local `page` state (`'catalog' | 'appearance' | 'settings'`) — no sub-routes
+- Routing: admin routes under `AdminLayout`; owner panel at `/owner/*` with `RequireOwner` guard in `App.tsx`; impersonation preview at `/owner/preview/:slug`
+
+## Firebase Auth (Google Sign-In)
+- `useGoogleAuth` hook at `apps/admin/src/hooks/useGoogleAuth.ts` handles mobile vs desktop sign-in
+- On mobile (`/Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i`): uses `signInWithRedirect`; falls back to redirect on `auth/popup-blocked`
+- On desktop: uses `signInWithPopup`
+- Always calls `getRedirectResult()` on mount to handle redirect return
+- RegisterPage persists `businessName` to `sessionStorage` before redirect (key: `pendingBusinessName`) so it survives the OAuth round-trip
+
+## Mobile-First Rules
+- All new layout grids must use responsive variants: `grid-cols-1 md:grid-cols-2`, `grid-cols-2 md:grid-cols-4`, etc.
+- Sidebar is always hidden on mobile via `hidden md:block`; mobile navigation uses `MobileSidebar` drawer
+- Content padding scales: `p-4 md:p-8`
+- Kanban board uses `TouchSensor` (200ms delay) alongside `PointerSensor` for touch drag support
