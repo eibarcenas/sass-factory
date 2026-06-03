@@ -26,16 +26,33 @@ def resolve_claims(
         raise HTTPException(status_code=400, detail="No email on token")
 
     db = get_db()
+
+    # Primary: pending_owners (manual admin activation flow)
     pending_ref = db.collection("pending_owners").document(user.email)
     pending_doc = pending_ref.get()
 
-    if not pending_doc.exists:
-        return {"resolved": False, "role": user.role}
+    if pending_doc.exists:
+        data = pending_doc.to_dict()
+        business_id = data.get("businessId")
+        role = data.get("role", "OWNER")
+        modules = data.get("modules", ["CATALOG", "APPEARANCE"])
+        resolve_pending_ref = pending_ref
+    else:
+        # Fallback: businesses created via auto-provision (ownerEmail match)
+        biz_docs = (
+            db.collection("businesses")
+            .where("ownerEmail", "==", user.email)
+            .limit(1)
+            .get()
+        )
+        if not biz_docs:
+            return {"resolved": False, "role": user.role}
 
-    data = pending_doc.to_dict()
-    business_id = data.get("businessId")
-    role = data.get("role", "OWNER")
-    modules = data.get("modules", ["CATALOG", "APPEARANCE"])
+        biz = biz_docs[0].to_dict()
+        business_id = biz.get("slug")
+        role = "OWNER"
+        modules = ["CATALOG", "APPEARANCE"]
+        resolve_pending_ref = None
 
     try:
         import firebase_admin
@@ -50,7 +67,8 @@ def resolve_claims(
             "modules": modules,
         })
 
-        pending_ref.update({"resolvedAt": datetime.now(timezone.utc).isoformat(), "resolvedUid": user.firebase_uid})
+        if resolve_pending_ref:
+            resolve_pending_ref.update({"resolvedAt": datetime.now(timezone.utc).isoformat(), "resolvedUid": user.firebase_uid})
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to set claims: {e}")

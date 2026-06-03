@@ -37,8 +37,8 @@ export default function LoginPage() {
       const provider = new GoogleAuthProvider()
       const cred = await signInWithPopup(auth, provider)
 
-      // Read custom claims (role + businessId set by admin)
-      const { claims } = await cred.user.getIdTokenResult()
+      // Force-refresh to pick up claims set by auto-provision or resolve-claims
+      const { claims } = await cred.user.getIdTokenResult(true)
       const role = claims.role as UserRole | undefined
 
       if (!role) {
