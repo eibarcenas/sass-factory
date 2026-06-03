@@ -1,10 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, Input, Label, Button } from '@eguru/ui'
 
 interface BusinessSectionProps {
   currentWhatsapp?: string
@@ -38,9 +35,11 @@ export default function BusinessSection({ currentWhatsapp }: BusinessSectionProp
             placeholder="+52 55 1234 5678"
           />
         </div>
-        <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
-          {saved ? '✓ Saved' : save.isPending ? 'Saving...' : 'Save'}
-        </Button>
+        <div className="flex justify-end">
+          <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
+            {saved ? '✓ Saved' : save.isPending ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
