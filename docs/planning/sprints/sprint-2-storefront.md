@@ -26,7 +26,7 @@ Key requirements:
 ## Key Files
 
 ```
-apps/storefront/
+apps/storefront-fe/
 ├── app/
 │   ├── [slug]/page.tsx          — active business catalog (ISR 60s)
 │   ├── demo/[slug]/page.tsx     — demo view (revalidate: 0)

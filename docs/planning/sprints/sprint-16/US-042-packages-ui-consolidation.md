@@ -33,15 +33,15 @@ Given the monorepo build runs
 When I import Card, CardHeader, CardContent, CardTitle, Label, Dialog from @catalog-mx/ui
 Then those components resolve correctly with full TypeScript types
 
-Given apps/admin/src/components/ui/card.tsx
+Given apps/admin-fe/src/components/ui/card.tsx
 When I read it
 Then it re-exports from @catalog-mx/ui (not a local implementation)
 
-Given apps/admin/src/components/ui/label.tsx
+Given apps/admin-fe/src/components/ui/label.tsx
 When I read it
 Then it re-exports from @catalog-mx/ui
 
-Given apps/storefront/components/ui/dialog.tsx
+Given apps/storefront-fe/components/ui/dialog.tsx
 When I read it
 Then it re-exports from @catalog-mx/ui
 
@@ -53,11 +53,11 @@ Given pnpm -F @catalog-mx/ui typecheck
 When I run it
 Then it exits 0
 
-Given pnpm -F admin typecheck
+Given pnpm -F admin-fe typecheck
 When I run it
 Then it exits 0
 
-Given pnpm -F storefront typecheck
+Given pnpm -F storefront-fe typecheck
 When I run it
 Then it exits 0
 ```

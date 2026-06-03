@@ -1,0 +1,4 @@
+project_id       = "ei-catalog-dev"
+region           = "us-central1"
+runtime_sa_email = "ei-catalog-api@ei-catalog-dev.iam.gserviceaccount.com"
+image            = "us-central1-docker.pkg.dev/ei-catalog-dev/ei-catalog/catalog-mx-admin:latest"

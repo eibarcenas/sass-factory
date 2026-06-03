@@ -310,10 +310,10 @@ Actualiza: `docs/architecture/decisions/index.md`
 
 5. Coloca los archivos generados en el directorio correcto según el tipo y el área del codebase que testea:
    - Tests unitarios de lógica de `packages/core` → `packages/core/src/__tests__/{feature-name}.test.ts`
-   - Tests unitarios del servidor de admin → `apps/admin/server/__tests__/{feature-name}.test.ts`
-   - Tests unitarios del frontend de admin → `apps/admin/app/__tests__/{feature-name}.test.ts`
+   - Tests unitarios del servidor de admin → `apps/admin-fe/server/__tests__/{feature-name}.test.ts`
+   - Tests unitarios del frontend de admin → `apps/admin-fe/app/__tests__/{feature-name}.test.ts`
    - Tests unitarios del template → `apps/template/app/__tests__/{feature-name}.test.ts`
-   - Tests E2E → `apps/admin/e2e/{feature-name}.spec.ts`
+   - Tests E2E → `apps/admin-fe/e2e/{feature-name}.spec.ts`
 
 6. Reporta: archivos creados con sus paths absolutos, conteo de tests unitarios generados, conteo de specs E2E generados, y el comando para correr solo estos tests en modo watch.
 
@@ -333,10 +333,10 @@ Clasificación:
 
 Archivos generados:
   packages/core/src/__tests__/business-status-machine.test.ts (4 tests — todos en estado FAILING)
-  apps/admin/e2e/business-status-machine.spec.ts (2 specs — todos en estado FAILING)
+  apps/admin-fe/e2e/business-status-machine.spec.ts (2 specs — todos en estado FAILING)
 
 Correr tests unitarios: pnpm vitest run packages/core/src/__tests__/business-status-machine.test.ts
-Correr E2E: pnpm playwright test apps/admin/e2e/business-status-machine.spec.ts
+Correr E2E: pnpm playwright test apps/admin-fe/e2e/business-status-machine.spec.ts
 ```
 
 **Archivo del skill:** `.claude/skills/gherkin-to-test.md`
@@ -407,7 +407,7 @@ Alternativas:
 | Polling cada 30s desde el frontend | +$0.42/mes | Latencia de hasta 30s. Aumenta reads de Firestore. |
 | Firebase Realtime Database solo para notificaciones | +$1.80/mes | Agrega un servicio Firebase adicional. Muy baja latencia. |
 
-Recomendación: SSE ya está implementado en el proyecto para el flujo de provisioning (ver apps/admin/server/api/dev/ports.get.ts). Es extensible a notificaciones de cualquier tipo sin costo adicional y sin requerir min-instances. Usar SSE en lugar de WebSockets.
+Recomendación: SSE ya está implementado en el proyecto para el flujo de provisioning (ver apps/admin-fe/server/api/dev/ports.get.ts). Es extensible a notificaciones de cualquier tipo sin costo adicional y sin requerir min-instances. Usar SSE en lugar de WebSockets.
 ```
 
 **Archivo del skill:** `.claude/skills/cost-check.md`
@@ -514,7 +514,7 @@ Escribe en ambas ubicaciones:
 2. **Grupo: module-boundaries** — Verifica que los límites de módulos definidos en la arquitectura no han sido violados:
    - Ejecuta: `grep -r "from.*apps/" packages/ui --include="*.ts" --include="*.vue" -l` → debe retornar vacío.
    - Ejecuta: `grep -r "firebase" packages/ui --include="*.ts" --include="*.vue" -l` → debe retornar vacío.
-   - Ejecuta: `grep -r "from.*apps/template" apps/admin --include="*.ts" --include="*.vue" -l` → debe retornar vacío.
+   - Ejecuta: `grep -r "from.*apps/template" apps/admin-fe --include="*.ts" --include="*.vue" -l` → debe retornar vacío.
    - Si Dependency Cruiser está configurado (`.dependency-cruiser.js` existe en la raíz), ejecuta: `npx dependency-cruiser --config .dependency-cruiser.js packages/ apps/ --output-type err` y parsea el output.
    - Para cada violación encontrada: reporta el archivo, la línea, y el import violatorio.
 
@@ -552,7 +552,7 @@ Salida esperada:
 ### module-boundaries
   ✓ packages/ui no importa de apps/
   ✓ packages/ui no importa Firebase ni firebase-admin
-  ✓ apps/admin no importa directamente de apps/template
+  ✓ apps/admin-fe no importa directamente de apps/template
 
 ### barrel-exports
   ✓ packages/ui/src/index.ts no exporta componentes de Tier 3
@@ -901,7 +901,7 @@ Week start
           Output: commit "feat(mfe): configure federation host and create demo remote skeleton"
 ```
 
-**Regla de coordinación:** `auth-agent` tiene una dependencia dura en los failing tests de `test-setup-agent` — ese es el contrato que define qué debe implementar. `auth-agent` no puede inferir los tests correctos sin leerlos. `mfe-setup-agent` no tiene esa dependencia (trabaja en `apps/mfe/`, no en `apps/admin/server/middleware/`), pero inicia en el mismo momento para maximizar el paralelismo.
+**Regla de coordinación:** `auth-agent` tiene una dependencia dura en los failing tests de `test-setup-agent` — ese es el contrato que define qué debe implementar. `auth-agent` no puede inferir los tests correctos sin leerlos. `mfe-setup-agent` no tiene esa dependencia (trabaja en `apps/mfe/`, no en `apps/admin-fe/server/middleware/`), pero inicia en el mismo momento para maximizar el paralelismo.
 
 **Cuándo usar este patrón:** Una tarea de setup o infraestructura define el contrato (tests, schemas, configuración) que las tareas de implementación deben satisfacer. El agente de setup es pequeño (1-2 días) y sus outputs son inputs directos para los agentes paralelos.
 
@@ -959,7 +959,7 @@ git worktree add /tmp/sass-factory-sprint3 -b sprint/3-storefront develop
 Sprint 4 start
 │
 └── shell-agent (primero, días 1-2)
-      Scope: apps/admin/nuxt.config.ts, federation.config.ts (nuevo archivo)
+      Scope: apps/admin-fe/nuxt.config.ts, federation.config.ts (nuevo archivo)
       Task: configurar el admin como host de Module Federation
             Declarar en federation.config.ts los módulos que el remote debe exponer
       Output: commit "feat(mfe): configure admin as federation host"

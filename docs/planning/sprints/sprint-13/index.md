@@ -59,13 +59,13 @@ US-036: SearchBar + useProductSearch (ProductCard untouched)
 ## Key Files
 
 ```
-apps/api/app/routers/
+apps/catalog-api/app/routers/
 └── prospects.py            — PATCH /{id}/contact, /accept, /reject
 
 packages/core/src/types/
 └── prospect.ts             — ProspectStatus enum + valid transitions
 
-apps/admin/src/
+apps/admin-fe/src/
 ├── components/prospects/
 │   └── ProspectRow.tsx     — Contact/Accept/Reject buttons
 ├── components/demos/
@@ -76,7 +76,7 @@ apps/admin/src/
 └── layouts/
     └── AdminSidebar.tsx    — PIPELINE / CLIENTS split
 
-apps/storefront/
+apps/storefront-fe/
 ├── components/
 │   ├── SearchBar.tsx       — new
 │   ├── WishlistPanel.tsx   — new

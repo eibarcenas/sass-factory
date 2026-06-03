@@ -4,10 +4,14 @@ on:
   push:
     branches: [production]
     paths:
-      - 'apps/admin/**'
-      - 'apps/api/**'
-      - 'apps/storefront/**'
-      - 'apps/landing/**'
+      - 'apps/admin-fe/**'
+      - 'apps/catalog-api/**'
+      - 'apps/identity-api/**'
+      - 'apps/demos-api/**'
+      - 'apps/prospects-api/**'
+      - 'apps/notifications-webhook/**'
+      - 'apps/storefront-fe/**'
+      - 'apps/landing-fe/**'
       - 'packages/**'
       - '.github/workflows/deploy-prod.yml'
 
@@ -43,15 +47,15 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
           DOCKER_BUILDKIT: "1"
         run: |
-          API_URL=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
+          API_URL=$(gcloud run services describe catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)' 2>/dev/null || echo "")
 
           docker build --secret id=gh_pat,env=GH_PAT \
-            -t "${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}" apps/api/
-          docker push "${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
+            -t "${{ env.AR_URL }}/catalog-mx-catalog-api:${{ github.sha }}" apps/catalog-api/
+          docker push "${{ env.AR_URL }}/catalog-mx-catalog-api:${{ github.sha }}"
 
-          docker build -f apps/storefront/Dockerfile \
+          docker build -f apps/storefront-fe/Dockerfile \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${{ vars.ADMIN_URL }}" \
             --build-arg NEXT_PUBLIC_API_URL="${API_URL}" \
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
@@ -61,7 +65,7 @@ jobs:
             -t "${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}" .
           docker push "${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
 
-          docker build -f apps/admin/Dockerfile \
+          docker build -f apps/admin-fe/Dockerfile \
             --build-arg VITE_API_URL="${API_URL}" \
             --build-arg VITE_STOREFRONT_URL="${{ vars.STOREFRONT_URL }}" \
             --build-arg VITE_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
@@ -72,22 +76,22 @@ jobs:
             -t "${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}" .
           docker push "${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
 
-      - name: Deploy API (catalog-mx-api-prod) — canary
+      - name: Deploy API (catalog-mx-catalog-api-prod) — canary
         run: |
-          IMAGE="${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
-          gcloud run deploy catalog-mx-api-${{ env.ENV_SUFFIX }} \
+          IMAGE="${{ env.AR_URL }}/catalog-mx-catalog-api:${{ github.sha }}"
+          gcloud run deploy catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_PROD }}" \
             --set-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-prod,ENVIRONMENT=production,FIREBASE_AUTH_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID }},STOREFRONT_URL=${{ vars.STOREFRONT_URL }},ADMIN_URL=${{ vars.ADMIN_URL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }}" \
             --update-secrets="SMTP_PASS=SMTP_PASS:latest" \
             --allow-unauthenticated --tag canary --no-traffic --quiet
-          gcloud run services update-traffic catalog-mx-api-${{ env.ENV_SUFFIX }} \
+          gcloud run services update-traffic catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --to-tags canary=10 --quiet
           echo "API canary: 10% traffic"
 
       - name: Deploy Storefront + Admin — canary
         run: |
-          API_URL=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
+          API_URL=$(gcloud run services describe catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           for svc in storefront admin; do
             IMAGE="${{ env.AR_URL }}/catalog-mx-${svc}:${{ github.sha }}"

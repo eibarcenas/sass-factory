@@ -9,7 +9,7 @@ Personal Access Token to clone `factory-sdk` during dependency installation.
 
 ## How it works
 
-`apps/api/pyproject.toml` declares the dependency as a git URL:
+`apps/catalog-api/pyproject.toml` declares the dependency as a git URL:
 
 ```toml
 dependencies = [
@@ -26,7 +26,7 @@ running `uv pip install -e ".[dev]"`:
   env:
     GH_PAT: ${{ secrets.GH_PAT }}
   run: |
-    cd apps/api
+    cd apps/catalog-api
     uv venv --python 3.13
     git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
     uv pip install -e ".[dev]"
@@ -94,7 +94,7 @@ No token needed locally. `uv` or `pip` uses your global git credentials
 (SSH key or gh CLI auth) when you run:
 
 ```bash
-cd apps/api
+cd apps/catalog-api
 uv pip install -e ".[dev]"
 # or
 pip install -e ".[dev]"

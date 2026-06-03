@@ -66,7 +66,7 @@ Feature: Unified dev quality command
 
   Scenario: ESLint finds a violation after typecheck passes
     Given typecheck passes for all packages
-    And `apps/admin/app/pages/index.vue` has an unused import
+    And `apps/admin-fe/app/pages/index.vue` has an unused import
     When the developer runs "pnpm check"
     Then the process exits with code 1
     And the output reports the ESLint rule violation with file and line
@@ -119,7 +119,7 @@ Feature: GitHub Actions CI pipeline on pull requests
 
   Scenario: PR has a type error and CI fails
     Given a developer opens a pull request targeting "develop"
-    And the branch introduces a type error in "apps/admin/server/api/v1/businesses.get.ts"
+    And the branch introduces a type error in "apps/admin-fe/server/api/v1/businesses.get.ts"
     When GitHub Actions triggers the CI workflow
     And "pnpm check" exits with code 1
     Then the PR shows a red status check named "CI / check"
@@ -205,7 +205,7 @@ Feature: Button component published and consumed from package registry
 - [ ] ST-012: Crear `packages/tokens` con design tokens CSS variables (Sprint 1)
 - [ ] ST-013: Escribir unit tests para AppButton con Vitest + @vue/test-utils (Sprint 1)
 - [ ] ST-014: Configurar `.npmrc` y publish step en GitHub Actions (Sprint 2)
-- [ ] ST-015: Consumir `@sass-factory/ui` en `apps/admin` reemplazando botones existentes (Sprint 2)
+- [ ] ST-015: Consumir `@sass-factory/ui` en `apps/admin-fe` reemplazando botones existentes (Sprint 2)
 
 **Definition of Done:**
 - [ ] Tests verdes
@@ -327,9 +327,9 @@ Feature: Protected route access with Firebase JWT
 ```
 
 **Subtareas:**
-- [ ] ST-021: Instalar Firebase Admin SDK en `apps/admin/server` (Sprint 2)
+- [ ] ST-021: Instalar Firebase Admin SDK en `apps/admin-fe/server` (Sprint 2)
 - [ ] ST-022: Crear Nitro middleware `server/middleware/auth.ts` que valide JWT (Sprint 2)
-- [ ] ST-023: Crear composable `useAdminAuth` en `apps/admin/app/composables/` (Sprint 2)
+- [ ] ST-023: Crear composable `useAdminAuth` en `apps/admin-fe/app/composables/` (Sprint 2)
 - [ ] ST-024: Crear route middleware de Nuxt para redirigir a `/login` si no autenticado (Sprint 2)
 - [ ] ST-025: Configurar Firebase Auth con Google provider en el admin (Sprint 2)
 - [ ] ST-026: Escribir unit tests para el middleware de auth (Sprint 2)
@@ -715,7 +715,7 @@ Feature: Demo publication lifecycle transition
 **Subtareas:**
 - [ ] ST-053: Crear endpoint `PATCH /api/v1/admin/businesses/{id}/status` (Sprint 3)
 - [ ] ST-054: Implementar state machine de transiciones válidas en `packages/core/src/utils/status.ts` (Sprint 3)
-- [ ] ST-055: Crear ruta pública `apps/admin/app/pages/demo/[slug].vue` (Sprint 3)
+- [ ] ST-055: Crear ruta pública `apps/admin-fe/app/pages/demo/[slug].vue` (Sprint 3)
 - [ ] ST-056: Escribir unit tests para la state machine de status (Sprint 3)
 - [ ] ST-057: Implementar escritura al subcollection `statusHistory` en Firestore (Sprint 4)
 

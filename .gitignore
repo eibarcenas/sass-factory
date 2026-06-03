@@ -5,6 +5,7 @@ node_modules/
 # Local dev state
 .dev-ports.json
 .dev-configs/
+.artifacts/
 
 # Build outputs
 dist/
@@ -73,7 +74,7 @@ infrastructure/terraform/.terraform.lock.hcl
 
 # GCP
 infrastructure/gcp/service-account*.json
-apps/admin/server/service-account.json
+apps/admin-fe/server/service-account.json
 .mcp.json
 .claude/worktrees/
 
@@ -91,21 +92,22 @@ __pycache__/
 # Python bytecode
 **/__pycache__/
 **/*.pyc
-apps/api/service-account.json
-apps/api/*.json
+apps/*/service-account.json
+apps/catalog-api/*.json
 
 # Python venv
-apps/api/.venv/
-apps/api/.env
-apps/api/service-account.json
-apps/api/*.json
-apps/admin/.env.production
-infrastructure/iterraform/app/environments/*/secrets.auto.tfvars.json
+apps/catalog-api/.venv/
+apps/catalog-api/.env
+apps/catalog-api/service-account.json
+apps/catalog-api/*.json
+apps/admin-fe/.env.production
+infrastructure/iterraform/**/environments/*/secrets.auto.tfvars.json
 
 # Terraform
 infrastructure/iterraform/**/.terraform/
 infrastructure/iterraform/**/.terraform.tfstate*
 infrastructure/iterraform/**/terraform.tfstate*
+infrastructure/iterraform/**/*.tfstate.backup
 
 # Playwright MCP
 .playwright-mcp/

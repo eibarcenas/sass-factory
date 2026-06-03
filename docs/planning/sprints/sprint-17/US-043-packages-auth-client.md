@@ -18,10 +18,10 @@
 
 Two pieces of admin infrastructure are currently app-local and would be copy-pasted into every new app:
 
-1. **`apps/admin/src/lib/api.ts`** — A generic typed HTTP client (Bearer token injection,
+1. **`apps/admin-fe/src/lib/api.ts`** — A generic typed HTTP client (Bearer token injection,
    upload, typed error shape). No catalog-specific logic; pure transport layer.
 
-2. **`apps/admin/src/store/auth.ts`** + **`useAuthRestore` in App.tsx`** — Firebase
+2. **`apps/admin-fe/src/store/auth.ts`** + **`useAuthRestore` in App.tsx`** — Firebase
    session restore, Zustand auth store, mock mode. The only catalog-specific part is
    `UserRole = 'SUPER_ADMIN' | 'OWNER'`, which becomes `string` in the generic package.
 
@@ -84,11 +84,11 @@ Given pnpm -F @catalog-mx/auth typecheck
 When I run it
 Then it exits 0
 
-Given pnpm -F admin typecheck
+Given pnpm -F admin-fe typecheck
 When I run it
 Then it exits 0
 
-Given pnpm -F admin test
+Given pnpm -F admin-fe test
 When I run it
 Then all tests pass
 ```

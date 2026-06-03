@@ -216,7 +216,7 @@ These are specific errors that have been observed and must not be repeated.
 
 **Why it matters:** Engineers using incorrect documentation make incorrect decisions. Stack confusion propagates through every layer — from environment setup to package selection to deployment configuration.
 
-**Prevention:** Before writing, generating, or approving any documentation, the CTO must verify the actual stack from `package.json`, `nuxt.config.ts`, and `apps/admin/server/`. Documentation that references the wrong framework must be corrected before it is committed.
+**Prevention:** Before writing, generating, or approving any documentation, the CTO must verify the actual stack from `package.json`, `nuxt.config.ts`, and `apps/admin-fe/server/`. Documentation that references the wrong framework must be corrected before it is committed.
 
 ---
 

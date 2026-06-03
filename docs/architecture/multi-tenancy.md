@@ -66,7 +66,7 @@ Lookup priority on request:
 ## Storefront Middleware
 
 ```typescript
-// apps/storefront/src/middleware.ts
+// apps/storefront-fe/src/middleware.ts
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   const isPlatformDomain = host.includes('platform.com')

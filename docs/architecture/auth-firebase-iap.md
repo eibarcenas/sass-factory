@@ -55,12 +55,12 @@ Admin deactivates            → status=INACTIVE, revoke_refresh_tokens()
 
 ## Key implementation files
 
-- `apps/api/app/shared/auth/firebase_verifier.py`
-- `apps/api/app/shared/auth/jwt_models.py`
-- `apps/api/app/shared/auth/rbac.py`
-- `apps/api/app/shared/middleware/auth_middleware.py`
-- `apps/admin/src/lib/auth.ts` — `fetchWithAuth` interceptor
-- `apps/admin/src/context/AuthContext.tsx`
+- `apps/catalog-api/app/shared/auth/firebase_verifier.py`
+- `apps/catalog-api/app/shared/auth/jwt_models.py`
+- `apps/catalog-api/app/shared/auth/rbac.py`
+- `apps/catalog-api/app/shared/middleware/auth_middleware.py`
+- `apps/admin-fe/src/lib/auth.ts` — `fetchWithAuth` interceptor
+- `apps/admin-fe/src/context/AuthContext.tsx`
 
 ## Full architecture reference
 

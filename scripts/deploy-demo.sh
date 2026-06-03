@@ -28,7 +28,7 @@ echo ""
 echo "▶ Desplegando storefront (solo lectura de Firestore)..."
 
 STOREFRONT_URL=$(gcloud run deploy sass-factory-storefront \
-  --source "$ROOT/apps/storefront" \
+  --source "$ROOT/apps/storefront-fe" \
   --region "$REGION" \
   --allow-unauthenticated \
   --set-env-vars="FIREBASE_PROJECT_ID=$PROJECT_ID" \

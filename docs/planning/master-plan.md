@@ -19,7 +19,7 @@
 | Firebase Auth + Firestore SDK | ✅ Configurado | **CONSERVAR** |
 | `TOPIC_PRESETS` (love/bday/xmas) | ❌ Dominio equivocado | **ELIMINAR** |
 | `provisioning.ts` con sleeps falsos | ❌ Teatro | **ELIMINAR, reescribir** |
-| `apps/admin/server/api/infra/` | ❌ Stubs inútiles | **ELIMINAR** |
+| `apps/admin-fe/server/api/infra/` | ❌ Stubs inútiles | **ELIMINAR** |
 | `AppConfig.features` (hero/timeline/moments) | ❌ Dominio de eventos | **ELIMINAR** |
 | `docs/architecture/backend.md` (Python FastAPI) | ❌ Stack equivocado | **ELIMINAR** |
 | Todo doc que mencione Next.js / React / Tailwind | ❌ Stack equivocado | **ELIMINAR** |
@@ -443,7 +443,7 @@ ops.catalog.mx
      ▼                  ▼                    ▼
 ┌──────────┐    ┌───────────────┐    ┌──────────────┐
 │STOREFRONT│    │  ADMIN SHELL  │    │  SUPER ADMIN │
-│ apps/    │    │  apps/admin   │    │  apps/ops    │
+│ apps/    │    │  apps/admin-fe   │    │  apps/ops    │
 │ storefront│   │  (HOST MFE)   │    │  (CSR)       │
 │ Nuxt SSG │    │  Nuxt CSR     │    │  Nuxt CSR    │
 │ +ISR     │    │               │    │              │
@@ -491,7 +491,7 @@ Shell carga remotes en runtime:
 ### Configuración Module Federation (ejemplo)
 
 ```
-// apps/admin (HOST) — vite.config.ts
+// apps/admin-fe (HOST) — vite.config.ts
 federation({
   name: 'admin_shell',
   remotes: {
@@ -778,8 +778,8 @@ service cloud.firestore {
 - [ ] `docs/planning/sprint-backlog.md` — sprints que nunca ocurrieron
 - [ ] `packages/core/src/types/app.ts` — tipos de eventos (reescribir)
 - [ ] `TOPIC_PRESETS` — dominio equivocado
-- [ ] `apps/admin/server/utils/provisioning.ts` — sleeps falsos
-- [ ] `apps/admin/server/api/infra/` — stubs engañosos
+- [ ] `apps/admin-fe/server/utils/provisioning.ts` — sleeps falsos
+- [ ] `apps/admin-fe/server/api/infra/` — stubs engañosos
 - [ ] `apps/template/` — evaluar qué sirve para el storefront
 
 **Crear:**
@@ -812,7 +812,7 @@ packages/core/__tests__/
   business-slug.test.ts    — slug generation, collisions
   status-machine.test.ts   — transiciones válidas e inválidas
 
-apps/admin/server/__tests__/
+apps/admin-fe/server/__tests__/
   auth.middleware.test.ts  — 401 sin token, 403 sin rol
   rate-limit.test.ts       — 429 al exceder límite
 ```
@@ -837,7 +837,7 @@ apps/admin/server/__tests__/
 
 **Objetivo**: Lo que ven los clientes del negocio. SSG + ISR.
 
-- [ ] `apps/storefront/` — Nuxt app independiente (Cloud Run)
+- [ ] `apps/storefront-fe/` — Nuxt app independiente (Cloud Run)
 - [ ] Ruta `/{slug}` → carga Business + Items de Firestore
 - [ ] Grid de productos con filtro por categoría
 - [ ] Modal de producto con foto, precio, descripción
@@ -867,7 +867,7 @@ storefront.spec.ts:
 
 **Objetivo**: El dashboard del admin de la plataforma (nosotros).
 
-- [ ] `apps/admin` como shell MFE con auth + routing
+- [ ] `apps/admin-fe` como shell MFE con auth + routing
 - [ ] Login con Firebase Auth (email/password)
 - [ ] `demo-mf` remote: formulario AI + gestión de demos
   - Repropósito de `generate.post.ts` con nuevo system prompt (catálogos, no eventos)

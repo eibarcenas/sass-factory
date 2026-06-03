@@ -59,16 +59,16 @@ Admin (ProductEditor / AppearancePage)
 ## Key Files
 
 ```
-apps/api/app/
+apps/catalog-api/app/
 ├── routers/prospects.py         — POST /api/v1/prospects (public)
 │                                  GET  /api/v1/prospects (SUPER_ADMIN)
 └── routers/images.py            — POST /api/v1/images/upload
 
-apps/admin/src/components/demos/
+apps/admin-fe/src/components/demos/
 ├── ImageUpload.tsx              — file picker + preview + success state
 └── ProductEditor.tsx            — ImageUpload embedded in edit form
 
-apps/storefront/components/
+apps/storefront-fe/components/
 └── ProspectModal.tsx            — "Sí, lo quiero" form
 ```
 

@@ -14,13 +14,13 @@
 
 Establish a consistent visual language across admin and storefront using shadcn/ui. Replace ad-hoc Tailwind patterns with shared primitives. Ship `StatusBadge` as the single source of truth for business status colors.
 
-Not a separate package — components live inside each app (`apps/admin/src/components/ui/`, `apps/storefront/components/ui/`). shadcn/ui copies source into the project, not a runtime dependency.
+Not a separate package — components live inside each app (`apps/admin-fe/src/components/ui/`, `apps/storefront-fe/components/ui/`). shadcn/ui copies source into the project, not a runtime dependency.
 
 ---
 
 ## Components Added
 
-### Admin (`apps/admin/src/components/ui/`)
+### Admin (`apps/admin-fe/src/components/ui/`)
 
 | Component | Source | Usage |
 |---|---|---|
@@ -32,7 +32,7 @@ Not a separate package — components live inside each app (`apps/admin/src/comp
 | `Skeleton` | shadcn | Loading states |
 | `StatusBadge` | custom | Business status pill (draft/demo/sent/accepted/active/suspended) |
 
-### Storefront (`apps/storefront/components/ui/`)
+### Storefront (`apps/storefront-fe/components/ui/`)
 
 | Component | Source | Usage |
 |---|---|---|

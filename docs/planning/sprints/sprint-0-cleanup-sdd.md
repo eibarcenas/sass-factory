@@ -56,8 +56,8 @@ Both agents commit to the same branch. `cleanup-agent` must commit its deletions
 | File/Folder | Reason to delete |
 |-------------|-----------------|
 | `packages/core/src/types/app.ts` | Contains `AppTopic` (love/bday/mom/xmas), `TOPIC_PRESETS`, `AppFeature` (hero/timeline/gallery/letter/moments/music/countdown/closing), and `AppConfig` — all event-domain types. Replaced by catalog domain types in this sprint. |
-| `apps/admin/server/utils/provisioning.ts` | Contains fake `sleep()` calls simulating infra provisioning steps. Pure theater — not connected to any real infrastructure. The real provisioning is handled by `local-simulator.ts` (Docker) and `k8s-simulator.ts`. |
-| `apps/admin/server/api/infra/` (entire folder) | Stub HTTP endpoints that were never wired to real infra. Includes `deploy.post.ts`, `simulate.post.ts`, `register.post.ts`, `index.get.ts`, `deploy-complete.post.ts`. These were placeholders. The real deployment flow will be in Sprint 4 under `/api/admin/`. |
+| `apps/admin-fe/server/utils/provisioning.ts` | Contains fake `sleep()` calls simulating infra provisioning steps. Pure theater — not connected to any real infrastructure. The real provisioning is handled by `local-simulator.ts` (Docker) and `k8s-simulator.ts`. |
+| `apps/admin-fe/server/api/infra/` (entire folder) | Stub HTTP endpoints that were never wired to real infra. Includes `deploy.post.ts`, `simulate.post.ts`, `register.post.ts`, `index.get.ts`, `deploy-complete.post.ts`. These were placeholders. The real deployment flow will be in Sprint 4 under `/api/admin/`. |
 
 ### How to verify nothing references deleted files
 
@@ -396,7 +396,7 @@ Feature: Core types compile without errors
 1. cleanup-agent: git checkout -b sprint/0-cleanup-sdd from develop
 2. cleanup-agent: Delete all documentation files listed above
 3. cleanup-agent: Delete provisioning.ts
-4. cleanup-agent: Delete apps/admin/server/api/infra/ folder
+4. cleanup-agent: Delete apps/admin-fe/server/api/infra/ folder
 5. cleanup-agent: Grep for remaining references, fix any import that pointed to deleted files
 6. cleanup-agent: Update packages/core/src/index.ts — remove re-exports of app.ts types
 7. cleanup-agent: git add + git commit "chore(cleanup): remove stale event-domain docs and stub code"
@@ -443,8 +443,8 @@ ls docs/development/monorepo.md 2>&1 | grep "No such file"
 ls docs/development/notifications.md 2>&1 | grep "No such file"
 ls docs/development/testing.md 2>&1 | grep "No such file"
 ls docs/planning/sprint-backlog.md 2>&1 | grep "No such file"
-ls apps/admin/server/utils/provisioning.ts 2>&1 | grep "No such file"
-ls apps/admin/server/api/infra/ 2>&1 | grep "No such file"
+ls apps/admin-fe/server/utils/provisioning.ts 2>&1 | grep "No such file"
+ls apps/admin-fe/server/api/infra/ 2>&1 | grep "No such file"
 ```
 
 ---
@@ -463,7 +463,7 @@ Sprint 0 deliverable. Two coordinated changes:
 ### Cleanup (cleanup-agent)
 - Deleted 7 documentation files describing wrong stack (Python FastAPI, Next.js, React, Node.js microservices, Eventarc)
 - Deleted `provisioning.ts` (fake sleep() infrastructure theater)
-- Deleted `apps/admin/server/api/infra/` (stub endpoints never connected to real infra)
+- Deleted `apps/admin-fe/server/api/infra/` (stub endpoints never connected to real infra)
 - Removed all references to deleted files from barrel exports and imports
 
 ### Type Rewrite (types-agent)
@@ -488,7 +488,7 @@ Sprint 0 deliverable. Two coordinated changes:
 - Any code importing those types will break at compile time — this is intentional
 
 ## Reviewer notes
-- apps/admin/app/ may have Vue components that imported old AppConfig for display. Verify those are removed or updated.
+- apps/admin-fe/app/ may have Vue components that imported old AppConfig for display. Verify those are removed or updated.
 - packages/ui components may reference old types. Update as needed before merging.
 ```
 

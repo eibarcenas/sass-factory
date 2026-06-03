@@ -21,7 +21,7 @@ This is a technical debt sprint. No new features. Ship a test suite that validat
 ### 1. Vitest — Admin (React)
 
 ```
-apps/admin/src/__tests__/
+apps/admin-fe/src/__tests__/
 ├── auth/
 │   ├── RequireAuth.test.tsx        — redirect when no user
 │   ├── RequireOwner.test.tsx       — redirect SUPER_ADMIN to /
@@ -40,7 +40,7 @@ apps/admin/src/__tests__/
 ### 2. Vitest — Storefront (Next.js)
 
 ```
-apps/storefront/__tests__/
+apps/storefront-fe/__tests__/
 ├── lib/
 │   └── api.test.ts                 — getCatalog: ISR revalidate values, null on 404
 └── components/
@@ -50,7 +50,7 @@ apps/storefront/__tests__/
 ### 3. pytest — FastAPI
 
 ```
-apps/api/tests/
+apps/catalog-api/tests/
 ├── conftest.py                     — Firebase emulator setup, test client
 ├── test_auth_middleware.py         — 401 without token, OPTIONS bypass, public paths
 ├── test_businesses.py              — CRUD, status machine transitions
@@ -101,9 +101,9 @@ jobs:
     steps:
       - run: pnpm typecheck
       - run: pnpm lint
-      - run: pnpm --filter admin test:unit
-      - run: pnpm --filter storefront test:unit
-      - run: cd apps/api && uv run pytest
+      - run: pnpm --filter admin-fe test:unit
+      - run: pnpm --filter storefront-fe test:unit
+      - run: cd apps/catalog-api && uv run pytest
       - run: pnpm e2e          # Playwright against local dev server
   deploy:
     needs: [test]              # blocks deploy if tests fail

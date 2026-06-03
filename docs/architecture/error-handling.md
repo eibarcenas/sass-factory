@@ -65,7 +65,7 @@ export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode]
 ## Python — DomainError hierarchy
 
 ```python
-# apps/api/src/domain/shared/errors.py
+# apps/catalog-api/src/domain/shared/errors.py
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -103,7 +103,7 @@ class ForbiddenError(DomainError):
 Uses `fastapi.status` constants — no magic numbers anywhere.
 
 ```python
-# apps/api/src/api/errors.py
+# apps/catalog-api/src/api/errors.py
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from src.domain.shared.errors import DomainError
@@ -142,7 +142,7 @@ async def domain_error_handler(request: Request, exc: DomainError) -> JSONRespon
 Use `fastapi.status` in route definitions too:
 
 ```python
-# apps/api/src/api/v1/businesses/router.py
+# apps/catalog-api/src/api/v1/businesses/router.py
 from fastapi import APIRouter, status
 
 router = APIRouter(prefix="/businesses", tags=["businesses"])
