@@ -52,6 +52,7 @@ jobs:
   deploy:
     needs: ci
     runs-on: ubuntu-latest
+    environment: dev
     if: ${{ vars.WIF_PROVIDER_DEV != '' }}
     permissions:
       contents: read
