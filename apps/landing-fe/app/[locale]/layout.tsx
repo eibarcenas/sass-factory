@@ -1,28 +1,26 @@
 import type { Metadata } from 'next'
-import { Bricolage_Grotesque, Figtree } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { notFound } from 'next/navigation'
 import { routing } from '@/i18n/routing'
 import '../globals.css'
 
-const bricolage = Bricolage_Grotesque({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-bricolage',
-  display: 'swap',
-})
-
-const figtree = Figtree({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-figtree',
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-inter',
   display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'catalog.mx — Tu catálogo digital',
+  title: 'catalog.mx — Tu catálogo digital en WhatsApp',
   description:
-    'Crea tu catálogo digital en minutos. Lo activamos en menos de 24 horas. 7 semanas gratis.',
+    'Comparte el link de tu catalogo digital. Tus clientes eligen lo que quieren y te mandan el pedido por WhatsApp, ya con todos los detalles.',
+  openGraph: {
+    title: 'catalog.mx — Tu catálogo digital en WhatsApp',
+    description: 'Crea tu catalogo en 5 minutos y recibe pedidos por WhatsApp.',
+    siteName: 'catalog.mx',
+  },
 }
 
 export default async function LocaleLayout({
@@ -39,11 +37,8 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html
-      lang={locale}
-      className={`${bricolage.variable} ${figtree.variable}`}
-    >
-      <body className="font-body min-h-screen antialiased">
+    <html lang={locale} className={inter.variable}>
+      <body className="bg-[#0A0A0A] text-white min-h-screen antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>

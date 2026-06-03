@@ -5,8 +5,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        heading: ['var(--font-bricolage)', 'system-ui', 'sans-serif'],
-        body: ['var(--font-figtree)', 'system-ui', 'sans-serif'],
+        sans:    ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        body:    ['var(--font-inter)', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        wa: '#25D366',
+        ink: { 950: '#0A0A0A', 900: '#111111', 800: '#161616' },
       },
     },
   },
