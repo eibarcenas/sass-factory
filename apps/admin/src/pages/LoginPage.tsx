@@ -104,6 +104,21 @@ export default function LoginPage() {
                   We activate your catalog within 24 hours.
                 </p>
               </div>
+            ) : error?.includes('Safari') ? (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+                <p className="text-sm font-medium text-blue-900">Abre en Safari para continuar</p>
+                <p className="text-xs text-blue-700">
+                  Tu navegador no permite iniciar sesión con Google. Ábrelo en Safari.
+                </p>
+                <a
+                  href={window.location.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center text-xs font-medium text-blue-700 underline underline-offset-2"
+                >
+                  Abrir en Safari →
+                </a>
+              </div>
             ) : error ? (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
                 <p className="text-sm text-destructive">{error}</p>
