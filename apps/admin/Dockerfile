@@ -20,13 +20,21 @@ WORKDIR /repo
 
 # Firebase web API keys are public by design — security is enforced by
 # Firebase Auth rules (domain restrictions) and Firestore rules.
-ENV VITE_API_URL=https://catalog-mx-api-dev-q3peeste7q-uc.a.run.app
-ENV VITE_STOREFRONT_URL=https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app
-ENV VITE_FIREBASE_API_KEY=AIzaSyCIhK1icvEyOEYGZ2bn6yjbZt2Kc6YhILQ
-ENV VITE_FIREBASE_AUTH_DOMAIN=catalog-mx-dev.firebaseapp.com
-ENV VITE_FIREBASE_PROJECT_ID=catalog-mx-dev
-ENV VITE_ADMIN_URL=https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
-ENV VITE_LANDING_URL=https://catalog-mx-landing-dev-q3peeste7q-uc.a.run.app
+ARG VITE_API_URL
+ARG VITE_STOREFRONT_URL
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_ADMIN_URL
+ARG VITE_LANDING_URL
+
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_STOREFRONT_URL=$VITE_STOREFRONT_URL
+ENV VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY
+ENV VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN
+ENV VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID
+ENV VITE_ADMIN_URL=$VITE_ADMIN_URL
+ENV VITE_LANDING_URL=$VITE_LANDING_URL
 
 COPY packages/core/ ./packages/core/
 COPY packages/ui/ ./packages/ui/
