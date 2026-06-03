@@ -28,7 +28,7 @@ Ship to production. First deploy to `ei-catalog-stg` and `ei-catalog-prod`. Conf
 
 ## First Deploy Checklist (stg + prod)
 
-- [ ] Apply `infrastructure/iterraform/setup/` for `ei-catalog-stg` and `ei-catalog-prod`
+- [ ] Apply `infrastructure/iterraform/_shared/setup/` for `ei-catalog-stg` and `ei-catalog-prod`
 - [ ] Create Firestore Native database in each project
 - [ ] Configure WIF pool + deployer SA for each project
 - [ ] Add GitHub secrets: `WIF_PROVIDER_STG`, `WIF_SA_STG`, `WIF_PROVIDER_PROD`, `WIF_SA_PROD`

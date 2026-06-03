@@ -18,22 +18,25 @@ jobs:
           cache: pnpm
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-      - name: Install Python 3.13 + API deps
+      - name: Install Python 3.13 + backend deps
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          cd apps/api
-          uv venv --python 3.13
           git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
-          uv pip install -e ".[dev]"
+          for service in catalog-api identity-api demos-api prospects-api notifications-webhook; do
+            (cd "apps/${service}" && uv venv --python 3.13 && uv pip install -e ".[dev]")
+          done
       - name: Install JS dependencies
         run: pnpm install --frozen-lockfile
       - name: Typecheck core
         run: pnpm -F @eguru/core typecheck
       - name: Core unit tests
         run: pnpm -F @eguru/core test
-      - name: API tests (Python 3.13)
-        run: cd apps/api && DEV_USER_EMAIL=dev@catalog.mx ENVIRONMENT=local .venv/bin/pytest -q
+      - name: Backend tests (Python 3.13)
+        run: |
+          for service in catalog-api identity-api demos-api prospects-api notifications-webhook; do
+            (cd "apps/${service}" && DEV_USER_EMAIL=dev@catalog.mx ENVIRONMENT=local .venv/bin/pytest -q)
+          done
       - name: Lint
         run: pnpm -r run lint --if-present 2>/dev/null || true
         continue-on-error: true

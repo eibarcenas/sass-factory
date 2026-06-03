@@ -4,10 +4,14 @@ on:
   push:
     branches: ['release/**']
     paths:
-      - 'apps/admin/**'
-      - 'apps/api/**'
-      - 'apps/storefront/**'
-      - 'apps/landing/**'
+      - 'apps/admin-fe/**'
+      - 'apps/catalog-api/**'
+      - 'apps/identity-api/**'
+      - 'apps/demos-api/**'
+      - 'apps/prospects-api/**'
+      - 'apps/notifications-webhook/**'
+      - 'apps/storefront-fe/**'
+      - 'apps/landing-fe/**'
       - 'packages/**'
       - '.github/workflows/deploy-stg.yml'
 
@@ -38,15 +42,15 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
       - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Deploy API (catalog-mx-api-stg)
+      - name: Deploy API (catalog-mx-catalog-api-stg)
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           DOCKER_BUILDKIT: "1"
         run: |
-          IMAGE="${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
-          docker build --secret id=gh_pat,env=GH_PAT -t "$IMAGE" apps/api/
+          IMAGE="${{ env.AR_URL }}/catalog-mx-catalog-api:${{ github.sha }}"
+          docker build --secret id=gh_pat,env=GH_PAT -t "$IMAGE" apps/catalog-api/
           docker push "$IMAGE"
-          gcloud run deploy catalog-mx-api-${{ env.ENV_SUFFIX }} \
+          gcloud run deploy catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_STG }}" \
             --set-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-stg,ENVIRONMENT=staging,FIREBASE_AUTH_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID }},STOREFRONT_URL=${{ vars.STOREFRONT_URL }},ADMIN_URL=${{ vars.ADMIN_URL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }}" \
@@ -55,7 +59,7 @@ jobs:
 
       - name: Deploy Storefront (catalog-mx-storefront-stg)
         run: |
-          API_URL=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
+          API_URL=$(gcloud run services describe catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           ADMIN_URL=$(gcloud run services describe catalog-mx-admin-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
@@ -67,7 +71,7 @@ jobs:
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
             --build-arg NEXT_PUBLIC_SUPPORT_WHATSAPP="${{ vars.SUPPORT_WHATSAPP }}" \
-            -t "$IMAGE" -f apps/storefront/Dockerfile .
+            -t "$IMAGE" -f apps/storefront-fe/Dockerfile .
           docker push "$IMAGE"
           gcloud run deploy catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
@@ -77,7 +81,7 @@ jobs:
 
       - name: Deploy Admin (catalog-mx-admin-stg)
         run: |
-          API_URL=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
+          API_URL=$(gcloud run services describe catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           STOREFRONT_URL=$(gcloud run services describe catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
@@ -90,7 +94,7 @@ jobs:
             --build-arg VITE_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
             --build-arg VITE_ADMIN_URL="${{ vars.ADMIN_URL }}" \
             --build-arg VITE_LANDING_URL="${{ vars.LANDING_URL }}" \
-            -t "$IMAGE" -f apps/admin/Dockerfile .
+            -t "$IMAGE" -f apps/admin-fe/Dockerfile .
           docker push "$IMAGE"
           gcloud run deploy catalog-mx-admin-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
@@ -107,7 +111,7 @@ jobs:
           docker build \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
             --build-arg NEXT_PUBLIC_STOREFRONT_URL="${STOREFRONT_URL}" \
-            -t "$IMAGE" -f apps/landing/Dockerfile .
+            -t "$IMAGE" -f apps/landing-fe/Dockerfile .
           docker push "$IMAGE"
           gcloud run deploy catalog-mx-landing-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
@@ -116,14 +120,14 @@ jobs:
 
       - name: Smoke test
         run: |
-          API=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
+          API=$(gcloud run services describe catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           curl -f "${API}/health" && echo "Smoke test passed"
 
       - name: Print URLs
         run: |
           echo "STG URLs"
-          for svc in catalog-mx-api-stg catalog-mx-storefront-stg catalog-mx-admin-stg catalog-mx-landing-stg; do
+          for svc in catalog-mx-catalog-api-stg catalog-mx-storefront-stg catalog-mx-admin-stg catalog-mx-landing-stg; do
             URL=$(gcloud run services describe $svc \
               --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
               --format='value(status.url)' 2>/dev/null)

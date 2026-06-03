@@ -19,7 +19,7 @@ Build the internal admin SPA that Erick uses to generate demos, manage businesse
 ## Key Files
 
 ```
-apps/admin/src/
+apps/admin-fe/src/
 ├── pages/
 │   ├── LoginPage.tsx              — Firebase Auth login (email/password)
 │   └── DashboardPage.tsx          — shell with sidebar + main content
@@ -34,7 +34,7 @@ apps/admin/src/
 │   └── auth.ts                    — Zustand: user, role, mockMode
 └── types/catalog.ts               — Business, Item, BusinessStatus
 
-apps/api/app/
+apps/catalog-api/app/
 ├── routers/businesses.py          — CRUD + status transitions
 ├── routers/items.py               — product CRUD per business
 └── shared/domain/status_machine.py — valid transitions, server-side

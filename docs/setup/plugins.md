@@ -133,7 +133,7 @@ Run the Playwright test suite in headless mode and report failures
 ### Security Guidance — Úsalo en Sprint 1 y en cada PR crítico
 
 ```
-/security-scan Review the Nitro auth middleware in apps/admin/server/middleware/auth.ts for JWT verification vulnerabilities
+/security-scan Review the Nitro auth middleware in apps/admin-fe/server/middleware/auth.ts for JWT verification vulnerabilities
 /audit Check the image upload endpoint for MIME type bypass, path traversal, and file size bypass vulnerabilities
 /secrets-check Scan the entire repository for hardcoded API keys, tokens, or credentials
 /dependency-audit Run OWASP dependency check on all packages in this pnpm monorepo
@@ -143,7 +143,7 @@ Run the Playwright test suite in headless mode and report failures
 
 ```
 /code-review Review the PR that adds the business status machine — check for missing status transition validations, edge cases in the state machine, and TypeScript strictness
-/review apps/admin/server/api/businesses/index.post.ts — check for missing input validation, SQL/NoSQL injection, and auth bypass
+/review apps/admin-fe/server/api/businesses/index.post.ts — check for missing input validation, SQL/NoSQL injection, and auth bypass
 /review-file packages/core/src/types/business.ts — verify the TypeScript types are strict, no implicit any, discriminated unions where needed
 ```
 

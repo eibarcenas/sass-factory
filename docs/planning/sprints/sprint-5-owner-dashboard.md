@@ -31,7 +31,7 @@ Build the dashboard a business owner uses after their account is activated. Cove
 ## Key Files
 
 ```
-apps/admin/src/
+apps/admin-fe/src/
 ├── pages/owner/
 │   └── OwnerDashboardPage.tsx     — owner shell with products + appearance tabs
 ├── components/owner/

@@ -10,6 +10,7 @@ docs/
 ├── architecture/       Technical architecture decisions
 ├── infrastructure/     GCP, Terraform, security, monitoring
 ├── development/        Coding standards, testing, tooling
+├── mvp/                Early product notes and prototypes
 └── planning/           Sprint backlog and confirmed decisions
 ```
 
@@ -19,6 +20,8 @@ docs/
 
 | File | Contents |
 |------|----------|
+| [mvp/idea.md](mvp/idea.md) | Early MVP product concept |
+| [mvp/gorras-bebes.html](mvp/gorras-bebes.html) | Early static catalog prototype |
 | [product/overview.md](product/overview.md) | Platform overview, actors, business model, subscription tiers, templates |
 | [product/analytics-billing.md](product/analytics-billing.md) | Analytics panel, invoice generation, charts implementation |
 | [product/ui-wireframes.md](product/ui-wireframes.md) | ASCII wireframes: storefront, owner dashboard, admin panel |
@@ -28,6 +31,9 @@ docs/
 | File | Contents |
 |------|----------|
 | [architecture/system-overview.md](architecture/system-overview.md) | ✅ Source of truth — monorepo, request flows, auth, Firestore schema, state machine, CI/CD |
+| [architecture/nomenclature.md](architecture/nomenclature.md) | Deployable naming rules: `-api`, `-fe`, `-mfe`, `-webhook` |
+| [architecture/eda-nomenclature.md](architecture/eda-nomenclature.md) | Event, Pub/Sub topic, subscription, and subscriber naming |
+| [architecture/api-clean-architecture.md](architecture/api-clean-architecture.md) | FastAPI clean architecture layers and compatibility notes |
 | [architecture/database.md](architecture/database.md) | Firestore schema detail (partially stale — system-overview.md is authoritative) |
 | [architecture/auth-firebase-iap.md](architecture/auth-firebase-iap.md) | Firebase + IAP decision record |
 | [architecture/multi-tenancy.md](architecture/multi-tenancy.md) | Multi-tenant routing, custom domains |

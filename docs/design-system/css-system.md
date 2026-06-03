@@ -289,7 +289,7 @@ export default function Button({ variant = 'primary', disabled, loading, onClick
 ## File Structure
 
 ```
-apps/admin/src/
+apps/admin-fe/src/
   styles/
     tokens.css        ← all CSS custom properties (import once in main.tsx)
     reset.css         ← minimal reset
@@ -309,7 +309,7 @@ apps/admin/src/
       Modal.tsx
       Modal.module.css
 
-apps/storefront/
+apps/storefront-fe/
   styles/
     tokens.css        ← same tokens, shared visual language
   components/

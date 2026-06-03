@@ -94,14 +94,14 @@ No automatic suspension — downgrade to free, not suspension. Owner keeps acces
 ## Key Files
 
 ```
-apps/api/app/
+apps/catalog-api/app/
 ├── routers/billing.py             — checkout, webhook, status
 └── shared/
     └── billing/
         ├── mercadopago.py         — MP client singleton
         └── plan_limits.py         — plan → max_products map
 
-apps/admin/src/components/owner/
+apps/admin-fe/src/components/owner/
 ├── BillingBanner.tsx              — upgrade CTA at top of owner dashboard
 ├── UpgradeModal.tsx               — plan comparison + checkout button
 └── PlanBadge.tsx                  — shows current plan next to business name

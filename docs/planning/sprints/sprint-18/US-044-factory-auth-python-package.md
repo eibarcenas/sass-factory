@@ -16,7 +16,7 @@
 
 ## Context
 
-`apps/api/app/shared/auth/` contains four files that are zero-percent catalog-specific:
+`apps/catalog-api/app/shared/auth/` contains four files that are zero-percent catalog-specific:
 - `firebase_verifier.py` — JWT verification against Firebase
 - `jwt_models.py` — UserContext, FirebaseClaims, Role enum
 - `rbac.py` — `require_role()`, `require_super_admin()`, `require_business_access()`
@@ -62,7 +62,7 @@ Given factory-auth is installed from git URL
 When I import AuthMiddleware, require_role, UserContext, Role from factory_auth
 Then they resolve correctly
 
-Given cd apps/api && .venv/bin/pytest -q
+Given cd apps/catalog-api && .venv/bin/pytest -q
 When I run it
 Then 38/38 pass
 

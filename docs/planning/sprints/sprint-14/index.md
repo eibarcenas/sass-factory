@@ -47,7 +47,7 @@ US-039: Storefront live route fix (independent — no dependencies)
 ## Key Files
 
 ```
-apps/admin/src/
+apps/admin-fe/src/
 ├── components/demos/
 │   ├── DemoCard.tsx (DemoList.tsx)  — add "Activate owner" button + import CreateOwnerModal
 │   └── CreateOwnerModal.tsx         — already built, needs wiring
@@ -55,10 +55,10 @@ apps/admin/src/
 │   └── OwnerDashboardPage.tsx       — support ?business= query param for SUPER_ADMIN preview
 └── App.tsx                          — add /owner/preview/:slug route for SUPER_ADMIN
 
-apps/api/app/routers/
+apps/catalog-api/app/routers/
 └── businesses.py                    — owner endpoints: allow SUPER_ADMIN with slug override
 
-apps/storefront/app/
+apps/storefront-fe/app/
 └── [slug]/page.tsx                  — debug and fix empty page
 ```
 

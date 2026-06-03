@@ -74,7 +74,7 @@ Not all components belong in a shared library. The classification below determin
 
 **Published to GitHub Packages:** Never
 
-**Lives in:** `apps/admin/app/components/` or `apps/template/components/`
+**Lives in:** `apps/admin-fe/app/components/` or `apps/template/components/`
 
 **Examples:**
 
@@ -136,7 +136,7 @@ sass-factory/
 ### Dependency Direction
 
 ```
-apps/admin          → @sass-factory/ui, @sass-factory/core, @sass-factory/tokens
+apps/admin-fe          → @sass-factory/ui, @sass-factory/core, @sass-factory/tokens
 apps/template       → @sass-factory/ui, @sass-factory/core, @sass-factory/tokens
 packages/ui         → @sass-factory/tokens
 packages/core       → (no internal dependencies)
@@ -293,7 +293,7 @@ export type { Status } from './components/StatusBadge/StatusBadge.vue'
 In any app within the monorepo, the package is already available without publishing:
 
 ```json
-// apps/admin/package.json
+// apps/admin-fe/package.json
 {
   "dependencies": {
     "@sass-factory/ui": "workspace:*",
@@ -656,7 +656,7 @@ Before a component is promoted from "in development" to "stable" (eligible for C
 
 ### The Rule
 
-Tier 3 components are never added to `packages/ui`. They live exclusively in `apps/admin/app/components/` or `apps/template/components/`.
+Tier 3 components are never added to `packages/ui`. They live exclusively in `apps/admin-fe/app/components/` or `apps/template/components/`.
 
 ### Why Domain Logic Does Not Belong in a Generic Library
 
@@ -675,7 +675,7 @@ Tier 3 components are never added to `packages/ui`. They live exclusively in `ap
 The correct approach when a Tier 3 component needs something reusable is to extract that reusable part into a Tier 1 or Tier 2 component, then compose it in the app layer.
 
 ```
-Tier 3: BusinessCard (apps/admin)
+Tier 3: BusinessCard (apps/admin-fe)
     ├── uses Tier 2: ImageUpload (packages/ui)
     ├── uses Tier 1: Card, Badge, Button (packages/ui)
     └── owns: BusinessCard-specific layout, AppConfig reference

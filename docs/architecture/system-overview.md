@@ -50,7 +50,9 @@ sass-factory/
 ├── apps/
 │   ├── admin/      React + Vite     — SUPER_ADMIN + OWNER dashboard
 │   ├── storefront/ Next.js 15       — public customer catalog pages
-│   └── api/        FastAPI          — REST API + RBAC + Firestore
+│   └── backend/
+│       └── services/
+│           └── catalog-api/ FastAPI — catalog REST API + RBAC + Firestore
 └── .github/workflows/
     ├── ci.yml           — typecheck + test on every PR
     ├── deploy-dev.yml   — auto-deploy on push to develop
@@ -61,16 +63,16 @@ sass-factory/
 ### Package dependency graph
 
 ```
-apps/admin      → @eguru/core, @eguru/ui, @eguru/auth, @eguru/client
-apps/storefront → @eguru/core, @eguru/ui
-apps/api        → factory_auth (Python, private git repo)
+apps/admin-fe      → @eguru/core, @eguru/ui, @eguru/auth, @eguru/client
+apps/storefront-fe → @eguru/core, @eguru/ui
+apps/catalog-api → factory_auth (Python, private git repo)
 ```
 
 ---
 
 ## 3. Apps
 
-### Admin Panel (`apps/admin`)
+### Admin Panel (`apps/admin-fe`)
 
 React + Vite SPA served by Nginx on Cloud Run. Two roles share the same container:
 
@@ -89,7 +91,7 @@ React + Vite SPA served by Nginx on Cloud Run. Two roles share the same containe
 
 **Mock mode:** when `VITE_FIREBASE_API_KEY` is absent, the store injects a mock SUPER_ADMIN user — no Firebase credentials needed for local dev.
 
-### Storefront (`apps/storefront`)
+### Storefront (`apps/storefront-fe`)
 
 Next.js 15 App Router with ISR. Two routes:
 
@@ -105,7 +107,7 @@ Calls `GET /api/v1/storefront/{slug}` (server-side, `API_URL` env var, never exp
 - `POST /api/demo-accept` → `/api/v1/demos/{slug}/accept`
 - `POST /api/wa-click` → `/api/v1/storefront/{slug}/whatsapp-click`
 
-### API (`apps/api`)
+### API (`apps/catalog-api`)
 
 FastAPI on Python 3.13. Single Cloud Run service.
 
@@ -400,24 +402,24 @@ Workload Identity Federation — no service account key files in GitHub. Three s
 
 ```bash
 # API (port 8000)
-cd apps/api && .venv/bin/uvicorn main:app --reload
+cd apps/catalog-api && .venv/bin/uvicorn main:app --reload
 # .env provides: DEV_USER_EMAIL, ENVIRONMENT=local, FIRESTORE_PROJECT_ID, GCS_DEV_FALLBACK=true
 
 # Admin (port 5173, mock mode — no Firebase needed)
-pnpm -F admin dev
+pnpm -F admin-fe dev
 
 # Storefront (port 3000)
-pnpm -F storefront dev
+pnpm -F storefront-fe dev
 
 # Tests
-cd apps/api && .venv/bin/pytest -q
-pnpm -F admin test
+cd apps/catalog-api && .venv/bin/pytest -q
+pnpm -F admin-fe test
 pnpm -F @eguru/core test
 
 # Typecheck all
 pnpm -F @eguru/core typecheck
-pnpm -F admin typecheck
-pnpm -F storefront typecheck
+pnpm -F admin-fe typecheck
+pnpm -F storefront-fe typecheck
 ```
 
 **Mock mode:** admin works without Firebase keys — Zustand injects a mock `SUPER_ADMIN` user. Set `VITE_MOCK_ROLE` and `VITE_MOCK_BUSINESS_ID` for owner mock.

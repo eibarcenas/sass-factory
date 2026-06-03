@@ -114,12 +114,12 @@
   │  packages/core  ──────────────────────────────────────────────────────  │
   │  (@sass-factory/core)   AppConfig · AppTheme · TOPIC_PRESETS             │
   │         │                         │                                      │
-  │         ├──────────► apps/admin   │  (consumes types + Firestore utils)  │
+  │         ├──────────► apps/admin-fe   │  (consumes types + Firestore utils)  │
   │         └──────────► apps/template│  (consumes types + theme config)     │
   │                                                                          │
   │  packages/ui  ────────────────────────────────────────────────────────  │
   │  (@sass-factory/ui)     AppCard · ThemePicker · FeatureToggle            │
-  │         └──────────► apps/admin   (shared Vue components)                │
+  │         └──────────► apps/admin-fe   (shared Vue components)                │
   │                                                                          │
   └──────────────────────────────────────────────────────────────────────────┘
 ```
@@ -290,10 +290,10 @@ Ports are pre-mapped in `infrastructure/k8s/kind-config.yaml` — 10 slots (3010
 Create a k8s Secret from your env file:
 
 ```bash
-cp apps/admin/.env.example apps/admin/.env
-# fill in apps/admin/.env
+cp apps/admin-fe/.env.example apps/admin-fe/.env
+# fill in apps/admin-fe/.env
 
-kubectl create secret generic admin-env --from-env-file=apps/admin/.env
+kubectl create secret generic admin-env --from-env-file=apps/admin-fe/.env
 make rebuild   # restart admin to pick up new secret
 ```
 
@@ -343,7 +343,7 @@ pnpm dev:admin    # http://localhost:3000
 npm install -g firebase-tools
 firebase emulators:start --only firestore   # terminal 1 → http://localhost:4000
 
-cp apps/admin/.env.emulator apps/admin/.env
+cp apps/admin-fe/.env.emulator apps/admin-fe/.env
 pnpm dev:admin                              # terminal 2
 ```
 
@@ -354,7 +354,7 @@ pnpm dev:admin                              # terminal 2
 3. Register a Web App and copy the config:
 
 ```bash
-cp apps/admin/.env.example apps/admin/.env
+cp apps/admin-fe/.env.example apps/admin-fe/.env
 # Fill in FIREBASE_* values
 pnpm dev:admin
 ```
@@ -537,7 +537,7 @@ This creates the service account with the right permissions and a Terraform stat
 ```bash
 # Build and deploy the admin panel to Cloud Run
 gcloud run deploy sass-factory-admin \
-  --source apps/admin \
+  --source apps/admin-fe \
   --region us-central1 \
   --project $GCP_PROJECT_ID \
   --set-env-vars "FIREBASE_API_KEY=...,FIREBASE_PROJECT_ID=...,GCP_PROJECT_ID=...,FACTORY_URL=...,TF_STATE_BUCKET=..."
@@ -581,7 +581,7 @@ gs://{TF_STATE_BUCKET}/terraform/apps/{slug}/
 
 ## Environment Variables
 
-### `apps/admin/.env`
+### `apps/admin-fe/.env`
 
 | Variable | Required | Description |
 |----------|----------|-------------|

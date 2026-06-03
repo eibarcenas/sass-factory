@@ -78,16 +78,16 @@ async function getToken() {
 
 ## Docker + Cloud Run
 
-### Admin (`apps/admin/Dockerfile`)
+### Admin (`apps/admin-fe/Dockerfile`)
 - Builder: `node:20-alpine`, runs `npm run build` → `dist/`
 - Runner: `nginx:alpine` serves `dist/` on port 8080
 - Firebase config baked in as `ENV` at build time (public by design — security via Firebase domain restrictions)
 
-### API (`apps/api/Dockerfile`)
+### API (`apps/catalog-api/Dockerfile`)
 - `python:3.13-slim`, `uv pip install` from `pyproject.toml`
 - Exposes port 8000, `/health` probe
 
-### Storefront (`apps/storefront/Dockerfile`)
+### Storefront (`apps/storefront-fe/Dockerfile`)
 - Multi-stage Next.js standalone build
 - `/health` route returns `{ status: 'ok' }` for Cloud Run startup probe
 
@@ -96,18 +96,18 @@ async function getToken() {
 ## Key Files
 
 ```
-apps/admin/
+apps/admin-fe/
 ├── Dockerfile
 ├── nginx.conf
 └── src/App.tsx              — useAuthRestore hook, RequireAuth/RequireOwner/RequireSuperAdmin
 
-apps/api/
+apps/catalog-api/
 ├── Dockerfile
 └── app/shared/
     ├── middleware/auth_middleware.py   — Firebase JWT verification, TTL cache
     └── auth/firebase_verifier.py       — FIREBASE_AUTH_PROJECT_ID support
 
-apps/storefront/
+apps/storefront-fe/
 ├── Dockerfile
 └── app/health/route.ts      — Cloud Run startup probe
 ```

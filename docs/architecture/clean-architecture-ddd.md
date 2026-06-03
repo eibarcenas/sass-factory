@@ -132,18 +132,18 @@ In this project:
 | Layer | Where it lives | Notes |
 |---|---|---|
 | Domain | `packages/core/src/types/` | Shared types, enums — good |
-| Services | `apps/api/app/services/` | `item_service.py` exists — good |
-| Routers | `apps/api/app/routers/` | Mix of HTTP + domain logic — needs cleanup |
-| Infrastructure | `apps/api/app/db.py` | Firestore client — good |
+| Services | `apps/catalog-api/app/services/` | `item_service.py` exists — good |
+| Routers | `apps/catalog-api/app/routers/` | Mix of HTTP + domain logic — needs cleanup |
+| Infrastructure | `apps/catalog-api/app/db.py` | Firestore client — good |
 
 ### What's misplaced today
 
-`VALID_TRANSITIONS` and `ACTION_TO_STATUS` in [routers/businesses.py](../../../apps/api/app/routers/businesses.py) are domain logic living in the HTTP layer. If a cron job or a webhook also needs to transition business states, this logic has to be duplicated or imported from a router — both are wrong.
+`VALID_TRANSITIONS` and `ACTION_TO_STATUS` in [routers/businesses.py](../../../apps/catalog-api/app/routers/businesses.py) are domain logic living in the HTTP layer. If a cron job or a webhook also needs to transition business states, this logic has to be duplicated or imported from a router — both are wrong.
 
 ### Target structure (backend)
 
 ```
-apps/api/app/
+apps/catalog-api/app/
 │
 ├── domain/
 │   ├── business.py        # Business entity, VALID_TRANSITIONS, transition rules
@@ -171,7 +171,7 @@ apps/api/app/
 ### Target structure (frontend)
 
 ```
-apps/admin/src/
+apps/admin-fe/src/
 │
 ├── domain/                # re-exports from @eguru/core (already correct)
 │

@@ -263,11 +263,11 @@ As the lead architect, my task was to evaluate whether to build a monolith Nuxt 
 
    Consequence: If team scales to 3+ engineers or admin/storefront require independent
    deployments, this decision should be revisited. The modular internal structure
-   (apps/admin + apps/template as separate Nuxt apps in a monorepo) preserves the
+   (apps/admin-fe + apps/template as separate Nuxt apps in a monorepo) preserves the
    option to migrate to MFE without a complete rewrite.
    ```
 
-6. **Defined a fallback preservation strategy.** I structured the monorepo so that `apps/admin` and `apps/template` were separate Nuxt applications with their own `package.json` and server configurations, sharing only `packages/core` and `packages/ui`. This structure meant that if MFE became the right choice later, the migration was a deployment configuration change, not a codebase restructure.
+6. **Defined a fallback preservation strategy.** I structured the monorepo so that `apps/admin-fe` and `apps/template` were separate Nuxt applications with their own `package.json` and server configurations, sharing only `packages/core` and `packages/ui`. This structure meant that if MFE became the right choice later, the migration was a deployment configuration change, not a codebase restructure.
 
 ### Result
 
@@ -281,7 +281,7 @@ The ADR had an equally important outcome: it made the "why not MFE" reasoning ex
 
 **Q: How do you prevent the monolith from becoming an unmaintainable ball of mud?**
 
-A: Module boundaries in code, enforced by convention and eventually by architecture fitness functions. In this project: `apps/admin` never imports from `apps/template`, all shared types go through `packages/core`, all shared UI goes through `packages/ui`. The physical separation in the monorepo creates the same conceptual isolation that MFE would create, without the deployment and operational overhead.
+A: Module boundaries in code, enforced by convention and eventually by architecture fitness functions. In this project: `apps/admin-fe` never imports from `apps/template`, all shared types go through `packages/core`, all shared UI goes through `packages/ui`. The physical separation in the monorepo creates the same conceptual isolation that MFE would create, without the deployment and operational overhead.
 
 **Q: What signals would tell you it's time to revisit the monolith decision?**
 
@@ -431,7 +431,7 @@ My task was to define the component library architecture: what gets extracted in
    Components with opinions about design system or interaction patterns, but no domain knowledge. Examples: AppCard (knows about card layouts and actions, but not about what a "SaaS app" is), ThemePicker (color palette selector, no assumption about what the theme is for), FeatureToggle (renders a feature flag UI, no assumption about what features exist). These are publishable to our private GitHub Packages registry but not to public npm.
 
    **Tier 3 — Domain-specific (never published, stays in apps/):**
-   Anything that imports from domain types, makes Firestore calls, or encodes business rules. Examples: BusinessCatalogCard (knows about the Business type), AppGenerationProgress (knows about the AppGenerationJob type and SSE streams). These live in `apps/admin/components/` and `apps/template/components/` forever. Publishing them would mean publishing business logic.
+   Anything that imports from domain types, makes Firestore calls, or encodes business rules. Examples: BusinessCatalogCard (knows about the Business type), AppGenerationProgress (knows about the AppGenerationJob type and SSE streams). These live in `apps/admin-fe/components/` and `apps/template/components/` forever. Publishing them would mean publishing business logic.
 
 2. **The rule I encoded as a linting constraint:**
    ```

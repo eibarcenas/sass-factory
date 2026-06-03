@@ -21,7 +21,7 @@ Give Erick (super admin) complete visibility into the platform: click tracking f
 Storefront fires a write to Firestore when a customer clicks the WhatsApp button. **No auth required** — the storefront is public.
 
 ```typescript
-// apps/storefront — WhatsAppButton.tsx
+// apps/storefront-fe — WhatsAppButton.tsx
 async function trackClick(businessId: string, itemId: string) {
   await fetch(`${API_URL}/api/v1/analytics/click`, {
     method: 'POST',
@@ -85,10 +85,10 @@ In `OwnerDashboardPage`, a new "Analytics" tab shows:
 ## Key Files
 
 ```
-apps/api/app/routers/
+apps/catalog-api/app/routers/
 └── analytics.py              — click endpoint + aggregation queries
 
-apps/admin/src/
+apps/admin-fe/src/
 ├── pages/
 │   └── DashboardPage.tsx     — adds SuperAdmin tab
 ├── components/superadmin/

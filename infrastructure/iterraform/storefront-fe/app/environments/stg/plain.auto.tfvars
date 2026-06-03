@@ -1,0 +1,5 @@
+project_id       = "ei-catalog-stg"
+region           = "us-central1"
+runtime_sa_email = "ei-catalog-api@ei-catalog-stg.iam.gserviceaccount.com"
+api_url          = "https://catalog-mx-catalog-api-stg-q3peeste7q-uc.a.run.app"
+image            = "us-central1-docker.pkg.dev/ei-catalog-stg/ei-catalog/catalog-mx-storefront:latest"

@@ -1,5 +1,5 @@
 export interface ApiClientConfig {
-  baseUrl: string
+  baseUrl: string | ((path: string) => string)
   getToken: () => Promise<string | null>
 }
 
@@ -14,7 +14,8 @@ export interface ApiClient {
 export function createApiClient({ baseUrl, getToken }: ApiClientConfig): ApiClient {
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const token = await getToken()
-    const res = await fetch(`${baseUrl}${path}`, {
+    const resolvedBaseUrl = typeof baseUrl === 'function' ? baseUrl(path) : baseUrl
+    const res = await fetch(`${resolvedBaseUrl}${path}`, {
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -34,7 +35,8 @@ export function createApiClient({ baseUrl, getToken }: ApiClientConfig): ApiClie
 
   async function upload<T>(path: string, form: FormData): Promise<T> {
     const token = await getToken()
-    const res = await fetch(`${baseUrl}${path}`, {
+    const resolvedBaseUrl = typeof baseUrl === 'function' ? baseUrl(path) : baseUrl
+    const res = await fetch(`${resolvedBaseUrl}${path}`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: form,

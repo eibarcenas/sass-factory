@@ -19,7 +19,7 @@ Stand up the FastAPI backend with Firestore persistence, Firebase Auth middlewar
 ## Key Files
 
 ```
-apps/api/
+apps/catalog-api/
 ├── main.py                          — FastAPI app, middleware order
 ├── pyproject.toml                   — uv dependencies
 ├── Dockerfile                       — python:3.13-slim

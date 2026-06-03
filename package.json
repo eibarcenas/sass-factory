@@ -6,6 +6,7 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
+    "check:nomenclature": "node scripts/check-nomenclature.mjs",
     "postinstall": "node node_modules/.pnpm/esbuild@0.25.12/node_modules/esbuild/install.js 2>/dev/null || true"
   },
   "engines": {

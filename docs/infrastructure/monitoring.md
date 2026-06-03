@@ -47,7 +47,7 @@ log.error('firestore write failed', { businessId, error: e.message, stack: e.sta
 ```
 
 ```python
-# Python structured logging (apps/api, apps/workers)
+# Python structured logging (apps/catalog-api, apps/workers)
 import logging, json
 
 logger = logging.getLogger(__name__)

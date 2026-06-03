@@ -412,7 +412,7 @@ A nivel Staff/Principal, implementar fitness functions es lo que separa "hablé 
     {
       "name": "no-cross-app-imports",
       "severity": "error",
-      "from": { "path": "^apps/admin" },
+      "from": { "path": "^apps/admin-fe" },
       "to": { "path": "^apps/template" }
     }
   ]

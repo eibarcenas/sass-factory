@@ -111,11 +111,11 @@ Auth via **Workload Identity Federation** — no service account keys in GitHub.
 
 ```bash
 # Apply infrastructure (once per env)
-cd infrastructure/iterraform/setup
+cd infrastructure/iterraform/_shared/setup
 ./scripts/apply.sh dev    # or stg / prod
 
 # Deploy app layer
-cd infrastructure/iterraform/app
+cd infrastructure/iterraform/_shared/app
 terraform init -backend-config=environments/dev/backend.hcl
 terraform apply -var-file=environments/dev/plain.auto.tfvars
 ```

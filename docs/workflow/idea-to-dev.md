@@ -675,8 +675,8 @@ Las fitness functions son pruebas automatizadas que verifican que las constraint
 // Ejemplo: ningún paquete de apps/ puede importar desde otro paquete de apps/
 // (la comunicación va a través de packages/core o APIs)
 describe('Architecture constraints', () => {
-  it('apps/admin does not import from apps/template', () => {
-    const imports = getImportsFrom('apps/admin/')
+  it('apps/admin-fe does not import from apps/template', () => {
+    const imports = getImportsFrom('apps/admin-fe/')
     expect(imports).not.toContain('apps/template')
   })
 
