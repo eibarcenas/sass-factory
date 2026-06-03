@@ -1,0 +1,20 @@
+name: Deploy Dev — prospects-api
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/prospects-api/**'
+      - 'infrastructure/iterraform/prospects-api/**'
+      - '.github/workflows/_deploy-dev-service.yml'
+      - '.github/workflows/deploy-dev-prospects-api.yml'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-dev-service.yml
+    with:
+      service: prospects-api
+      kind: backend
+      image_name: catalog-mx-prospects-api
+      cloud_run_service: catalog-mx-prospects-api-dev
+    secrets: inherit

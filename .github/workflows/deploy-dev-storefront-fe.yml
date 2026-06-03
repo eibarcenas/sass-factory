@@ -1,0 +1,24 @@
+name: Deploy Dev — storefront-fe
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/storefront-fe/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'infrastructure/iterraform/storefront-fe/**'
+      - '.github/workflows/_deploy-dev-service.yml'
+      - '.github/workflows/deploy-dev-storefront-fe.yml'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-dev-service.yml
+    with:
+      service: storefront-fe
+      kind: storefront-fe
+      image_name: catalog-mx-storefront
+      cloud_run_service: catalog-mx-storefront-dev
+    secrets: inherit

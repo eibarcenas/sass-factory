@@ -1,0 +1,24 @@
+name: Deploy Dev — admin-fe
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/admin-fe/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'infrastructure/iterraform/admin-fe/**'
+      - '.github/workflows/_deploy-dev-service.yml'
+      - '.github/workflows/deploy-dev-admin-fe.yml'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-dev-service.yml
+    with:
+      service: admin-fe
+      kind: admin-fe
+      image_name: catalog-mx-admin
+      cloud_run_service: catalog-mx-admin-dev
+    secrets: inherit

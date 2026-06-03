@@ -1,0 +1,23 @@
+name: Deploy Dev — landing-fe
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/landing-fe/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'infrastructure/iterraform/landing-fe/**'
+      - '.github/workflows/_deploy-dev-service.yml'
+      - '.github/workflows/deploy-dev-landing-fe.yml'
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-dev-service.yml
+    with:
+      service: landing-fe
+      kind: landing-fe
+      image_name: catalog-mx-landing
+      cloud_run_service: catalog-mx-landing-dev
+    secrets: inherit
