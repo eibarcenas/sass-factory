@@ -1,22 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, type UserRole } from '../store/auth'
 import { useGoogleAuth } from '../hooks/useGoogleAuth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
-const API_URL    = import.meta.env.VITE_API_URL    ?? 'http://localhost:8000'
+const API_URL     = import.meta.env.VITE_API_URL     ?? 'http://localhost:8000'
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
 
 export default function LoginPage() {
   const { mockMode, setUser } = useAuthStore()
   const navigate = useNavigate()
   const [error, setError] = useState('')
-
-  if (mockMode) {
-    navigate('/', { replace: true })
-    return null
-  }
+  const landingAutoStarted = useRef(false)
 
   const { signInWithGoogle, pending, redirectChecked } = useGoogleAuth(async (cred) => {
     setError('')
@@ -53,6 +49,25 @@ export default function LoginPage() {
     navigate(role === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
   })
 
+  useEffect(() => {
+    if (mockMode) {
+      navigate('/', { replace: true })
+      return
+    }
+
+    const params = new URLSearchParams(window.location.search)
+    if (
+      params.get('from') === 'landing' &&
+      redirectChecked &&
+      !landingAutoStarted.current
+    ) {
+      landingAutoStarted.current = true
+      signInWithGoogle().catch((err: any) => {
+        setError(err.message ?? 'Sign in failed')
+      })
+    }
+  }, [mockMode, navigate, redirectChecked, signInWithGoogle])
+
   async function handleGoogleSignIn() {
     setError('')
     try {
@@ -61,6 +76,8 @@ export default function LoginPage() {
       setError(err.message ?? 'Sign in failed')
     }
   }
+
+  if (mockMode) return null
 
   const loading = pending || !redirectChecked
 
@@ -78,7 +95,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold">catalog.mx</h1>
-          <p className="text-muted-foreground text-sm mt-1">Sign in to manage your existing catalog</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {loading ? 'Iniciando sesion...' : 'Inicia sesion para gestionar tu catalogo'}
+          </p>
         </div>
         <Card>
           <CardContent className="pt-6 space-y-4">
@@ -94,15 +113,13 @@ export default function LoginPage() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              {loading ? 'Signing in...' : 'Continue with Google'}
+              {loading ? 'Iniciando...' : 'Continuar con Google'}
             </Button>
 
             {error === 'pending' ? (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
-                <p className="text-sm font-medium text-amber-800">Your account is under review</p>
-                <p className="text-xs text-amber-700">
-                  We activate your catalog within 24 hours.
-                </p>
+                <p className="text-sm font-medium text-amber-800">Tu cuenta esta en revision</p>
+                <p className="text-xs text-amber-700">Activamos tu catalogo en menos de 24 horas.</p>
               </div>
             ) : error?.includes('Safari') ? (
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
@@ -124,13 +141,6 @@ export default function LoginPage() {
                 <p className="text-sm text-destructive">{error}</p>
               </div>
             ) : null}
-
-            <p className="text-xs text-center text-muted-foreground">
-              No account?{' '}
-              <a href="/register" className="underline underline-offset-2">
-                Create your free catalog
-              </a>
-            </p>
           </CardContent>
         </Card>
       </div>

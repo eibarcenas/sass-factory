@@ -3,6 +3,13 @@ name: Deploy — Prod (ei-catalog-prod)
 on:
   push:
     branches: [production]
+    paths:
+      - 'apps/admin/**'
+      - 'apps/api/**'
+      - 'apps/storefront/**'
+      - 'apps/landing/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-prod.yml'
 
 env:
   PROJECT: ei-catalog-prod
@@ -31,20 +38,37 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
       - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Build and push all images
+      - name: Build all images
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           DOCKER_BUILDKIT: "1"
         run: |
+          API_URL=$(gcloud run services describe catalog-mx-api-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
+            --format='value(status.url)' 2>/dev/null || echo "")
+
           docker build --secret id=gh_pat,env=GH_PAT \
             -t "${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}" apps/api/
           docker push "${{ env.AR_URL }}/catalog-mx-api:${{ github.sha }}"
 
           docker build -f apps/storefront/Dockerfile \
+            --build-arg NEXT_PUBLIC_ADMIN_URL="${{ vars.ADMIN_URL }}" \
+            --build-arg NEXT_PUBLIC_API_URL="${API_URL}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
+            --build-arg NEXT_PUBLIC_SUPPORT_WHATSAPP="${{ vars.SUPPORT_WHATSAPP }}" \
             -t "${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}" .
           docker push "${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
 
           docker build -f apps/admin/Dockerfile \
+            --build-arg VITE_API_URL="${API_URL}" \
+            --build-arg VITE_STOREFRONT_URL="${{ vars.STOREFRONT_URL }}" \
+            --build-arg VITE_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
+            --build-arg VITE_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
+            --build-arg VITE_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
+            --build-arg VITE_ADMIN_URL="${{ vars.ADMIN_URL }}" \
+            --build-arg VITE_LANDING_URL="${{ vars.LANDING_URL }}" \
             -t "${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}" .
           docker push "${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
 
@@ -54,7 +78,8 @@ jobs:
           gcloud run deploy catalog-mx-api-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_PROD }}" \
-            --update-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-prod,ENVIRONMENT=production" \
+            --set-env-vars="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-prod,ENVIRONMENT=production,FIREBASE_AUTH_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID }},STOREFRONT_URL=${{ vars.STOREFRONT_URL }},ADMIN_URL=${{ vars.ADMIN_URL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }}" \
+            --update-secrets="SMTP_PASS=SMTP_PASS:latest" \
             --allow-unauthenticated --tag canary --no-traffic --quiet
           gcloud run services update-traffic catalog-mx-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --to-tags canary=10 --quiet
@@ -83,5 +108,5 @@ jobs:
           for svc in api storefront admin; do
             gcloud run services update-traffic catalog-mx-${svc}-${{ env.ENV_SUFFIX }} \
               --region=${{ env.REGION }} --project=${{ env.PROJECT }} --to-latest --quiet
-            echo "✅ catalog-mx-${svc}-prod: 100%"
+            echo "catalog-mx-${svc}-prod: 100%"
           done
