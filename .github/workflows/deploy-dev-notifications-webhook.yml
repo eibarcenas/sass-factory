@@ -6,15 +6,77 @@ on:
     paths:
       - 'apps/notifications-webhook/**'
       - 'infrastructure/iterraform/notifications-webhook/**'
-      - '.github/workflows/_deploy-dev-service.yml'
       - '.github/workflows/deploy-dev-notifications-webhook.yml'
 
 jobs:
   deploy:
-    uses: ./.github/workflows/_deploy-dev-service.yml
-    with:
-      service: notifications-webhook
-      kind: backend
-      image_name: catalog-mx-notifications-webhook
-      cloud_run_service: catalog-mx-notifications-webhook-dev
-    secrets: inherit
+    runs-on: ubuntu-latest
+    environment: dev
+    if: ${{ vars.WIF_PROVIDER_DEV != '' }}
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      PROJECT: ei-catalog-dev
+      REGION: us-central1
+      AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/catalog-mx
+      ENV_SUFFIX: dev
+
+      SERVICE: notifications-webhook
+      IMAGE_NAME: catalog-mx-notifications-webhook
+      CLOUD_RUN_SERVICE: catalog-mx-notifications-webhook-dev
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Backend tests
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DEV_USER_EMAIL: dev@test.local
+          ENVIRONMENT: local
+        run: |
+          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
+          cd "apps/${SERVICE}"
+          uv venv --python 3.13
+          uv pip install -e ".[dev]"
+          .venv/bin/pytest -q
+
+      - name: Auth GCP — ei-catalog-dev
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER_DEV }}
+          service_account: ${{ vars.DEPLOYER_SA_DEV }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DOCKER_BUILDKIT: "1"
+        run: |
+          IMAGE="${AR_URL}/${IMAGE_NAME}:${GITHUB_SHA}"
+          docker build --secret id=gh_pat,env=GH_PAT -t "$IMAGE" "apps/${SERVICE}/"
+          docker push "$IMAGE"
+
+      - name: Deploy Cloud Run service
+        run: |
+          IMAGE="${AR_URL}/${IMAGE_NAME}:${GITHUB_SHA}"
+          ENV_VARS="FIRESTORE_PROJECT_ID=${PROJECT},ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=catalog-mx-dev,CORS_ALLOWED_ORIGINS=*"
+          ENV_VARS="${ENV_VARS},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},STOREFRONT_URL=https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app,ADMIN_URL=https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app"
+          gcloud run deploy "${CLOUD_RUN_SERVICE}" \
+            --image "$IMAGE" \
+            --region "${REGION}" \
+            --project "${PROJECT}" \
+            --service-account "${{ vars.RUNTIME_SA_DEV }}" \
+            --set-env-vars="$ENV_VARS" \
+            --no-allow-unauthenticated \
+            --update-secrets="SMTP_PASS=SMTP_PASS:latest" \
+            --quiet
+
+      - name: Print URL
+        run: |
+          URL=$(gcloud run services describe "${CLOUD_RUN_SERVICE}" --region="${REGION}" --project="${PROJECT}" --format='value(status.url)' 2>/dev/null)
+          echo "${CLOUD_RUN_SERVICE}: $URL"

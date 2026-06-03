@@ -10,15 +10,78 @@ on:
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'infrastructure/iterraform/admin-fe/**'
-      - '.github/workflows/_deploy-dev-service.yml'
       - '.github/workflows/deploy-dev-admin-fe.yml'
 
 jobs:
   deploy:
-    uses: ./.github/workflows/_deploy-dev-service.yml
-    with:
-      service: admin-fe
-      kind: admin-fe
-      image_name: catalog-mx-admin
-      cloud_run_service: catalog-mx-admin-dev
-    secrets: inherit
+    runs-on: ubuntu-latest
+    environment: dev
+    if: ${{ vars.WIF_PROVIDER_DEV != '' }}
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      PROJECT: ei-catalog-dev
+      REGION: us-central1
+      AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/catalog-mx
+      ENV_SUFFIX: dev
+
+      SERVICE: admin-fe
+      IMAGE_NAME: catalog-mx-admin
+      CLOUD_RUN_SERVICE: catalog-mx-admin-dev
+      STOREFRONT_URL: https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app
+      ADMIN_URL: https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
+      LANDING_URL: https://catalog-mx-landing-dev-q3peeste7q-uc.a.run.app
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -F admin-fe typecheck
+
+      - name: Auth GCP — ei-catalog-dev
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER_DEV }}
+          service_account: ${{ vars.DEPLOYER_SA_DEV }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        run: |
+          CATALOG_API_URL=$(gcloud run services describe catalog-mx-catalog-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+          IDENTITY_API_URL=$(gcloud run services describe catalog-mx-identity-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+          DEMOS_API_URL=$(gcloud run services describe catalog-mx-demos-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+          PROSPECTS_API_URL=$(gcloud run services describe catalog-mx-prospects-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+          IMAGE="${AR_URL}/${IMAGE_NAME}:${GITHUB_SHA}"
+          docker build \
+            --build-arg VITE_API_URL="${CATALOG_API_URL}" \
+            --build-arg VITE_CATALOG_API_URL="${CATALOG_API_URL}" \
+            --build-arg VITE_IDENTITY_API_URL="${IDENTITY_API_URL}" \
+            --build-arg VITE_DEMOS_API_URL="${DEMOS_API_URL}" \
+            --build-arg VITE_PROSPECTS_API_URL="${PROSPECTS_API_URL}" \
+            --build-arg VITE_STOREFRONT_URL="${STOREFRONT_URL}" \
+            --build-arg VITE_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
+            --build-arg VITE_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
+            --build-arg VITE_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
+            --build-arg VITE_ADMIN_URL="${ADMIN_URL}" \
+            --build-arg VITE_LANDING_URL="${LANDING_URL}" \
+            -t "$IMAGE" -f apps/admin-fe/Dockerfile .
+          docker push "$IMAGE"
+
+      - name: Deploy Cloud Run service
+        run: |
+          IMAGE="${AR_URL}/${IMAGE_NAME}:${GITHUB_SHA}"
+          gcloud run deploy "${CLOUD_RUN_SERVICE}" \
+            --image "$IMAGE" \
+            --region "${REGION}" \
+            --project "${PROJECT}" \
+            --service-account "${{ vars.RUNTIME_SA_DEV }}" \
+            --allow-unauthenticated \
+            --quiet
