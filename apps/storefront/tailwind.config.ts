@@ -27,6 +27,15 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        wa: '#25D366',
+        ink: {
+          950: '#0A0A0A',
+          900: '#111111',
+          800: '#161616',
+        },
+      },
+      fontFamily: {
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",

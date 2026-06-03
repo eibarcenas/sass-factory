@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Settings, Plus } from 'lucide-react'
+import { LayoutDashboard, Users, Plus } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { useProspects } from '../hooks/useProspects'
 import { useBusinesses } from '../hooks/useBusinesses'
@@ -145,7 +145,6 @@ export function DashboardContent() {
 const NAV_ITEMS = [
   { key: 'dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard', path: '/dashboard' },
   { key: 'clientes',  icon: <Users size={16} />,           label: 'Clientes',  path: '/clientes' },
-  { key: 'ajustes',   icon: <Settings size={16} />,        label: 'Ajustes',   path: '/ajustes' },
 ] as const
 
 type NavKey = typeof NAV_ITEMS[number]['key']
@@ -157,8 +156,6 @@ function AdminSidebar({ newProspects }: { newProspects: number }) {
 
   const active: NavKey = location.pathname.startsWith('/clientes')
     ? 'clientes'
-    : location.pathname.startsWith('/ajustes')
-    ? 'ajustes'
     : 'dashboard'
 
   const nav = NAV_ITEMS.map(n => ({
