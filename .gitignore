@@ -92,14 +92,14 @@ __pycache__/
 # Python bytecode
 **/__pycache__/
 **/*.pyc
-apps/*/service-account.json
+
+# Service account credentials — never commit (all apps, all envs)
+apps/*/service-account*.json
 apps/catalog-api/*.json
 
-# Python venv
-apps/catalog-api/.venv/
-apps/catalog-api/.env
-apps/catalog-api/service-account.json
-apps/catalog-api/*.json
+# Python venv / per-app env
+apps/*/.venv/
+apps/*/.env
 apps/admin-fe/.env.production
 infrastructure/iterraform/**/environments/*/secrets.auto.tfvars.json
 
