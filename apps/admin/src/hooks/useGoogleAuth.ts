@@ -7,8 +7,12 @@ const FIREBASE_CONFIG = {
   projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
 }
 
-function isMobileDevice(): boolean {
-  return /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+function isIOS(): boolean {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
+function isAndroid(): boolean {
+  return /Android/i.test(navigator.userAgent)
 }
 
 async function initFirebase() {
@@ -24,24 +28,30 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
   const onCredentialRef = useRef(onCredential)
   onCredentialRef.current = onCredential
 
-  // On mount: pick up any pending redirect result from signInWithRedirect
+  // On mount: pick up any pending redirect result (Android redirect flow)
   useEffect(() => {
     let cancelled = false
     ;(async () => {
+      let result = null
       try {
         const { getRedirectResult } = await import('firebase/auth')
         const auth = await initFirebase()
-        const result = await getRedirectResult(auth)
-        if (!cancelled && result) {
-          setPending(true)
-          await onCredentialRef.current(result)
-        }
+        result = await getRedirectResult(auth)
       } catch {
-        // nothing to do — redirect result errors are non-actionable on mount
+        // getRedirectResult errors mean no valid redirect — treat as null
       } finally {
-        if (!cancelled) {
-          setPending(false)
-          setRedirectChecked(true)
+        if (!cancelled) setRedirectChecked(true)
+      }
+
+      if (result && !cancelled) {
+        setPending(true)
+        try {
+          await onCredentialRef.current(result)
+        } catch (err: any) {
+          // Surface credential errors — these are actionable
+          onCredentialRef.current = async () => { throw err }
+        } finally {
+          if (!cancelled) setPending(false)
         }
       }
     })()
@@ -55,20 +65,26 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
       const auth = await initFirebase()
       const provider = new GoogleAuthProvider()
 
-      if (isMobileDevice()) {
+      if (isAndroid()) {
+        // Android: redirect works reliably
         const { signInWithRedirect } = await import('firebase/auth')
         await signInWithRedirect(auth, provider)
-        // Page navigates away; code below won't run
-        return
+        return // page navigates away
       }
 
+      // iOS or Desktop: use popup (user gesture makes it allowed in real browsers)
       const { signInWithPopup } = await import('firebase/auth')
       try {
         const cred = await signInWithPopup(auth, provider)
         await onCredentialRef.current(cred)
       } catch (err: any) {
         if (err.code === 'auth/popup-blocked') {
-          // Fall back to redirect when popup is blocked
+          if (isIOS()) {
+            // In-app browser (WhatsApp, etc.) blocks popups and redirect doesn't persist state.
+            // Tell the user to open in a real browser.
+            throw new Error('Para iniciar sesión, abre esta página en Safari.')
+          }
+          // Desktop: fall back to redirect
           const { signInWithRedirect } = await import('firebase/auth')
           await signInWithRedirect(auth, provider)
           return
