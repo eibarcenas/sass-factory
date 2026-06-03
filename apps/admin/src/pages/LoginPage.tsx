@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, type UserRole } from '../store/auth'
+import { useGoogleAuth } from '../hooks/useGoogleAuth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -11,72 +12,57 @@ export default function LoginPage() {
   const { mockMode, setUser } = useAuthStore()
   const navigate = useNavigate()
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
   if (mockMode) {
     navigate('/', { replace: true })
     return null
   }
 
-  async function signInWithGoogle() {
-    setLoading(true)
+  const { signInWithGoogle, pending, redirectChecked } = useGoogleAuth(async (cred) => {
     setError('')
-    try {
-      const { getAuth, signInWithPopup, GoogleAuthProvider } = await import('firebase/auth')
-      const { initializeApp, getApps } = await import('firebase/app')
+    const { claims } = await cred.user.getIdTokenResult(true)
+    const role = claims.role as UserRole | undefined
 
-      if (!getApps().length) {
-        initializeApp({
-          apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
-          authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-          projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
-        })
-      }
+    if (!role) {
+      const freshToken = await cred.user.getIdToken(true)
+      const resolved = await fetch(`${API_URL}/api/v1/auth/resolve-claims`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${freshToken}` },
+      }).then(r => r.json()).catch(() => ({ resolved: false }))
 
-      const auth = getAuth()
-      const provider = new GoogleAuthProvider()
-      const cred = await signInWithPopup(auth, provider)
-
-      // Force-refresh to pick up claims set by auto-provision or resolve-claims
-      const { claims } = await cred.user.getIdTokenResult(true)
-      const role = claims.role as UserRole | undefined
-
-      if (!role) {
-        // No role yet — call resolve-claims in case admin just activated them
-        const freshToken = await cred.user.getIdToken(true)
-        const resolved = await fetch(`${API_URL}/api/v1/auth/resolve-claims`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${freshToken}` },
-        }).then(r => r.json()).catch(() => ({ resolved: false }))
-
-        if (resolved.resolved) {
-          // Claims just set — force token refresh and retry
-          await cred.user.getIdToken(true)
-          window.location.reload()
-          return
-        }
-
-        await auth.signOut()
-        setError('pending')
+      if (resolved.resolved) {
+        await cred.user.getIdToken(true)
+        window.location.reload()
         return
       }
 
-      setUser({
-        uid:        cred.user.uid,
-        email:      cred.user.email,
-        role,
-        businessId: claims.business_id as string | undefined,
-        modules:    (claims.modules as string[]) ?? [],
-      })
+      const { getAuth } = await import('firebase/auth')
+      await getAuth().signOut()
+      setError('pending')
+      return
+    }
 
-      navigate(role === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
+    setUser({
+      uid:        cred.user.uid,
+      email:      cred.user.email,
+      role,
+      businessId: claims.business_id as string | undefined,
+      modules:    (claims.modules as string[]) ?? [],
+    })
+
+    navigate(role === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
+  })
+
+  async function handleGoogleSignIn() {
+    setError('')
+    try {
+      await signInWithGoogle()
     } catch (err: any) {
-      if (err.code === 'auth/popup-closed-by-user') return
       setError(err.message ?? 'Sign in failed')
-    } finally {
-      setLoading(false)
     }
   }
+
+  const loading = pending || !redirectChecked
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 px-4">
@@ -99,7 +85,7 @@ export default function LoginPage() {
             <Button
               className="w-full gap-3"
               variant="outline"
-              onClick={signInWithGoogle}
+              onClick={handleGoogleSignIn}
               disabled={loading}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">

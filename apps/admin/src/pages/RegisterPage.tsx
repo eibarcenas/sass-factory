@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
+import { useGoogleAuth } from '../hooks/useGoogleAuth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
+const SESSION_KEY = 'pendingBusinessName'
 
 type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
 
@@ -22,7 +24,6 @@ export default function RegisterPage() {
   const [businessName, setBusinessName] = useState('')
   const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle')
   const [slug, setSlug] = useState('')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
@@ -34,7 +35,6 @@ export default function RegisterPage() {
       setSlug('')
       return
     }
-    // Show client-side slug preview immediately
     setSlug(clientSlugify(businessName))
     setSlugStatus('checking')
     debounceRef.current = setTimeout(async () => {
@@ -53,94 +53,83 @@ export default function RegisterPage() {
     return () => clearTimeout(debounceRef.current)
   }, [businessName])
 
-  const canSubmit = slugStatus === 'available' && !loading
+  const { signInWithGoogle, pending, redirectChecked } = useGoogleAuth(async (cred) => {
+    // Read business name from sessionStorage (set before any redirect) and clear it
+    const name = sessionStorage.getItem(SESSION_KEY) ?? businessName.trim()
+    sessionStorage.removeItem(SESSION_KEY)
+
+    if (!name) return
+
+    const token = await cred.user.getIdToken()
+
+    const res = await fetch(`${API_URL}/api/v1/auth/auto-provision`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ businessName: name }),
+    })
+
+    if (res.status === 409) {
+      const errData = await res.json().catch(() => ({}))
+      if (errData.detail === 'Account already active') {
+        const { claims } = await cred.user.getIdTokenResult(true)
+        const role = (claims.role as string) ?? 'OWNER'
+        const businessId = (claims.business_id as string) ?? ''
+        store.setUser({
+          uid: cred.user.uid,
+          email: cred.user.email,
+          displayName: cred.user.displayName ?? null,
+          photoURL: cred.user.photoURL ?? null,
+          role,
+          businessId,
+          modules: (claims.modules as string[]) ?? [],
+        })
+        navigate(role === 'SUPER_ADMIN' ? '/dashboard' : '/owner', { replace: true })
+      } else {
+        setSlugStatus('taken')
+        const { getAuth } = await import('firebase/auth')
+        await getAuth().signOut()
+      }
+      return
+    }
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.detail ?? `Error ${res.status}`)
+    }
+
+    const data = await res.json()
+    const { claims } = await cred.user.getIdTokenResult(true)
+
+    store.setUser({
+      uid:         cred.user.uid,
+      email:       cred.user.email,
+      displayName: cred.user.displayName ?? null,
+      photoURL:    cred.user.photoURL ?? null,
+      role:        (claims.role as string) ?? 'OWNER',
+      businessId:  data.slug,
+      modules:     (claims.modules as string[]) ?? [],
+    })
+
+    navigate('/owner', { replace: true })
+  })
+
+  const canSubmit = slugStatus === 'available' && !pending && redirectChecked
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
     setError('')
-    setLoading(true)
-
+    // Persist name before sign-in (survives redirect back from Google on mobile)
+    sessionStorage.setItem(SESSION_KEY, businessName.trim())
     try {
-      const { getAuth, signInWithPopup, GoogleAuthProvider } = await import('firebase/auth')
-      const { initializeApp, getApps } = await import('firebase/app')
-
-      if (!getApps().length) {
-        initializeApp({
-          apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
-          authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-          projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
-        })
-      }
-
-      const auth = getAuth()
-      const cred = await signInWithPopup(auth, new GoogleAuthProvider())
-      const token = await cred.user.getIdToken()
-
-      const res = await fetch(`${API_URL}/api/v1/auth/auto-provision`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ businessName: businessName.trim() }),
-      })
-
-      if (res.status === 409) {
-        const errData = await res.json().catch(() => ({}))
-        if (errData.detail === 'Account already active') {
-          // existing account — log them in directly
-          const { claims } = await cred.user.getIdTokenResult(true)
-          const role = (claims.role as string) ?? 'OWNER'
-          const businessId = (claims.business_id as string) ?? ''
-          store.setUser({
-            uid: cred.user.uid,
-            email: cred.user.email,
-            displayName: cred.user.displayName ?? null,
-            photoURL: cred.user.photoURL ?? null,
-            role,
-            businessId,
-            modules: (claims.modules as string[]) ?? [],
-          })
-          navigate(role === 'SUPER_ADMIN' ? '/dashboard' : '/owner', { replace: true })
-        } else {
-          setSlugStatus('taken')
-          await auth.signOut()
-        }
-        setLoading(false)
-        return
-      }
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.detail ?? `Error ${res.status}`)
-      }
-
-      const data = await res.json()
-
-      const { claims } = await cred.user.getIdTokenResult(true)
-
-      store.setUser({
-        uid:         cred.user.uid,
-        email:       cred.user.email,
-        displayName: cred.user.displayName ?? null,
-        photoURL:    cred.user.photoURL ?? null,
-        role:        (claims.role as string) ?? 'OWNER',
-        businessId:  data.slug,
-        modules:     (claims.modules as string[]) ?? [],
-      })
-
-      navigate('/owner', { replace: true })
+      await signInWithGoogle()
     } catch (err: any) {
-      if (err.code === 'auth/popup-closed-by-user') {
-        setLoading(false)
-        return
-      }
       setError(err.message ?? 'Ocurrió un error. Intenta de nuevo.')
-      setLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/40 px-4">
-      {/* Back to landing */}
       <a
         href={LANDING_URL}
         className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -182,7 +171,6 @@ export default function RegisterPage() {
                         : ''
                     }
                   />
-                  {/* Status indicator */}
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     {slugStatus === 'checking' && (
                       <span className="h-4 w-4 block rounded-full border-2 border-muted-foreground border-t-transparent animate-spin" />
@@ -200,7 +188,6 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Slug preview — show immediately while checking, green checkmark only when available */}
                 {(slugStatus === 'checking' || slugStatus === 'available') && slug && (
                   <p className={`text-xs ${slugStatus === 'available' ? 'text-green-600' : 'text-muted-foreground'}`}>
                     Tu link: <span className="font-medium">catalog.mx/{slug}</span>
@@ -221,7 +208,7 @@ export default function RegisterPage() {
               )}
 
               <Button type="submit" className="w-full gap-2" disabled={!canSubmit}>
-                {loading ? (
+                {pending ? (
                   <>
                     <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
                     Conectando con Google...

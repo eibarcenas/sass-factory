@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Settings, Plus } from 'lucide-react'
+import { LayoutDashboard, Users, Settings, Plus, Menu } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { useProspects } from '../hooks/useProspects'
 import { useBusinesses } from '../hooks/useBusinesses'
 import AppSidebar, { SidebarProfile } from '../components/layout/AppSidebar'
+import { MobileSidebar } from '@eguru/ui'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -75,7 +77,7 @@ export function DashboardContent() {
   return (
     <div className="space-y-8">
       {/* Greeting */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">
             {greeting}{firstName ? `, ${firstName}` : ''}
@@ -86,14 +88,14 @@ export function DashboardContent() {
               : 'Todo en orden.'}
           </p>
         </div>
-        <Button onClick={() => navigate('/clientes')} className="shrink-0">
+        <Button onClick={() => navigate('/clientes')} className="shrink-0 self-start">
           <Plus className="w-4 h-4 mr-1.5" />
           Nueva demo
         </Button>
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard label="Total demos" value={total} loading={isLoading} />
         <MetricCard label="Demo lista" value={readyCount} loading={isLoading} />
         <MetricCard label="Activas" value={activeCount} loading={isLoading} />
@@ -150,7 +152,7 @@ const NAV_ITEMS = [
 
 type NavKey = typeof NAV_ITEMS[number]['key']
 
-function AdminSidebar({ newProspects }: { newProspects: number }) {
+function AdminSidebar({ newProspects, onAfterNavigate }: { newProspects: number; onAfterNavigate?: () => void }) {
   const { user, mockMode } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
@@ -176,6 +178,7 @@ function AdminSidebar({ newProspects }: { newProspects: number }) {
         const item = NAV_ITEMS.find(n => n.key === key)
         if (item) navigate(item.path)
       }}
+      onAfterNavigate={onAfterNavigate}
       headerSlot={mockMode && <Badge variant="secondary" className="text-[10px] px-1.5 h-4">mock</Badge>}
       footerSlot={
         <SidebarProfile
@@ -195,12 +198,39 @@ function AdminSidebar({ newProspects }: { newProspects: number }) {
 export default function AdminLayout() {
   const { data: prospectData } = useProspects()
   const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
-      <AdminSidebar newProspects={newProspects} />
-      <main className="flex-1 overflow-y-auto p-8">
-        <Outlet />
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">
+        <AdminSidebar newProspects={newProspects} />
+      </div>
+
+      {/* Mobile drawer */}
+      <MobileSidebar open={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)}>
+        <AdminSidebar
+          newProspects={newProspects}
+          onAfterNavigate={() => setMobileSidebarOpen(false)}
+        />
+      </MobileSidebar>
+
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-background sticky top-0 z-30">
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            aria-label="Open menu"
+            className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <Menu size={20} />
+          </button>
+          <span className="font-semibold text-sm text-primary">catalog.mx</span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   )
