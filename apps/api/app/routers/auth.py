@@ -49,6 +49,23 @@ def resolve_claims(
             return {"resolved": False, "role": user.role}
 
         biz = biz_docs[0].to_dict()
+
+        # Require UID match — prevents takeover if a Firebase account is
+        # deleted and a new account is created with the same email.
+        if biz.get("ownerUid") != user.firebase_uid:
+            return {"resolved": False, "role": user.role}
+
+        # Only grant claims for active-ish statuses; suspended/rejected/archived
+        # owners must not be able to reactivate themselves via this endpoint.
+        claimable_statuses = {
+            BusinessStatus.DRAFT,
+            BusinessStatus.PENDING_REVIEW,
+            BusinessStatus.REVIEW,
+            BusinessStatus.ACTIVE,
+        }
+        if biz.get("status") not in claimable_statuses:
+            raise HTTPException(status_code=403, detail="Account not eligible for activation")
+
         business_id = biz.get("slug")
         role = "OWNER"
         modules = ["CATALOG", "APPEARANCE"]
