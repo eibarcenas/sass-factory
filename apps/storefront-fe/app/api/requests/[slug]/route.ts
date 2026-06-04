@@ -1,0 +1,21 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+) {
+  const { slug } = await params
+  const apiUrl = process.env.CATALOG_API_URL ?? process.env.API_URL ?? 'http://localhost:8000'
+  try {
+    const body = await req.json()
+    const res = await fetch(`${apiUrl}/api/v1/storefront/${slug}/requests`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json().catch(() => ({}))
+    return NextResponse.json(data, { status: res.status })
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 500 })
+  }
+}
