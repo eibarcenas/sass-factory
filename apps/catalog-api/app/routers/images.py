@@ -1,14 +1,33 @@
+import asyncio
+import os
+import uuid
+
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from google.cloud import storage
-from app.db import get_db
-import uuid
-import os
 
 router = APIRouter(tags=["images"])
 
 BUCKET_NAME = os.getenv("GCS_BUCKET", "catalog-mx-images")
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
 MAX_BYTES = 2 * 1024 * 1024  # 2MB
+
+# Module-level singleton: initialized once on first request, reused thereafter.
+_gcs_client: "storage.Client | None" = None
+
+
+def _get_bucket() -> "storage.Bucket":
+    global _gcs_client
+    if _gcs_client is None:
+        _gcs_client = storage.Client()
+    return _gcs_client.bucket(BUCKET_NAME)
+
+
+def _sync_upload(content: bytes, filename: str, content_type: str) -> str:
+    """Blocking GCS upload — called via asyncio.to_thread to avoid blocking the event loop."""
+    blob = _get_bucket().blob(filename)
+    blob.upload_from_string(content, content_type=content_type, predefined_acl="publicRead")
+    return f"https://storage.googleapis.com/{BUCKET_NAME}/{filename}"
+
 
 @router.post("/images/upload")
 async def upload_image(
@@ -34,17 +53,11 @@ async def upload_image(
     filename = f"{folder}/{uuid.uuid4().hex}.{ext}"
 
     try:
-        client = storage.Client()
-        bucket = client.bucket(BUCKET_NAME)
-        blob = bucket.blob(filename)
-        blob.upload_from_string(content, content_type=file.content_type)
-        blob.make_public()
-        public_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{filename}"
+        public_url = await asyncio.to_thread(_sync_upload, content, filename, file.content_type)
         return {"url": public_url, "filename": filename}
-    except Exception as e:
+    except Exception:
         if os.getenv("GCS_DEV_FALLBACK", "false") != "true":
             raise HTTPException(status_code=500, detail="Image upload failed")
-        # Local dev: GCS not configured, return a placeholder so UI is testable
         return {
             "url": f"https://via.placeholder.com/400x400?text={folder}",
             "filename": filename,
