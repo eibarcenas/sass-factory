@@ -14,6 +14,17 @@ on:
       - 'apps/landing-fe/**'
       - 'packages/**'
       - '.github/workflows/deploy-prod.yml'
+  workflow_dispatch:
+    inputs:
+      promote_to_full:
+        description: Promote canary revisions to 100% after deployment
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -42,6 +53,7 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v2
       - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
 
       - name: Build all images
         env:
@@ -52,11 +64,18 @@ jobs:
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)' 2>/dev/null || echo "")
 
-          docker build --secret id=gh_pat,env=GH_PAT \
+          docker buildx build \
+            --push \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            --secret id=gh_pat,env=GH_PAT \
             -t "${{ env.AR_URL }}/catalog-mx-catalog-api:${{ github.sha }}" apps/catalog-api/
-          docker push "${{ env.AR_URL }}/catalog-mx-catalog-api:${{ github.sha }}"
 
-          docker build -f apps/storefront-fe/Dockerfile \
+          docker buildx build \
+            --push \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            -f apps/storefront-fe/Dockerfile \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${{ vars.ADMIN_URL }}" \
             --build-arg NEXT_PUBLIC_API_URL="${API_URL}" \
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
@@ -64,9 +83,12 @@ jobs:
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
             --build-arg NEXT_PUBLIC_SUPPORT_WHATSAPP="${{ vars.SUPPORT_WHATSAPP }}" \
             -t "${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}" .
-          docker push "${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
 
-          docker build -f apps/admin-fe/Dockerfile \
+          docker buildx build \
+            --push \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            -f apps/admin-fe/Dockerfile \
             --build-arg VITE_API_URL="${API_URL}" \
             --build-arg VITE_STOREFRONT_URL="${{ vars.STOREFRONT_URL }}" \
             --build-arg VITE_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
@@ -75,7 +97,6 @@ jobs:
             --build-arg VITE_ADMIN_URL="${{ vars.ADMIN_URL }}" \
             --build-arg VITE_LANDING_URL="${{ vars.LANDING_URL }}" \
             -t "${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}" .
-          docker push "${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
 
       - name: Deploy API (catalog-mx-catalog-api-prod) — canary
         run: |
@@ -106,11 +127,19 @@ jobs:
               --region=${{ env.REGION }} --project=${{ env.PROJECT }} --to-tags canary=10 --quiet
           done
 
-      - name: Wait 5 min then promote to 100%
+      - name: Smoke test production API
         run: |
-          echo "Waiting 5 minutes on canary..."
-          sleep 300
-          for svc in api storefront admin; do
+          API=$(gcloud run services describe catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
+          curl -f "${API}/health" && echo "Production API smoke test passed"
+
+      - name: Promote canaries to 100%
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.promote_to_full }}
+        run: |
+          gcloud run services update-traffic catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} --to-latest --quiet
+          echo "catalog-mx-catalog-api-prod: 100%"
+          for svc in storefront admin; do
             gcloud run services update-traffic catalog-mx-${svc}-${{ env.ENV_SUFFIX }} \
               --region=${{ env.REGION }} --project=${{ env.PROJECT }} --to-latest --quiet
             echo "catalog-mx-${svc}-prod: 100%"
