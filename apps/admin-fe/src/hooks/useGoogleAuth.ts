@@ -50,16 +50,25 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
         result = await getRedirectResult(auth)
       } catch {
         // No valid redirect state — treat as null
-      } finally {
-        if (!cancelled) setRedirectChecked(true)
       }
 
-      if (result && !cancelled) {
-        setPending(true)
-        try {
-          await onCredentialRef.current(result)
-        } finally {
-          if (!cancelled) setPending(false)
+      if (!cancelled) {
+        if (result) {
+          // Set pending and redirectChecked together so consumers never see
+          // redirectChecked=true with pending=false while processing a redirect return.
+          // React 18 batches these two synchronous setState calls into one render.
+          setPending(true)
+          setRedirectChecked(true)
+          try {
+            await onCredentialRef.current(result)
+          } catch (err: any) {
+            // Surface credential errors — these are actionable
+            onCredentialRef.current = async () => { throw err }
+          } finally {
+            if (!cancelled) setPending(false)
+          }
+        } else {
+          setRedirectChecked(true)
         }
       }
     })()
