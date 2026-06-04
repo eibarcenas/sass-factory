@@ -1,8 +1,8 @@
 import { getTranslations } from 'next-intl/server'
-import PhoneMockup from './PhoneMockup'
+import LiveCatalogPreview from './LiveCatalogPreview'
 
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:5173'
-const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? 'http://localhost:3000'
+const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? 'http://localhost:3010'
 
 export default async function Hero() {
   const t = await getTranslations('hero')
@@ -70,9 +70,9 @@ export default async function Hero() {
             </div>
           </div>
 
-          {/* Phone mockup */}
+          {/* Live catalog preview */}
           <div className="hero-visual flex justify-center lg:justify-end">
-            <PhoneMockup />
+            <LiveCatalogPreview />
           </div>
         </div>
       </div>
