@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 const API_URL     = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 export default function LoginPage() {
-  const { mockMode, setUser } = useAuthStore()
+  const { mockMode, user, setUser } = useAuthStore()
   const navigate = useNavigate()
   const [error, setError] = useState('')
   const autoStarted = useRef(false)
@@ -62,13 +62,17 @@ export default function LoginPage() {
       navigate('/', { replace: true })
       return
     }
+    if (user) {
+      navigate(user.role === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
+      return
+    }
     if (redirectChecked && !pending && !autoStarted.current) {
       autoStarted.current = true
       signInWithGoogle().catch((err: any) => {
         setError(err.message ?? 'Sign in failed')
       })
     }
-  }, [mockMode, navigate, redirectChecked, pending, signInWithGoogle])
+  }, [mockMode, navigate, redirectChecked, pending, signInWithGoogle, user])
 
   if (mockMode) return null
 
