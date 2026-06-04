@@ -1,8 +1,8 @@
 import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 
-export default async function PrivacyPage() {
-  const t = await getTranslations('privacy')
+export default async function CookiesPage() {
+  const t = await getTranslations('cookies')
 
   const sections = [
     { title: t('s1_title'), body: t('s1_body') },
