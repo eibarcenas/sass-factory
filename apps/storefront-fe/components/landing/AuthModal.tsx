@@ -124,18 +124,6 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
             <p className="text-sm text-center" style={{ color: '#f87171' }}>{error}</p>
           )}
 
-          {/* Legal note */}
-          <p className="text-[11px] text-center leading-relaxed" style={{ color: '#555' }}>
-            Al continuar aceptas los{' '}
-            <a href="/terminos" className="underline underline-offset-2" style={{ color: '#777' }}>
-              Terminos y Condiciones
-            </a>{' '}
-            y la{' '}
-            <a href="/privacidad" className="underline underline-offset-2" style={{ color: '#777' }}>
-              Politica de Privacidad
-            </a>{' '}
-            de catalog.mx.
-          </p>
         </div>
       </div>
     </>

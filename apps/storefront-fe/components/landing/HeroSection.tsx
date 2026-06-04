@@ -53,7 +53,7 @@ export default function HeroSection() {
           <div className="flex flex-col items-center lg:items-start gap-2">
             <GoogleSignInButton size="large" />
             <span className="text-[0.8rem]" style={{ color: '#888888' }}>
-              Sin tarjeta de credito &middot; Listo en 5 min
+              Sin tarjeta de crédito &middot; Listo en 5 min
             </span>
           </div>
 

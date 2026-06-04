@@ -39,20 +39,12 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
-            <div className="flex gap-4 mt-2">
-              <a href="/terminos" className="text-sm underline underline-offset-4" style={{ color: '#888888' }}>
-                Terminos y Condiciones
-              </a>
-              <a href="/privacidad" className="text-sm underline underline-offset-4" style={{ color: '#888888' }}>
-                Politica de Privacidad
-              </a>
-            </div>
           </div>
 
           <div className="flex flex-col gap-4">
             <h3 className="text-white font-bold text-[1.1rem]">Tienes dudas?</h3>
             <p className="text-sm leading-relaxed" style={{ color: '#888888' }}>
-              Escribenos por WhatsApp y te ayudamos a configurar tu catalogo. Respondemos en menos de 24 horas en dias habiles.
+              Escríbenos por WhatsApp y te ayudamos a configurar tu catálogo. Respondemos en menos de 24 horas en días hábiles.
             </p>
             <a
               href="https://wa.me/521XXXXXXXXXX"
@@ -78,10 +70,6 @@ export default function LandingPage() {
           <span className="text-xs order-last sm:order-none" style={{ color: '#555555' }}>
             &copy; 2025 catalog.mx. Todos los derechos reservados. Operado en Mexico.
           </span>
-          <div className="flex items-center gap-4">
-            <a href="/terminos" className="text-xs" style={{ color: '#555555' }}>Terminos</a>
-            <a href="/privacidad" className="text-xs" style={{ color: '#555555' }}>Privacidad</a>
-          </div>
         </div>
       </footer>
       <WhatsAppFAB />

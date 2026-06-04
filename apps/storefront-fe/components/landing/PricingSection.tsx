@@ -128,7 +128,7 @@ export default function PricingSection() {
                   <span className="font-bold" style={{ color: '#25D366' }}>
                     $75/mes
                   </span>
-                  . Ahorras ${saving} al ano.
+                  . Ahorras ${saving} al año.
                 </p>
               )}
             </div>
