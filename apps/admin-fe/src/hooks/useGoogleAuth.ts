@@ -49,7 +49,7 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
         const auth = await initFirebase()
         result = await getRedirectResult(auth)
       } catch {
-        // getRedirectResult errors mean no valid redirect — treat as null
+        // No valid redirect state — treat as null
       }
 
       if (!cancelled) {
