@@ -51,7 +51,7 @@ export default async function Hero() {
                 {t('cta_primary')}
               </a>
               <a
-                href={`${STOREFRONT_URL}/demo/heladeria-pinguino`}
+                href={`${STOREFRONT_URL}/heladeria-el-pinguino`}
                 className="text-sm font-medium text-zinc-500 underline-offset-4 transition-colors hover:text-zinc-700 hover:underline"
               >
                 {t('cta_secondary')} →
