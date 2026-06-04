@@ -39,6 +39,15 @@ def mock_firestore():
         yield
 
 
+@pytest.fixture(autouse=True)
+def reset_gcs_singleton():
+    """Reset the module-level GCS client so each test starts with a fresh mock."""
+    import app.routers.images as images_mod
+    images_mod._gcs_client = None
+    yield
+    images_mod._gcs_client = None
+
+
 @pytest.fixture
 def client_with_auth():
     """Client with dev auth bypass and GCS dev fallback active."""
@@ -127,7 +136,9 @@ def test_upload_success_returns_url(client_with_auth):
     assert data["url"].startswith("https://storage.googleapis.com/")
     assert "filename" in data
     mock_blob.upload_from_string.assert_called_once()
-    mock_blob.make_public.assert_called_once()
+    # predefined_acl="publicRead" replaces a separate make_public() round-trip
+    assert mock_blob.upload_from_string.call_args.kwargs.get("predefined_acl") == "publicRead"
+    mock_blob.make_public.assert_not_called()
 
 
 def test_upload_png_success(client_with_auth):
