@@ -2,8 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import CreateBusinessForm from '../components/businesses/CreateBusinessForm'
 import { Card, CardContent } from '@/components/ui/card'
 
-const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
-
 export default function NewClientPage() {
   const navigate = useNavigate()
 
@@ -26,8 +24,7 @@ export default function NewClientPage() {
         <CardContent className="pt-5">
           <CreateBusinessForm
             onSuccess={(slug) => {
-              window.open(`${STOREFRONT_URL}/demo/${slug}`, '_blank')
-              navigate('/clientes')
+              navigate(`/owner/preview/${slug}`)
             }}
           />
         </CardContent>

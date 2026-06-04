@@ -81,7 +81,15 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, readonly,
             <p className="text-xs font-mono text-muted-foreground flex-1 truncate">{catalogUrl}</p>
             <Button size="sm" variant="outline" onClick={copyLink}>Copy</Button>
           </div>
-          {!isPreview && (
+          {isPreview ? (
+            <Button
+              size="sm"
+              className="w-full bg-green-600 hover:bg-green-700"
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Hola, aquí está tu sitio para revisar: ${catalogUrl}`)}`, '_blank')}
+            >
+              📱 Compartir con cliente
+            </Button>
+          ) : (
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button size="sm" className="w-full sm:flex-1 bg-green-600 hover:bg-green-700" onClick={shareWhatsApp}>
                 📱 Share on WhatsApp
