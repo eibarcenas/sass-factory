@@ -15,6 +15,10 @@ on:
       - 'packages/**'
       - '.github/workflows/deploy-stg.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   PROJECT: ei-catalog-stg
@@ -42,6 +46,7 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v2
       - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - uses: docker/setup-buildx-action@v3
 
       - name: Deploy API (catalog-mx-catalog-api-stg)
         env:
@@ -49,8 +54,12 @@ jobs:
           DOCKER_BUILDKIT: "1"
         run: |
           IMAGE="${{ env.AR_URL }}/catalog-mx-catalog-api:${{ github.sha }}"
-          docker build --secret id=gh_pat,env=GH_PAT -t "$IMAGE" apps/catalog-api/
-          docker push "$IMAGE"
+          docker buildx build \
+            --push \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
+            --secret id=gh_pat,env=GH_PAT \
+            -t "$IMAGE" apps/catalog-api/
           gcloud run deploy catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_STG }}" \
@@ -65,7 +74,10 @@ jobs:
           ADMIN_URL=$(gcloud run services describe catalog-mx-admin-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
-          docker build \
+          docker buildx build \
+            --push \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
             --build-arg NEXT_PUBLIC_API_URL="${API_URL}" \
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
@@ -73,7 +85,6 @@ jobs:
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
             --build-arg NEXT_PUBLIC_SUPPORT_WHATSAPP="${{ vars.SUPPORT_WHATSAPP }}" \
             -t "$IMAGE" -f apps/storefront-fe/Dockerfile .
-          docker push "$IMAGE"
           gcloud run deploy catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_STG }}" \
@@ -87,7 +98,10 @@ jobs:
           STOREFRONT_URL=$(gcloud run services describe catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
-          docker build \
+          docker buildx build \
+            --push \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
             --build-arg VITE_API_URL="${API_URL}" \
             --build-arg VITE_STOREFRONT_URL="${STOREFRONT_URL}" \
             --build-arg VITE_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
@@ -96,7 +110,6 @@ jobs:
             --build-arg VITE_ADMIN_URL="${{ vars.ADMIN_URL }}" \
             --build-arg VITE_LANDING_URL="${{ vars.LANDING_URL }}" \
             -t "$IMAGE" -f apps/admin-fe/Dockerfile .
-          docker push "$IMAGE"
           gcloud run deploy catalog-mx-admin-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_STG }}" \
@@ -109,11 +122,13 @@ jobs:
           STOREFRONT_URL=$(gcloud run services describe catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-landing:${{ github.sha }}"
-          docker build \
+          docker buildx build \
+            --push \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=max \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
             --build-arg NEXT_PUBLIC_STOREFRONT_URL="${STOREFRONT_URL}" \
             -t "$IMAGE" -f apps/landing-fe/Dockerfile .
-          docker push "$IMAGE"
           gcloud run deploy catalog-mx-landing-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_STG }}" \
