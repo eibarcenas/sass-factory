@@ -1,4 +1,4 @@
-import PhoneMockup from './PhoneMockup'
+import LiveCatalogPreview from './LiveCatalogPreview'
 import GoogleSignInButton from './GoogleSignInButton'
 
 const AVATAR_SEEDS = ['mx-biz-1', 'mx-biz-2', 'mx-biz-3', 'mx-biz-4']
@@ -80,7 +80,7 @@ export default function HeroSection() {
 
         {/* Right column */}
         <div className="flex justify-center lg:justify-end">
-          <PhoneMockup />
+          <LiveCatalogPreview />
         </div>
 
       </div>
