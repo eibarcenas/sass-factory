@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const autoStarted = useRef(false)
 
-  const { signInWithGoogle, redirectChecked } = useGoogleAuth(async (cred) => {
+  const { signInWithGoogle, redirectChecked, pending } = useGoogleAuth(async (cred) => {
     setError('')
     const { claims } = await cred.user.getIdTokenResult(true)
     const role = claims.role as UserRole | undefined
@@ -62,13 +62,13 @@ export default function LoginPage() {
       navigate('/', { replace: true })
       return
     }
-    if (redirectChecked && !autoStarted.current) {
+    if (redirectChecked && !pending && !autoStarted.current) {
       autoStarted.current = true
       signInWithGoogle().catch((err: any) => {
         setError(err.message ?? 'Sign in failed')
       })
     }
-  }, [mockMode, navigate, redirectChecked, signInWithGoogle])
+  }, [mockMode, navigate, redirectChecked, pending, signInWithGoogle])
 
   if (mockMode) return null
 
