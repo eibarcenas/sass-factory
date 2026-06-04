@@ -6,6 +6,9 @@ on:
   push:
     branches: [develop]
 
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -38,5 +41,5 @@ jobs:
             (cd "apps/${service}" && DEV_USER_EMAIL=dev@catalog.mx ENVIRONMENT=local .venv/bin/pytest -q)
           done
       - name: Lint
-        run: pnpm -r run lint --if-present 2>/dev/null || true
+        run: pnpm -r --if-present run lint
         continue-on-error: true
