@@ -99,31 +99,6 @@ def business_action(
 
 # ── Owner endpoints ────────────────────────────────────────────────────────────
 
-@router.post("/owner/business/submit")
-def owner_submit_for_review(
-    business: str | None = None,
-    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
-):
-    """Owner submits their draft catalog for admin review (DRAFT → REVIEW)."""
-    slug = _resolve_owner_slug(user, business)
-    try:
-        return business_use_cases.transition_status(slug, "submit")
-    except ApplicationError as error:
-        raise_http(error)
-
-
-@router.patch("/owner/business/approve")
-def owner_approve_business(
-    business: str | None = None,
-    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
-):
-    slug = _resolve_owner_slug(user, business)
-    try:
-        return business_use_cases.owner_approve(slug)
-    except ApplicationError as error:
-        raise_http(error)
-
-
 @router.patch("/owner/business")
 def owner_update_business(
     patch: dict,

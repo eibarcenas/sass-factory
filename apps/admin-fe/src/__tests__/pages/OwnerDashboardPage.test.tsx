@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth'
 
 vi.mock('@/lib/api', () => ({
   api: {
-    get: vi.fn().mockResolvedValue({ name: 'Heladería El Pingüino', slug: 'heladeria-el-pinguino', status: 'demo', items: [] }),
+    get: vi.fn().mockResolvedValue({ name: 'Heladería El Pingüino', slug: 'heladeria-el-pinguino', status: 'active', items: [] }),
     patch: vi.fn(),
   },
 }))

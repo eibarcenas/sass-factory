@@ -27,7 +27,7 @@ const inputClass = 'w-full px-3.5 py-2.5 border border-input rounded-xl text-sm 
 
 interface Props { onSuccess?: (slug: string) => void }
 
-export default function CreateDemoForm({ onSuccess }: Props) {
+export default function CreateBusinessForm({ onSuccess }: Props) {
   const createDemo = useCreateDemo()
   const [form, setForm] = useState({
     type: '' as BusinessType | '',
@@ -70,7 +70,7 @@ export default function CreateDemoForm({ onSuccess }: Props) {
       onSuccess?.(business.slug)
       setForm({ type: '', name: '', contactName: '', whatsapp: '', city: '', state: 'Ciudad de México', tagline: '' })
     } catch (err: any) {
-      setError(err.message ?? 'No se pudo crear la demo')
+      setError(err.message ?? 'No se pudo crear el negocio')
     }
   }
 
@@ -163,9 +163,6 @@ export default function CreateDemoForm({ onSuccess }: Props) {
           placeholder="Los mejores cortes del sur de la ciudad"
           className={inputClass}
         />
-        <p className="text-xs text-muted-foreground">
-          Frase corta visible en la página del negocio.
-        </p>
       </div>
 
       {error && <p className="text-xs text-destructive">{error}</p>}
@@ -175,7 +172,7 @@ export default function CreateDemoForm({ onSuccess }: Props) {
         disabled={createDemo.isPending}
         className="w-full py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-xl transition-colors disabled:opacity-50"
       >
-        {createDemo.isPending ? 'Creando...' : 'Crear demo'}
+        {createDemo.isPending ? 'Creando...' : 'Crear negocio'}
       </button>
     </form>
   )

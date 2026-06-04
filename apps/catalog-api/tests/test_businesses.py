@@ -74,8 +74,8 @@ def client():
 
 def test_list_businesses_returns_all(client):
     db = _db_with([
-        {"slug": "a", "name": "A", "status": "draft",  "plan": "free"},
-        {"slug": "b", "name": "B", "status": "active", "plan": "pro"},
+        {"slug": "a", "name": "A", "status": "pending", "plan": "free"},
+        {"slug": "b", "name": "B", "status": "active",  "plan": "pro"},
     ])
     with patch("app.application.use_cases.businesses.get_db", return_value=db):
         resp = client.get("/api/v1/admin/businesses")
@@ -98,12 +98,9 @@ def test_list_businesses_requires_auth():
 # ---------------------------------------------------------------------------
 
 VALID_TRANSITIONS = [
-    ("draft",     "publish"),
-    ("demo",      "send"),
-    ("sent",      "accept"),
-    ("accepted",  "activate"),
-    ("active",    "suspend"),
-    ("suspended", "reactivate"),
+    ("pending",  "activate"),
+    ("active",   "deactivate"),
+    ("inactive", "reactivate"),
 ]
 
 
@@ -120,10 +117,9 @@ def test_valid_status_transition(client, from_status, action):
 # ---------------------------------------------------------------------------
 
 INVALID_TRANSITIONS = [
-    ("draft",    "activate"),
-    ("active",   "publish"),
-    ("active",   "accept"),
-    ("archived", "publish"),
+    ("pending",  "deactivate"),
+    ("inactive", "deactivate"),
+    ("active",   "activate"),
 ]
 
 
@@ -138,5 +134,5 @@ def test_invalid_status_transition_returns_422(client, from_status, action):
 def test_unknown_business_returns_404(client):
     db = _db_with([])
     with patch("app.application.use_cases.businesses.get_db", return_value=db):
-        resp = client.post("/api/v1/admin/businesses/nonexistent/publish")
+        resp = client.post("/api/v1/admin/businesses/nonexistent/activate")
     assert resp.status_code == 404

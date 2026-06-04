@@ -1,15 +1,7 @@
 export enum BusinessStatus {
-  Draft         = 'draft',
-  PendingReview = 'pending_review',
-  Review        = 'review',
-  Demo          = 'demo',
-  Sent          = 'sent',
-  Accepted      = 'accepted',
-  Active        = 'active',
-  Suspended     = 'suspended',
-  Expired       = 'expired',
-  Rejected      = 'rejected',
-  Archived      = 'archived',
+  Pending  = 'pending',
+  Active   = 'active',
+  Inactive = 'inactive',
 }
 
 export enum BusinessType {

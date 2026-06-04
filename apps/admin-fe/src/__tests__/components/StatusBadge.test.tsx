@@ -4,14 +4,9 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import { BusinessStatus } from '@eguru/core'
 
 const STATUSES: [BusinessStatus, string][] = [
-  [BusinessStatus.Draft,     'Draft'],
-  [BusinessStatus.Demo,      'Demo'],
-  [BusinessStatus.Sent,      'Sent'],
-  [BusinessStatus.Accepted,  'Accepted'],
-  [BusinessStatus.Active,    'Active'],
-  [BusinessStatus.Suspended, 'Suspended'],
-  [BusinessStatus.Expired,   'Expired'],
-  [BusinessStatus.Archived,  'Archived'],
+  [BusinessStatus.Pending,  'Pendiente'],
+  [BusinessStatus.Active,   'Activa'],
+  [BusinessStatus.Inactive, 'Inactiva'],
 ]
 
 describe('StatusBadge', () => {
@@ -25,13 +20,13 @@ describe('StatusBadge', () => {
     expect(container.firstChild).toHaveClass('bg-emerald-100')
   })
 
-  it('applies color class for suspended status', () => {
-    const { container } = render(<StatusBadge status={BusinessStatus.Suspended} />)
-    expect(container.firstChild).toHaveClass('bg-red-100')
+  it('applies color class for inactive status', () => {
+    const { container } = render(<StatusBadge status={BusinessStatus.Inactive} />)
+    expect(container.firstChild).toHaveClass('bg-slate-100')
   })
 
-  it('applies color class for draft status', () => {
-    const { container } = render(<StatusBadge status={BusinessStatus.Draft} />)
-    expect(container.firstChild).toHaveClass('bg-slate-100')
+  it('applies color class for pending status', () => {
+    const { container } = render(<StatusBadge status={BusinessStatus.Pending} />)
+    expect(container.firstChild).toHaveClass('bg-amber-100')
   })
 })
