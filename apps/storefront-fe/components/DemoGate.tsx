@@ -27,9 +27,18 @@ export default function DemoGate({ slug, data }: Props) {
       try {
         const { claims } = await user.getIdTokenResult()
         const r = claims.role as string | undefined
-        if (r === 'SUPER_ADMIN') setRole('super_admin')
-        else if (r === 'OWNER' && claims.business_id === slug) setRole('owner')
-        else setRole('other')
+        if (r === 'SUPER_ADMIN') {
+          setRole('super_admin')
+        } else if (r === 'OWNER' && claims.business_id === slug) {
+          setRole('owner')
+        } else if (!r && user.phoneNumber) {
+          // Phone-auth user: grant access if their number matches the business's registered WhatsApp
+          const authDigits = user.phoneNumber.replace(/\D/g, '')
+          const bizDigits = data.whatsapp.replace(/\D/g, '')
+          setRole(authDigits.endsWith(bizDigits) ? 'owner' : 'other')
+        } else {
+          setRole('other')
+        }
       } catch {
         setRole('other')
       }

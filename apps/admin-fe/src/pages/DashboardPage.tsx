@@ -159,7 +159,7 @@ const NAV_ITEMS = [
 
 type NavKey = typeof NAV_ITEMS[number]['key']
 
-function AdminSidebar({ newProspects, onAfterNavigate }: { newProspects: number; onAfterNavigate?: () => void }) {
+function AdminSidebar({ pendingCount, onAfterNavigate }: { pendingCount: number; onAfterNavigate?: () => void }) {
   const { user, mockMode } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
@@ -172,7 +172,7 @@ function AdminSidebar({ newProspects, onAfterNavigate }: { newProspects: number;
     key: n.key,
     icon: n.icon,
     label: n.label,
-    badge: n.key === 'clientes' ? newProspects : undefined,
+    badge: n.key === 'clientes' ? pendingCount : undefined,
   }))
 
   return (
@@ -201,21 +201,21 @@ function AdminSidebar({ newProspects, onAfterNavigate }: { newProspects: number;
 // ── Admin layout (wraps all admin routes) ─────────────────────────────────────
 
 export default function AdminLayout() {
-  const { data: prospectData } = useProspects()
-  const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
+  const { data: bizData } = useBusinesses()
+  const pendingCount = (bizData?.businesses ?? []).filter(b => b.status === BusinessStatus.Pending).length
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
       {/* Desktop sidebar */}
-      <div className="hidden md:block">
-        <AdminSidebar newProspects={newProspects} />
+      <div className="hidden md:block h-full">
+        <AdminSidebar pendingCount={pendingCount} />
       </div>
 
       {/* Mobile drawer */}
       <MobileSidebar open={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)}>
         <AdminSidebar
-          newProspects={newProspects}
+          pendingCount={pendingCount}
           onAfterNavigate={() => setMobileSidebarOpen(false)}
         />
       </MobileSidebar>

@@ -85,7 +85,7 @@ export default function AppSidebar<T extends string>({
 
   return (
     <aside
-      className={`${collapsed ? 'w-14' : 'w-[220px]'} bg-background border-r border-border flex flex-col h-screen sticky top-0 transition-all duration-200 shadow-sm`}
+      className={`${collapsed ? 'w-14' : 'w-[220px]'} bg-background border-r border-border flex flex-col h-full transition-all duration-200 shadow-sm`}
     >
       {/* Header */}
       <div className="px-3 py-4 border-b border-border flex items-center justify-between gap-2 min-h-[57px]">
