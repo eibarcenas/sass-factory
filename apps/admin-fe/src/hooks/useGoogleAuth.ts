@@ -11,10 +11,6 @@ function isIOS(): boolean {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent)
 }
 
-function isAndroid(): boolean {
-  return /Android/i.test(navigator.userAgent)
-}
-
 // Real Safari has "Version/X.X" in its UA. In-app browsers (WhatsApp, Instagram, etc.) don't.
 function isRealSafari(): boolean {
   const ua = navigator.userAgent
@@ -82,13 +78,9 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
       const auth = await initFirebase()
       const provider = new GoogleAuthProvider()
 
-      if (isAndroid()) {
-        // Android: redirect works reliably
-        await doRedirect(auth)
-        return // page navigates away
-      }
-
-      // iOS and Desktop: try popup first (works when popups are allowed)
+      // Try popup on all platforms first. Chrome blocks third-party cookies since 2024,
+      // which breaks signInWithRedirect when authDomain differs from the app domain.
+      // Popup avoids this; redirect is only the fallback when popups are explicitly blocked.
       try {
         const cred = await signInWithPopup(auth, provider)
         await onCredentialRef.current(cred)
@@ -99,7 +91,7 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
             // Tell the user to open in a real browser.
             throw new Error('Para iniciar sesión, abre esta página en Safari.')
           }
-          // Real Safari or Desktop: popup blocked by browser settings → fall back to redirect
+          // Real Safari, Desktop, or Android with popup blocked → fall back to redirect
           await doRedirect(auth)
           return
         }
