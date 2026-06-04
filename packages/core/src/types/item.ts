@@ -6,6 +6,7 @@ export interface Item {
   currency: 'MXN'
   description?: string
   image?: string
+  images?: string[]
   category?: string
   visible: boolean
   order: number

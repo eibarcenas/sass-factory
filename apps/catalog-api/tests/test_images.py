@@ -136,9 +136,7 @@ def test_upload_success_returns_url(client_with_auth):
     assert data["url"].startswith("https://storage.googleapis.com/")
     assert "filename" in data
     mock_blob.upload_from_string.assert_called_once()
-    # predefined_acl="publicRead" replaces a separate make_public() round-trip
-    assert mock_blob.upload_from_string.call_args.kwargs.get("predefined_acl") == "publicRead"
-    mock_blob.make_public.assert_not_called()
+    mock_blob.make_public.assert_called_once()
 
 
 def test_upload_png_success(client_with_auth):

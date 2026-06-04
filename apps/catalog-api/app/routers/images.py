@@ -25,7 +25,8 @@ def _get_bucket() -> "storage.Bucket":
 def _sync_upload(content: bytes, filename: str, content_type: str) -> str:
     """Blocking GCS upload — called via asyncio.to_thread to avoid blocking the event loop."""
     blob = _get_bucket().blob(filename)
-    blob.upload_from_string(content, content_type=content_type, predefined_acl="publicRead")
+    blob.upload_from_string(content, content_type=content_type)
+    blob.make_public()
     return f"https://storage.googleapis.com/{BUCKET_NAME}/{filename}"
 
 
