@@ -136,9 +136,7 @@ def test_upload_success_returns_url(client_with_auth):
     assert data["url"].startswith("https://storage.googleapis.com/")
     assert "filename" in data
     mock_blob.upload_from_string.assert_called_once()
-    # predefined_acl="publicRead" replaces a separate make_public() round-trip
-    assert mock_blob.upload_from_string.call_args.kwargs.get("predefined_acl") == "publicRead"
-    mock_blob.make_public.assert_not_called()
+    mock_blob.make_public.assert_called_once()
 
 
 def test_upload_png_success(client_with_auth):
@@ -174,6 +172,68 @@ def test_upload_uses_folder_param(client_with_auth):
         )
 
     assert response.json()["filename"].startswith("menus/")
+
+
+# ---------------------------------------------------------------------------
+# Uniform bucket-level access — make_public() is rejected by GCS
+# ---------------------------------------------------------------------------
+
+def test_upload_uniform_acl_bucket_still_returns_url(client_with_auth):
+    """
+    GCS buckets with Uniform bucket-level access reject blob.make_public()
+    with a BadRequest exception.  The upload itself succeeds; only the ACL
+    step fails.  The endpoint must return 200 + a valid URL — not 500.
+
+    This is the regression test for the 'Error al subir' bug seen in the
+    ei-catalog-images-dev bucket.
+    """
+    mock_blob = MagicMock()
+    mock_blob.make_public.side_effect = Exception(
+        "Cannot use ACL API on a bucket with Uniform Bucket-Level Access"
+    )
+    mock_bucket = MagicMock()
+    mock_bucket.blob.return_value = mock_blob
+    mock_client = MagicMock()
+    mock_client.bucket.return_value = mock_bucket
+
+    with patch("app.routers.images.storage.Client", return_value=mock_client):
+        response = client_with_auth.post(
+            "/api/v1/images/upload",
+            files=[_make_file(jpeg_bytes(), "photo.jpg", "image/jpeg")],
+        )
+
+    assert response.status_code == 200, (
+        f"Expected 200 but got {response.status_code}. "
+        "make_public() failure on a Uniform-ACL bucket must not kill the upload."
+    )
+    data = response.json()
+    assert "url" in data
+    assert data["url"].startswith("https://storage.googleapis.com/")
+    assert "filename" in data
+    # The file was actually uploaded even though make_public raised
+    mock_blob.upload_from_string.assert_called_once()
+    mock_blob.make_public.assert_called_once()
+
+
+def test_upload_uniform_acl_bucket_png_still_returns_url(client_with_auth):
+    """Same Uniform-ACL scenario for PNG uploads."""
+    mock_blob = MagicMock()
+    mock_blob.make_public.side_effect = Exception("Uniform bucket-level access enabled")
+    mock_bucket = MagicMock()
+    mock_bucket.blob.return_value = mock_blob
+    mock_client = MagicMock()
+    mock_client.bucket.return_value = mock_bucket
+
+    with patch("app.routers.images.storage.Client", return_value=mock_client):
+        response = client_with_auth.post(
+            "/api/v1/images/upload?folder=banners",
+            files=[_make_file(png_bytes(), "banner.png", "image/png")],
+        )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["filename"].startswith("banners/")
+    assert data["url"].startswith("https://storage.googleapis.com/")
 
 
 # ---------------------------------------------------------------------------

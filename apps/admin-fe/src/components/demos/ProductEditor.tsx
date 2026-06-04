@@ -15,7 +15,12 @@ interface RowProps {
 
 function ItemRow({ item, businessId, scope, readonly = false, impersonateSlug, onSaved }: RowProps) {
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ name: item.name, price: item.price, description: item.description ?? '', image: item.image ?? '' })
+  const [form, setForm] = useState({
+    name: item.name,
+    price: item.price,
+    description: item.description ?? '',
+    images: item.images ?? (item.image ? [item.image] : []) as string[],
+  })
   const adminUpdate = useUpdateItem(businessId)
   const ownerUpdate = useOwnerUpdateItem(businessId, impersonateSlug)
   const adminDelete = useDeleteItem(businessId)
@@ -24,7 +29,14 @@ function ItemRow({ item, businessId, scope, readonly = false, impersonateSlug, o
   const deleteItem = scope === 'owner' ? ownerDelete : adminDelete
 
   async function save() {
-    await updateItem.mutateAsync({ itemId: item.id, patch: { ...form, price: Number(form.price) } })
+    const patch = {
+      name: form.name,
+      price: Number(form.price),
+      description: form.description,
+      images: form.images,
+      image: form.images[0] ?? null,
+    }
+    await updateItem.mutateAsync({ itemId: item.id, patch })
     setEditing(false)
     onSaved()
   }
@@ -36,8 +48,8 @@ function ItemRow({ item, businessId, scope, readonly = false, impersonateSlug, o
 
   if (readonly) return (
     <div className={`flex items-center gap-3 p-3 rounded-xl border ${item.visible ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
-      {item.image ? (
-        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+      {(item.images?.[0] ?? item.image) ? (
+        <img src={item.images?.[0] ?? item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
       ) : (
         <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 text-lg">📦</div>
       )}
@@ -98,8 +110,8 @@ function ItemRow({ item, businessId, scope, readonly = false, impersonateSlug, o
           className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <ImageUpload
-          currentUrl={form.image}
-          onUploaded={url => setForm(f => ({ ...f, image: url }))}
+          currentUrls={form.images}
+          onChanged={urls => setForm(f => ({ ...f, images: urls }))}
           folder="products"
         />
       </div>
