@@ -12,6 +12,9 @@ on:
       - 'infrastructure/iterraform/storefront-fe/**'
       - '.github/workflows/deploy-dev-storefront-fe.yml'
 
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 jobs:
   deploy:
     runs-on: ubuntu-latest
