@@ -22,9 +22,6 @@ def get_storefront(slug: str, demo: bool = False):
     business["id"] = doc.id
     status = business.get("status")
 
-    if status == BusinessStatus.SUSPENDED:
-        raise HTTPException(status_code=410, detail="This business is currently suspended")
-
     if not demo and status != BusinessStatus.ACTIVE:
         raise HTTPException(
             status_code=403,

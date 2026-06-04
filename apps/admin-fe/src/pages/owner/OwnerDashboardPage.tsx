@@ -6,7 +6,7 @@ import { useImpersonationStore } from '../../store/impersonation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import AppSidebar, { SidebarProfile } from '../../components/layout/AppSidebar'
-import ProductEditor from '../../components/demos/ProductEditor'
+import ProductEditor from '../../components/catalog/ProductEditor'
 import type { NavItem } from '../../components/layout/AppSidebar'
 import { MobileSidebar } from '@eguru/ui'
 import { Button } from '@/components/ui/button'
@@ -23,60 +23,8 @@ const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:
 
 type Page = 'catalog' | 'appearance' | 'settings' | 'requests'
 
-// ── Draft onboarding banner ───────────────────────────────────────────────────
-function DraftBanner({ businessId, onSubmitted }: { businessId: string; onSubmitted: () => void }) {
-  const [submitting, setSubmitting] = useState(false)
-  const [done, setDone] = useState(false)
-
-  async function submitForReview() {
-    setSubmitting(true)
-    try {
-      await api.post(`/api/v1/owner/business/submit`, {})
-      setDone(true)
-      onSubmitted()
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  if (done) {
-    return (
-      <div className="mb-6 flex items-center gap-3 p-4 rounded-lg border border-green-200 bg-green-50">
-        <svg viewBox="0 0 20 20" className="h-5 w-5 text-green-600 shrink-0" fill="currentColor">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-        </svg>
-        <div>
-          <p className="text-sm font-medium text-green-900">¡Solicitud enviada!</p>
-          <p className="text-xs text-green-700">Revisamos tu catálogo y lo activamos en menos de 24 horas.</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-blue-900">Tu catálogo está en borrador</p>
-          <p className="text-xs text-blue-700 mt-0.5">
-            Agrega tus productos y personaliza tu página. Cuando esté listo, envíalo para que lo activemos en menos de 24 horas.
-          </p>
-        </div>
-        <Button
-          size="sm"
-          className="shrink-0"
-          onClick={submitForReview}
-          disabled={submitting}
-        >
-          {submitting ? 'Enviando...' : 'Enviar para revisión'}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-// ── Review status banner (auto-provisioned businesses) ───────────────────────
-function ReviewBanner() {
+// ── Pending activation banner ─────────────────────────────────────────────────
+function PendingBanner() {
   return (
     <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
       <div className="flex items-start gap-3">
@@ -84,9 +32,9 @@ function ReviewBanner() {
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
         </svg>
         <div>
-          <p className="text-sm font-semibold text-blue-900">Tu catálogo está en revisión</p>
+          <p className="text-sm font-semibold text-blue-900">Tu sitio está pendiente de activación</p>
           <p className="text-xs text-blue-700 mt-0.5">
-            Agrega tus productos y personaliza tu página mientras esperamos. Lo activamos en menos de 24 horas.
+            Agrega tus productos y personaliza tu página. Lo activamos pronto.
           </p>
         </div>
       </div>
@@ -134,11 +82,11 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, readonly,
             <Button size="sm" variant="outline" onClick={copyLink}>Copy</Button>
           </div>
           {!isPreview && (
-            <div className="flex gap-2">
-              <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700" onClick={shareWhatsApp}>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button size="sm" className="w-full sm:flex-1 bg-green-600 hover:bg-green-700" onClick={shareWhatsApp}>
                 📱 Share on WhatsApp
               </Button>
-              <Button size="sm" variant="outline" className="flex-1" asChild>
+              <Button size="sm" variant="outline" className="w-full sm:flex-1" asChild>
                 <a href={catalogUrl} target="_blank" rel="noopener noreferrer">View catalog →</a>
               </Button>
             </div>
@@ -248,15 +196,13 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
     setMobileSidebarOpen(false)
   }
 
-  const queryClient = useQueryClient()
-
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
     queryFn: () => api.get<{ name: string; slug: string; tagline?: string; whatsapp?: string; status: BusinessStatus; whatsappClicks?: number }>(`/api/v1/storefront/${businessId}`),
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
-  const isUnderReview = !isImpersonating && !isPreview && bizData?.status === BusinessStatus.Review
+  const isUnderReview = !isImpersonating && !isPreview && bizData?.status === BusinessStatus.Pending
 
   const sidebarFooter = (
     <div className="space-y-2">
@@ -323,11 +269,8 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-        {bizData?.status === BusinessStatus.Draft && !isPreview && !isImpersonating && (
-          <DraftBanner businessId={businessId} onSubmitted={() => queryClient.invalidateQueries({ queryKey: ['owner-business', businessId] })} />
-        )}
-        {bizData?.status === BusinessStatus.Review && !isPreview && !isImpersonating && (
-          <ReviewBanner />
+        {bizData?.status === BusinessStatus.Pending && !isPreview && !isImpersonating && (
+          <PendingBanner />
         )}
 
         {isImpersonating && (

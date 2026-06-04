@@ -16,19 +16,15 @@ import { useBusinesses, useBusinessAction } from '../../hooks/useBusinesses'
 import { BusinessStatus, type Business } from '@eguru/core'
 
 const COLUMNS: { status: BusinessStatus; label: string; topBorder: string; labelColor: string }[] = [
-  { status: BusinessStatus.Draft,    label: 'Borrador',   topBorder: 'border-t-slate-300',   labelColor: 'text-slate-500' },
-  { status: BusinessStatus.Demo,     label: 'Demo lista', topBorder: 'border-t-primary',     labelColor: 'text-primary' },
-  { status: BusinessStatus.Sent,     label: 'Enviada',    topBorder: 'border-t-amber-400',   labelColor: 'text-amber-600' },
-  { status: BusinessStatus.Accepted, label: 'Aceptada',   topBorder: 'border-t-emerald-500', labelColor: 'text-emerald-700' },
-  { status: BusinessStatus.Active,   label: 'Activa',     topBorder: 'border-t-emerald-600', labelColor: 'text-emerald-800' },
+  { status: BusinessStatus.Pending,  label: 'Pendiente', topBorder: 'border-t-amber-400',   labelColor: 'text-amber-600'   },
+  { status: BusinessStatus.Active,   label: 'Activa',    topBorder: 'border-t-emerald-500', labelColor: 'text-emerald-700' },
+  { status: BusinessStatus.Inactive, label: 'Inactiva',  topBorder: 'border-t-slate-400',   labelColor: 'text-slate-500'   },
 ]
 
-// Only forward transitions are supported by the API
 const VALID_TRANSITION: Partial<Record<BusinessStatus, { to: BusinessStatus; action: string }>> = {
-  [BusinessStatus.Draft]:    { to: BusinessStatus.Demo,     action: 'publish'  },
-  [BusinessStatus.Demo]:     { to: BusinessStatus.Sent,     action: 'send'     },
-  [BusinessStatus.Sent]:     { to: BusinessStatus.Accepted, action: 'accept'   },
-  [BusinessStatus.Accepted]: { to: BusinessStatus.Active,   action: 'activate' },
+  [BusinessStatus.Pending]:  { to: BusinessStatus.Active,   action: 'activate'   },
+  [BusinessStatus.Active]:   { to: BusinessStatus.Inactive, action: 'deactivate' },
+  [BusinessStatus.Inactive]: { to: BusinessStatus.Active,   action: 'reactivate' },
 }
 
 function timeAgo(iso: string): string {
@@ -42,7 +38,6 @@ function timeAgo(iso: string): string {
 }
 
 function CardBody({ business }: { business: Business }) {
-  const isAccepted = business.status === BusinessStatus.Accepted
   return (
     <>
       <div className="flex items-center gap-2.5">
@@ -59,19 +54,12 @@ function CardBody({ business }: { business: Business }) {
           </p>
         </div>
       </div>
-
-      {isAccepted && (
-        <div className="mt-2.5 pt-2.5 border-t border-emerald-200 flex items-center justify-between">
-          <p className="text-xs text-emerald-700 font-medium">Cliente aceptó la demo</p>
-          <span className="text-xs text-primary font-semibold">Activar →</span>
-        </div>
-      )}
-
-      {!isAccepted && (
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[11px] text-muted-foreground">{timeAgo(business.createdAt)}</span>
-        </div>
-      )}
+      <div className="mt-2 flex items-center justify-between">
+        <span className="text-[11px] text-muted-foreground">{timeAgo(business.createdAt)}</span>
+        {business.status === BusinessStatus.Pending && (
+          <span className="text-xs text-amber-600 font-medium">Activar →</span>
+        )}
+      </div>
     </>
   )
 }
@@ -82,8 +70,7 @@ function DraggableCard({ business, onClick, isBeingDragged }: {
   isBeingDragged: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: business.id })
-  const isAccepted = business.status === BusinessStatus.Accepted
-
+  const isPending = business.status === BusinessStatus.Pending
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined
 
   return (
@@ -97,8 +84,8 @@ function DraggableCard({ business, onClick, isBeingDragged }: {
       <button
         onClick={onClick}
         className={`w-full text-left p-3 rounded-xl border transition-all group cursor-grab active:cursor-grabbing ${
-          isAccepted
-            ? 'bg-emerald-50 border-emerald-200 hover:border-emerald-400 hover:shadow-sm'
+          isPending
+            ? 'bg-amber-50 border-amber-200 hover:border-amber-400 hover:shadow-sm'
             : 'bg-background border-border hover:border-primary/30 hover:shadow-sm'
         }`}
       >
@@ -163,13 +150,8 @@ function DroppableColumn({ col, cards, isOver, canDrop, onSelectBusiness, draggi
 }
 
 function OverlayCard({ business }: { business: Business }) {
-  const isAccepted = business.status === BusinessStatus.Accepted
   return (
-    <div className={`w-52 p-3 rounded-xl border shadow-xl rotate-2 cursor-grabbing ${
-      isAccepted
-        ? 'bg-emerald-50 border-emerald-300'
-        : 'bg-background border-primary/40'
-    }`}>
+    <div className="w-52 p-3 rounded-xl border shadow-xl rotate-2 cursor-grabbing bg-background border-primary/40">
       <CardBody business={business} />
     </div>
   )

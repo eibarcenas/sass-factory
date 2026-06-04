@@ -55,14 +55,9 @@ def resolve_claims(
         if biz.get("ownerUid") != user.firebase_uid:
             return {"resolved": False, "role": user.role}
 
-        # Only grant claims for active-ish statuses; suspended/rejected/archived
-        # owners must not be able to reactivate themselves via this endpoint.
-        claimable_statuses = {
-            BusinessStatus.DRAFT,
-            BusinessStatus.PENDING_REVIEW,
-            BusinessStatus.REVIEW,
-            BusinessStatus.ACTIVE,
-        }
+        # Only grant claims for active-ish statuses; inactive owners
+        # must not be able to reactivate themselves via this endpoint.
+        claimable_statuses = {BusinessStatus.PENDING, BusinessStatus.ACTIVE}
         if biz.get("status") not in claimable_statuses:
             raise HTTPException(status_code=403, detail="Account not eligible for activation")
 
@@ -147,7 +142,7 @@ def auto_provision(
     biz_ref.set({
         "name": body.businessName,
         "slug": slug,
-        "status": BusinessStatus.REVIEW,
+        "status": BusinessStatus.PENDING,
         "ownerEmail": user.email,
         "ownerUid": user.firebase_uid,
         "createdAt": now,
