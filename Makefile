@@ -1,113 +1,198 @@
-.PHONY: help dev dev-admin dev-storefront dev-api \
-        test test-unit test-api test-e2e typecheck lint \
-        install deploy email \
-        up down status logs clean
+.PHONY: help install up down status ports dev dev-admin dev-storefront dev-api \
+        test test-unit test-api test-e2e typecheck lint deploy email
 
-help: ## Show available targets (run from repo root)
-	@echo "Run all targets from the repo root: ~/Desktop/erickbarcenas/sass-factory/"
+SHELL := /bin/bash
+
+service ?= all
+
+PORT_admin-fe              := 3000
+PORT_storefront-fe         := 3010
+PORT_landing-fe            := 3020
+PORT_catalog-api           := 8000
+PORT_identity-api          := 8001
+PORT_demos-api             := 8002
+PORT_prospects-api         := 8003
+PORT_notifications-webhook := 8004
+
+SERVICES := admin-fe storefront-fe landing-fe catalog-api identity-api demos-api prospects-api notifications-webhook
+API_BASE ?= http://localhost:$(PORT_catalog-api)
+
+help: ## Show available targets
+	@echo "Run from repo root: ~/Desktop/erickbarcenas/sass-factory/"
+	@echo ""
+	@echo "Local dev:"
+	@echo "  make up service=landing-fe"
+	@echo "  make up service=storefront-fe"
+	@echo "  make up service=admin-fe"
+	@echo "  make up service=catalog-api"
+	@echo "  make up service=all"
+	@echo "  make down service=landing-fe"
+	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-20s\033[0m %s\n",$$1,$$2}'
+
+ports: ## Print canonical local ports
+	@echo "admin-fe              http://localhost:$(PORT_admin-fe)"
+	@echo "storefront-fe         http://localhost:$(PORT_storefront-fe)"
+	@echo "landing-fe            http://localhost:$(PORT_landing-fe)"
+	@echo "catalog-api           http://localhost:$(PORT_catalog-api)"
+	@echo "identity-api          http://localhost:$(PORT_identity-api)"
+	@echo "demos-api             http://localhost:$(PORT_demos-api)"
+	@echo "prospects-api         http://localhost:$(PORT_prospects-api)"
+	@echo "notifications-webhook http://localhost:$(PORT_notifications-webhook)"
 
 ## ─── Install ─────────────────────────────────────────────────────────────────
 
-install: ## Install all dependencies (JS + Python 3.13 via uv)
+install: ## Install all dependencies
 	pnpm install
-	cd apps/api && uv venv --python 3.13
-	cd apps/api && uv pip install fastapi "uvicorn[standard]" pydantic pydantic-settings \
-	  google-cloud-firestore python-dotenv python-multipart pytest pytest-asyncio httpx
+	@for app in catalog-api identity-api demos-api prospects-api notifications-webhook; do \
+	  echo "▶ Installing $$app"; \
+	  cd "apps/$$app" && uv sync --extra dev && cd ../..; \
+	done
 
 ## ─── Local development ───────────────────────────────────────────────────────
 
-dev: ## Start all services locally
-	@fuser -k 3000/tcp 3010/tcp 8000/tcp 2>/dev/null || true
-	@echo ""
-	@echo "  ┌──────────────────────────────────────────────────────────┐"
-	@echo "  │  catalog.mx — Dev local                                  │"
-	@echo "  │  Admin (React)       → http://localhost:3000             │"
-	@echo "  │  Storefront (Next)   → http://localhost:3010             │"
-	@echo "  │  API (FastAPI)       → http://localhost:8000             │"
-	@echo "  └──────────────────────────────────────────────────────────┘"
-	@echo ""
-	@cd apps/admin && pnpm dev &
-	@cd apps/storefront && pnpm dev &
-	@[ -d apps/api ] && (cd apps/api && uvicorn main:app --reload --port 8000) || echo "  ⚠ API not scaffolded yet"
-	@wait
+up: ## Start one service. Usage: make up service=landing-fe
+	@case "$(service)" in \
+	  admin-fe) \
+	    fuser -k $(PORT_admin-fe)/tcp 2>/dev/null || true; \
+	    echo "▶ admin-fe → http://localhost:$(PORT_admin-fe)"; \
+	    cd apps/admin-fe && \
+	      VITE_ADMIN_URL=http://localhost:$(PORT_admin-fe) \
+	      VITE_STOREFRONT_URL=http://localhost:$(PORT_storefront-fe) \
+	      VITE_LANDING_URL=http://localhost:$(PORT_landing-fe) \
+	      VITE_CATALOG_API_URL=http://localhost:$(PORT_catalog-api) \
+	      VITE_IDENTITY_API_URL=http://localhost:$(PORT_identity-api) \
+	      VITE_DEMOS_API_URL=http://localhost:$(PORT_demos-api) \
+	      VITE_PROSPECTS_API_URL=http://localhost:$(PORT_prospects-api) \
+	      npm run dev -- --host 127.0.0.1 ;; \
+	  storefront-fe) \
+	    fuser -k $(PORT_storefront-fe)/tcp 2>/dev/null || true; \
+	    echo "▶ storefront-fe → http://localhost:$(PORT_storefront-fe)"; \
+	    cd apps/storefront-fe && \
+	      CATALOG_API_URL=http://localhost:$(PORT_catalog-api) \
+	      IDENTITY_API_URL=http://localhost:$(PORT_identity-api) \
+	      DEMOS_API_URL=http://localhost:$(PORT_demos-api) \
+	      PROSPECTS_API_URL=http://localhost:$(PORT_prospects-api) \
+	      NEXT_PUBLIC_ADMIN_URL=http://localhost:$(PORT_admin-fe) \
+	      NEXT_PUBLIC_CATALOG_API_URL=http://localhost:$(PORT_catalog-api) \
+	      NEXT_PUBLIC_IDENTITY_API_URL=http://localhost:$(PORT_identity-api) \
+	      NEXT_PUBLIC_API_URL=$(API_BASE) \
+	      npm run dev ;; \
+	  landing-fe) \
+	    fuser -k $(PORT_landing-fe)/tcp 2>/dev/null || true; \
+	    echo "▶ landing-fe → http://localhost:$(PORT_landing-fe)"; \
+	    cd apps/landing-fe && \
+	      NEXT_PUBLIC_ADMIN_URL=http://localhost:$(PORT_admin-fe) \
+	      NEXT_PUBLIC_STOREFRONT_URL=http://localhost:$(PORT_storefront-fe) \
+	      NEXT_PUBLIC_IDENTITY_API_URL=http://localhost:$(PORT_identity-api) \
+	      NEXT_PUBLIC_API_URL=$(API_BASE) \
+	      npm run dev ;; \
+	  catalog-api) \
+	    fuser -k $(PORT_catalog-api)/tcp 2>/dev/null || true; \
+	    echo "▶ catalog-api → http://localhost:$(PORT_catalog-api)"; \
+	    cd apps/catalog-api && uv run uvicorn main:app --reload --host 127.0.0.1 --port $(PORT_catalog-api) ;; \
+	  identity-api) \
+	    fuser -k $(PORT_identity-api)/tcp 2>/dev/null || true; \
+	    echo "▶ identity-api → http://localhost:$(PORT_identity-api)"; \
+	    cd apps/identity-api && uv run uvicorn main:app --reload --host 127.0.0.1 --port $(PORT_identity-api) ;; \
+	  demos-api) \
+	    fuser -k $(PORT_demos-api)/tcp 2>/dev/null || true; \
+	    echo "▶ demos-api → http://localhost:$(PORT_demos-api)"; \
+	    cd apps/demos-api && uv run uvicorn main:app --reload --host 127.0.0.1 --port $(PORT_demos-api) ;; \
+	  prospects-api) \
+	    fuser -k $(PORT_prospects-api)/tcp 2>/dev/null || true; \
+	    echo "▶ prospects-api → http://localhost:$(PORT_prospects-api)"; \
+	    cd apps/prospects-api && uv run uvicorn main:app --reload --host 127.0.0.1 --port $(PORT_prospects-api) ;; \
+	  notifications-webhook) \
+	    fuser -k $(PORT_notifications-webhook)/tcp 2>/dev/null || true; \
+	    echo "▶ notifications-webhook → http://localhost:$(PORT_notifications-webhook)"; \
+	    cd apps/notifications-webhook && uv run uvicorn main:app --reload --host 127.0.0.1 --port $(PORT_notifications-webhook) ;; \
+	  all) \
+	    echo "▶ Starting all services"; \
+	    $(MAKE) up service=catalog-api & \
+	    $(MAKE) up service=identity-api & \
+	    $(MAKE) up service=demos-api & \
+	    $(MAKE) up service=prospects-api & \
+	    $(MAKE) up service=notifications-webhook & \
+	    $(MAKE) up service=storefront-fe & \
+	    $(MAKE) up service=landing-fe & \
+	    $(MAKE) up service=admin-fe & \
+	    wait ;; \
+	  *) \
+	    echo "❌ Unknown service=$(service)"; \
+	    echo "Use one of: $(SERVICES) all"; \
+	    exit 1 ;; \
+	esac
 
-dev-admin: ## Start only admin panel (React, localhost:3000)
-	@fuser -k 3000/tcp 2>/dev/null || true
-	cd apps/admin && pnpm dev
+down: ## Stop one service by canonical port. Usage: make down service=landing-fe
+	@case "$(service)" in \
+	  admin-fe) fuser -k $(PORT_admin-fe)/tcp 2>/dev/null || true ;; \
+	  storefront-fe) fuser -k $(PORT_storefront-fe)/tcp 2>/dev/null || true ;; \
+	  landing-fe) fuser -k $(PORT_landing-fe)/tcp 2>/dev/null || true ;; \
+	  catalog-api) fuser -k $(PORT_catalog-api)/tcp 2>/dev/null || true ;; \
+	  identity-api) fuser -k $(PORT_identity-api)/tcp 2>/dev/null || true ;; \
+	  demos-api) fuser -k $(PORT_demos-api)/tcp 2>/dev/null || true ;; \
+	  prospects-api) fuser -k $(PORT_prospects-api)/tcp 2>/dev/null || true ;; \
+	  notifications-webhook) fuser -k $(PORT_notifications-webhook)/tcp 2>/dev/null || true ;; \
+	  all) for port in $(PORT_admin-fe) $(PORT_storefront-fe) $(PORT_landing-fe) $(PORT_catalog-api) $(PORT_identity-api) $(PORT_demos-api) $(PORT_prospects-api) $(PORT_notifications-webhook); do fuser -k $$port/tcp 2>/dev/null || true; done ;; \
+	  *) echo "❌ Unknown service=$(service). Use one of: $(SERVICES) all"; exit 1 ;; \
+	esac
 
-dev-storefront: ## Start only storefront (Next.js, localhost:3010)
-	@fuser -k 3010/tcp 2>/dev/null || true
-	cd apps/storefront && pnpm dev
+status: ## Show local listeners for canonical ports
+	@ss -ltnp '( sport = :$(PORT_admin-fe) or sport = :$(PORT_storefront-fe) or sport = :$(PORT_landing-fe) or sport = :$(PORT_catalog-api) or sport = :$(PORT_identity-api) or sport = :$(PORT_demos-api) or sport = :$(PORT_prospects-api) or sport = :$(PORT_notifications-webhook) )' || true
 
-dev-api: ## Start only FastAPI (localhost:8000, Python 3.13)
-	@fuser -k 8000/tcp 2>/dev/null || true
-	cd apps/api && .venv/bin/uvicorn main:app --reload --port 8000
+dev: up ## Alias for make up service=all
+dev-admin: ## Alias for make up service=admin-fe
+	$(MAKE) up service=admin-fe
+dev-storefront: ## Alias for make up service=storefront-fe
+	$(MAKE) up service=storefront-fe
+dev-api: ## Alias for make up service=catalog-api
+	$(MAKE) up service=catalog-api
 
 ## ─── Quality ─────────────────────────────────────────────────────────────────
 
 test: test-unit test-api ## Run all unit + integration tests
 
-test-unit: ## Run Vitest unit tests (core + admin)
-	pnpm -F @catalog-mx/core test
-	pnpm -F admin test
+test-unit: ## Run Vitest unit tests
+	pnpm -F @eguru/core test
+	pnpm -F admin-fe test --if-present
 
-test-api: ## Run FastAPI pytest suite
-	cd apps/api && DEV_USER_EMAIL=dev@test.local ENVIRONMENT=local .venv/bin/pytest -q
+test-api: ## Run catalog-api pytest suite
+	cd apps/catalog-api && DEV_USER_EMAIL=dev@test.local ENVIRONMENT=local uv run pytest -q
 
-test-e2e: ## Run Playwright E2E tests (requires services running)
+test-e2e: ## Run Playwright E2E tests
 	pnpm exec playwright test
 
-typecheck: ## Type-check all JS/TS packages
-	pnpm -F @catalog-mx/core typecheck
-	@[ -d apps/admin ] && pnpm -F admin typecheck || true
-	@[ -d apps/storefront ] && pnpm -F storefront typecheck || true
+typecheck: ## Type-check JS/TS packages
+	pnpm -F @eguru/core typecheck
+	pnpm -F admin-fe typecheck
+	pnpm -F storefront-fe typecheck
+	pnpm -F landing-fe typecheck
 
 lint: ## Lint all packages
 	pnpm -r lint --if-present
 
 ## ─── Deploy (GCP Cloud Run) ──────────────────────────────────────────────────
-## Usage: make deploy layer=<admin|storefront|api|all> [project-id=...] [region=...]
+## Usage: make deploy service=admin-fe|storefront-fe|landing-fe|catalog-api|identity-api|demos-api|prospects-api|notifications-webhook|all
 
 project-id ?= catalog-mx-dev
 region     ?= us-central1
 
-deploy: ## Deploy to Cloud Run. layer=admin|storefront|api|all
-	@[ -n "$(layer)" ] || (echo "❌ layer is required. Usage: make deploy layer=admin|storefront|api|all"; exit 1)
-	@if [ "$(layer)" = "admin" ] || [ "$(layer)" = "all" ]; then \
-	  echo "▶ Deploying admin..."; \
-	  gcloud run deploy catalog-mx-admin \
-	    --source apps/admin \
+deploy: ## Deploy one canonical service to Cloud Run
+	@[ -n "$(service)" ] || (echo "❌ service is required. Usage: make deploy service=admin-fe"; exit 1)
+	@if [ "$(service)" = "all" ]; then \
+	  for svc in $(SERVICES); do $(MAKE) deploy service=$$svc project-id=$(project-id) region=$(region); done; \
+	elif [ "$(service)" = "admin-fe" ] || [ "$(service)" = "storefront-fe" ] || [ "$(service)" = "landing-fe" ] || [ "$(service)" = "catalog-api" ] || [ "$(service)" = "identity-api" ] || [ "$(service)" = "demos-api" ] || [ "$(service)" = "prospects-api" ] || [ "$(service)" = "notifications-webhook" ]; then \
+	  echo "▶ Deploying $(service)..."; \
+	  gcloud run deploy catalog-mx-$(service)-dev \
+	    --source apps/$(service) \
 	    --region $(region) \
 	    --allow-unauthenticated \
-	    --min-instances=0 --max-instances=5 --memory=256Mi \
-	    --set-build-env-vars="VITE_API_URL=https://catalog-mx-api-105288105956.us-central1.run.app,VITE_STOREFRONT_URL=https://catalog-mx-storefront-105288105956.us-central1.run.app" \
-	    --project=$(project-id) --quiet; \
-	  echo "✅ Admin: $$(gcloud run services describe catalog-mx-admin --region $(region) --project $(project-id) --format 'value(status.url)')"; \
-	fi
-	@if [ "$(layer)" = "storefront" ] || [ "$(layer)" = "all" ]; then \
-	  echo "▶ Deploying storefront..."; \
-	  gcloud run deploy catalog-mx-storefront \
-	    --source apps/storefront \
-	    --region $(region) \
-	    --allow-unauthenticated \
-	    --set-env-vars="FIREBASE_PROJECT_ID=$(project-id)" \
 	    --min-instances=0 --max-instances=10 --memory=512Mi \
 	    --project=$(project-id) --quiet; \
-	  echo "✅ Storefront: $$(gcloud run services describe catalog-mx-storefront --region $(region) --project $(project-id) --format 'value(status.url)')"; \
-	fi
-	@if [ "$(layer)" = "api" ] || [ "$(layer)" = "all" ]; then \
-	  echo "▶ Deploying api..."; \
-	  gcloud run deploy catalog-mx-api \
-	    --source apps/api \
-	    --region $(region) \
-	    --set-secrets="ANTHROPIC_API_KEY=anthropic-api-key:latest" \
-	    --min-instances=0 --max-instances=10 --memory=512Mi \
-	    --project=$(project-id) --quiet; \
-	  echo "✅ API: $$(gcloud run services describe catalog-mx-api --region $(region) --project $(project-id) --format 'value(status.url)')"; \
-	fi
-	@if [ "$(layer)" != "admin" ] && [ "$(layer)" != "storefront" ] && [ "$(layer)" != "api" ] && [ "$(layer)" != "all" ]; then \
-	  echo "❌ Unknown layer=$(layer). Use layer=admin|storefront|api|all"; \
+	  echo "✅ $(service): $$(gcloud run services describe catalog-mx-$(service)-dev --region $(region) --project $(project-id) --format 'value(status.url)')"; \
+	else \
+	  echo "❌ Unknown service=$(service). Use one of: $(SERVICES) all"; \
 	  exit 1; \
 	fi
 

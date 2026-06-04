@@ -25,9 +25,19 @@ export default function LoginPage() {
       }).then(r => r.json()).catch(() => ({ resolved: false }))
 
       if (resolved.resolved) {
-        await cred.user.getIdToken(true)
-        window.location.reload()
-        return
+        const refreshed = await cred.user.getIdTokenResult(true)
+        const refreshedRole = refreshed.claims.role as UserRole | undefined
+        if (refreshedRole) {
+          setUser({
+            uid:        cred.user.uid,
+            email:      cred.user.email,
+            role:       refreshedRole,
+            businessId: refreshed.claims.business_id as string | undefined,
+            modules:    (refreshed.claims.modules as string[]) ?? [],
+          })
+          navigate(refreshedRole === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
+          return
+        }
       }
 
       const { getAuth } = await import('firebase/auth')

@@ -1,16 +1,17 @@
 ## Quick Context
-**Stack**: React (admin) + Next.js 15 (storefront) + FastAPI (API), Firebase Auth, Firestore, pnpm monorepo (Node ≥20)
+**Stack**: React (admin-fe) + Next.js 15 (storefront-fe, landing-fe) + FastAPI services, Firebase Auth, Firestore, pnpm monorepo (Node ≥20)
 **Key services**: Firebase Firestore (data), GCP Cloud Run (deploy), Firebase Auth (identity)
-**Entry points**: `apps/admin` → localhost:5173 | `apps/storefront` → localhost:3000 | `apps/api` → localhost:8000
-**Tests**: `pnpm -F @catalog-mx/core test` | `pnpm -F admin test` | `cd apps/api && .venv/bin/pytest -q`
-**Dev**: `pnpm dev` (admin + storefront) | `pnpm -F admin dev` | `pnpm -F storefront dev`
+**Entry points**: `apps/admin-fe` → localhost:3000 | `apps/storefront-fe` → localhost:3010 | `apps/landing-fe` → localhost:3020 | `apps/catalog-api` → localhost:8000
+**Tests**: `pnpm -F @eguru/core test` | `pnpm -F admin-fe test` | `cd apps/catalog-api && uv run pytest -q`
+**Dev**: `make up service=landing-fe` | `make up service=storefront-fe` | `make up service=admin-fe` | `make up service=catalog-api`
 
 ## Independent Modules
 | Module | Directory | Notes |
 |--------|-----------|-------|
-| admin-frontend | `apps/admin/src/` | React + Vite; pages, hooks, components, Zustand auth store |
-| storefront | `apps/storefront/` | Next.js 15 App Router; public catalog pages per slug |
-| api | `apps/api/app/` | FastAPI; routers, RBAC middleware, Firestore client |
+| admin-fe | `apps/admin-fe/src/` | React + Vite; pages, hooks, components, Zustand auth store |
+| storefront-fe | `apps/storefront-fe/` | Next.js 15 App Router; public catalog pages per slug |
+| landing-fe | `apps/landing-fe/` | Next.js 15 marketing site |
+| catalog-api | `apps/catalog-api/app/` | FastAPI; routers, RBAC middleware, Firestore client |
 | core-types | `packages/core/src/` | Shared TS types — Business, Item, BusinessStatus enum |
 
 **Shared files (coordinate before editing):**
@@ -21,11 +22,11 @@
 
 ## Verification
 ```
-pnpm -F @catalog-mx/core typecheck   # core types
-pnpm -F admin typecheck              # admin
-pnpm -F @catalog-mx/core test        # core unit tests
-pnpm -F admin test                   # admin Vitest tests
-cd apps/api && .venv/bin/pytest -q   # API tests
+pnpm -F @eguru/core typecheck        # core types
+pnpm -F admin-fe typecheck           # admin
+pnpm -F storefront-fe typecheck      # storefront
+pnpm -F landing-fe typecheck         # landing
+cd apps/catalog-api && uv run pytest -q
 ```
 
 ## @eguru Packages
@@ -40,8 +41,8 @@ All new UI components MUST go in `packages/ui/src/` and be exported from `packag
 
 ## Design System
 
-Source of truth: `apps/admin/src/components/ui/`
-Rule: any panel UI (admin or owner) MUST use these components. Never use raw `<input>`, `<button>`, or ad-hoc wrappers when a component exists. This rule also applies to `apps/storefront/components/ui/` (same shadcn components, copied per-app).
+Source of truth: `apps/admin-fe/src/components/ui/`
+Rule: any panel UI (admin or owner) MUST use these components. Never use raw `<input>`, `<button>`, or ad-hoc wrappers when a component exists. This rule also applies to `apps/storefront-fe/components/ui/` (same shadcn components, copied per-app).
 
 Components:
 - `Card / CardHeader / CardTitle / CardContent` → section containers

@@ -19,10 +19,6 @@ export default function LandingPage() {
           <span className="text-xs order-last sm:order-none" style={{ color: '#555555' }}>
             &copy; 2025 catalog.mx. Todos los derechos reservados. Operado en Mexico.
           </span>
-          <div className="flex items-center gap-4">
-            <a href="/es/terminos" className="text-xs" style={{ color: '#555555' }}>Terminos</a>
-            <a href="/es/privacidad" className="text-xs" style={{ color: '#555555' }}>Privacidad</a>
-          </div>
         </div>
       </footer>
 

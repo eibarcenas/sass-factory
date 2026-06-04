@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { UserCredential } from 'firebase/auth'
 
 const FIREBASE_CONFIG = {
@@ -66,7 +66,7 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
     return () => { cancelled = true }
   }, [])
 
-  async function signInWithGoogle() {
+  const signInWithGoogle = useCallback(async () => {
     setPending(true)
     try {
       const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth')
@@ -100,7 +100,7 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
     } finally {
       setPending(false)
     }
-  }
+  }, [])
 
   return { signInWithGoogle, pending, redirectChecked }
 }
