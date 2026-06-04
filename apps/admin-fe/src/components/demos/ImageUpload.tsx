@@ -216,8 +216,9 @@ export default function ImageUpload({ currentUrls = [], onChanged, folder = 'pro
       finalUrls[idx] = data.url
       setUrls(finalUrls)
       onChanged(finalUrls.filter(Boolean))
-    } catch {
-      setError('Error al subir. Intenta de nuevo.')
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : 'Error desconocido'
+      setError(`Error al subir: ${detail}`)
       const rollback = [...urls]
       rollback[idx] = urls[idx] ?? ''
       URL.revokeObjectURL(localUrl)
