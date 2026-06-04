@@ -11,6 +11,8 @@ export default async function TermsPage() {
     { title: t('s4_title'), body: t('s4_body') },
     { title: t('s5_title'), body: t('s5_body') },
     { title: t('s6_title'), body: t('s6_body') },
+    { title: t('s7_title'), body: t('s7_body') },
+    { title: t('s8_title'), body: t('s8_body') },
   ]
 
   return (

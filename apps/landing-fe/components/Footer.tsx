@@ -17,6 +17,9 @@ export default async function Footer() {
           <Link href="/terminos" className="transition-colors hover:text-zinc-400">
             {t('terms')}
           </Link>
+          <Link href="/cookies" className="transition-colors hover:text-zinc-400">
+            {t('cookies')}
+          </Link>
           <a
             href="mailto:hola@catalog.mx"
             className="transition-colors hover:text-zinc-400"
@@ -24,7 +27,7 @@ export default async function Footer() {
             {t('contact')}
           </a>
         </nav>
-        <span className="text-xs text-zinc-700">{t('copyright')}</span>
+        <span className="text-xs text-zinc-700">{t('copyright', { year: new Date().getFullYear() })}</span>
       </div>
     </footer>
   )
