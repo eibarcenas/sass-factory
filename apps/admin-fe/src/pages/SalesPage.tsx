@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useProspects } from '../hooks/useProspects'
 import { useBusinesses } from '../hooks/useBusinesses'
 import KanbanBoard from '../components/dashboard/KanbanBoard'
@@ -82,7 +82,11 @@ function ProspectsTab() {
 
 export default function SalesPage() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<'solicitudes' | 'demos' | 'prospects'>('solicitudes')
+  const [searchParams] = useSearchParams()
+  const initialTab = searchParams.get('tab')
+  const [tab, setTab] = useState<'solicitudes' | 'demos' | 'prospects'>(
+    initialTab === 'demos' || initialTab === 'prospects' ? initialTab : 'solicitudes'
+  )
   const { data: prospectData } = useProspects()
   const { data: solicitudesData } = useBusinesses(BusinessStatus.Review)
   const newCount = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0

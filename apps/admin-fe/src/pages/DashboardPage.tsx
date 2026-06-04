@@ -25,14 +25,18 @@ function timeAgo(iso: string): string {
 
 // ── Metric card ───────────────────────────────────────────────────────────────
 
-function MetricCard({ label, value, highlight, loading }: {
+function MetricCard({ label, value, highlight, loading, onClick }: {
   label: string
   value: number
   highlight?: boolean
   loading?: boolean
+  onClick?: () => void
 }) {
   return (
-    <Card>
+    <Card
+      onClick={onClick}
+      className={onClick ? 'cursor-pointer transition-shadow hover:shadow-md active:scale-[0.98]' : ''}
+    >
       <CardContent className="p-5">
         {loading ? (
           <div className="h-9 w-10 bg-muted rounded animate-pulse mb-1" />
@@ -96,10 +100,10 @@ export function DashboardContent() {
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total demos" value={total} loading={isLoading} />
-        <MetricCard label="Demo lista" value={readyCount} loading={isLoading} />
-        <MetricCard label="Activas" value={activeCount} loading={isLoading} />
-        <MetricCard label="Prospectos nuevos" value={newProspects} highlight loading={isLoading} />
+        <MetricCard label="Total demos" value={total} loading={isLoading} onClick={() => navigate('/clientes?tab=demos')} />
+        <MetricCard label="Demo lista" value={readyCount} loading={isLoading} onClick={() => navigate('/clientes?tab=demos')} />
+        <MetricCard label="Activas" value={activeCount} loading={isLoading} onClick={() => navigate('/clientes?tab=demos')} />
+        <MetricCard label="Prospectos nuevos" value={newProspects} highlight loading={isLoading} onClick={() => navigate('/clientes?tab=prospects')} />
       </div>
 
       {/* Recent activity */}
@@ -114,7 +118,11 @@ export function DashboardContent() {
           </CardHeader>
           <CardContent className="pt-0 divide-y divide-border">
             {recent.map(b => (
-              <div key={b.id} className="py-3 flex items-center gap-3 first:pt-0 last:pb-0">
+              <button
+                key={b.id}
+                onClick={() => navigate(`/clientes/${b.id}`)}
+                className="w-full py-3 flex items-center gap-3 first:pt-0 last:pb-0 text-left hover:bg-muted/50 active:bg-muted -mx-6 px-6 transition-colors rounded-lg"
+              >
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
                   style={{ backgroundColor: (b.theme?.primary ?? '#6366f1') + '20' }}
@@ -127,7 +135,7 @@ export function DashboardContent() {
                 </div>
                 <Badge variant="secondary" className="text-xs shrink-0 capitalize">{b.status}</Badge>
                 <span className="text-xs text-muted-foreground shrink-0">{timeAgo(b.createdAt)}</span>
-              </div>
+              </button>
             ))}
           </CardContent>
         </Card>
