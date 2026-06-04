@@ -17,10 +17,11 @@ import { Badge } from '@/components/ui/badge'
 import { Menu } from 'lucide-react'
 import { BusinessStatus } from '@eguru/core'
 import SettingsPage from '../settings/SettingsPage'
+import OwnerRequestsPage from '../../components/owner/OwnerRequestsPage'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
-type Page = 'catalog' | 'appearance' | 'settings'
+type Page = 'catalog' | 'appearance' | 'settings' | 'requests'
 
 // ── Draft onboarding banner ───────────────────────────────────────────────────
 function DraftBanner({ businessId, onSubmitted }: { businessId: string; onSubmitted: () => void }) {
@@ -96,6 +97,7 @@ function ReviewBanner() {
 // ── Product row ───────────────────────────────────────────────────────────────
 const OWNER_NAV: NavItem<Page>[] = [
   { key: 'catalog',    icon: '🛍️', label: 'My Products' },
+  { key: 'requests',   icon: '📋', label: 'Solicitudes' },
   { key: 'appearance', icon: '🎨', label: 'Appearance' },
 ]
 
@@ -351,6 +353,15 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         )}
         {page === 'appearance' && (
           <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview || isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} />
+        )}
+        {page === 'requests' && (
+          <div className="space-y-4">
+            <div>
+              <h1 className="text-2xl font-bold">Solicitudes</h1>
+              <p className="text-muted-foreground text-sm mt-1">Cotizaciones recibidas de clientes</p>
+            </div>
+            <OwnerRequestsPage />
+          </div>
         )}
         {page === 'settings' && (
           <SettingsPage onSignOut={isPreview ? undefined : handleSignOut} />
