@@ -1,6 +1,6 @@
 project_id         = "ei-catalog-dev"
 region             = "us-central1"
-runtime_sa_email   = "ei-catalog-api@ei-catalog-dev.iam.gserviceaccount.com"
+runtime_sa_email   = "ei-stores-api@ei-catalog-dev.iam.gserviceaccount.com"
 environment        = "development"
 admin_notify_email = ""
 smtp_host          = ""

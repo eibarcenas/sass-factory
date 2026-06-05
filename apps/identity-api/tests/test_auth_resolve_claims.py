@@ -1,10 +1,11 @@
 """
-POST /api/v1/auth/resolve-claims tests.
+POST /api/v1/auth/claims/resolve tests.
 Verifies that owners with no role claim get their Firebase custom claims
 set when a pending_owners record exists, and that the endpoint is a no-op
 when the record is absent.
 """
 from unittest.mock import MagicMock, patch
+import os
 import pytest
 from fastapi.testclient import TestClient
 from factory_auth import UserContext, Role
@@ -45,7 +46,8 @@ def roleless_client():
     from main import app
     app.dependency_overrides[get_current_user] = lambda: roleless
     try:
-        yield TestClient(app)
+        with patch.dict(os.environ, {"DEV_USER_EMAIL": "owner@example.com", "ENVIRONMENT": "local"}):
+            yield TestClient(app)
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
@@ -110,7 +112,7 @@ def test_resolve_claims_sets_claims_when_pending(roleless_client):
         patch("firebase_admin.auth.set_custom_user_claims"),
         patch("firebase_admin._apps", {"default": MagicMock()}),
     ):
-        resp = roleless_client.post("/api/v1/auth/resolve-claims")
+        resp = roleless_client.post("/api/v1/auth/claims/resolve")
     assert resp.status_code == 200
     data = resp.json()
     assert data["resolved"] is True
@@ -121,7 +123,7 @@ def test_resolve_claims_sets_claims_when_pending(roleless_client):
 def test_resolve_claims_noop_when_no_pending(roleless_client):
     db = _db_no_pending()
     with patch("app.routers.auth.get_db", return_value=db):
-        resp = roleless_client.post("/api/v1/auth/resolve-claims")
+        resp = roleless_client.post("/api/v1/auth/claims/resolve")
     assert resp.status_code == 200
     assert resp.json()["resolved"] is False
 
@@ -135,7 +137,7 @@ def test_resolve_claims_fallback_to_businesses(roleless_client):
         patch("firebase_admin.auth.set_custom_user_claims"),
         patch("firebase_admin._apps", {"default": MagicMock()}),
     ):
-        resp = roleless_client.post("/api/v1/auth/resolve-claims")
+        resp = roleless_client.post("/api/v1/auth/claims/resolve")
     assert resp.status_code == 200
     data = resp.json()
     assert data["resolved"] is True
@@ -149,7 +151,7 @@ def test_resolve_claims_fallback_blocked_uid_mismatch(roleless_client):
         "owner@example.com", "heladeria-el-pinguino", uid="different-uid"
     )
     with patch("app.routers.auth.get_db", return_value=db):
-        resp = roleless_client.post("/api/v1/auth/resolve-claims")
+        resp = roleless_client.post("/api/v1/auth/claims/resolve")
     assert resp.status_code == 200
     assert resp.json()["resolved"] is False
 
@@ -159,5 +161,5 @@ def test_resolve_claims_fallback_blocked_suspended(roleless_client):
         "owner@example.com", "heladeria-el-pinguino", status="suspended"
     )
     with patch("app.routers.auth.get_db", return_value=db):
-        resp = roleless_client.post("/api/v1/auth/resolve-claims")
+        resp = roleless_client.post("/api/v1/auth/claims/resolve")
     assert resp.status_code == 403

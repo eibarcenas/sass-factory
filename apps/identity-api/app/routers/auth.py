@@ -1,6 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import secrets
 from pydantic import BaseModel, field_validator
 from app.db import get_db
 from app.domain.business import BusinessStatus, slugify
@@ -9,7 +10,7 @@ from factory_auth import get_current_user, UserContext
 router = APIRouter(tags=["auth"])
 
 
-@router.post("/auth/resolve-claims")
+@router.post("/auth/claims/resolve")
 def resolve_claims(
     user: Annotated[UserContext, Depends(get_current_user)],
 ):
@@ -95,21 +96,25 @@ def resolve_claims(
 
 # ── Self-service registration (v2) ────────────────────────────────────────────
 
-@router.get("/auth/check-slug")
-def check_slug(name: str):
+@router.get("/business-slugs/{slug}/availability")
+def check_slug(slug: str):
     """Public — returns whether a business name slug is available."""
-    if not name.strip():
-        raise HTTPException(status_code=400, detail="name is required")
-    slug = slugify(name)
-    if not slug:
+    normalized_slug = slugify(slug)
+    if not normalized_slug:
         return {"available": False, "slug": "", "reason": "invalid_name"}
     db = get_db()
-    exists = db.collection("businesses").document(slug).get().exists
-    return {"available": not exists, "slug": slug}
+    exists = db.collection("businesses").document(normalized_slug).get().exists
+    return {"available": not exists, "slug": normalized_slug}
 
 
-class AutoProvisionRequest(BaseModel):
+class BusinessRegistrationRequest(BaseModel):
     businessName: str
+    type: str | None = None
+    whatsapp: str | None = None
+    city: str | None = None
+    state: str | None = None
+    tagline: str | None = None
+    contactName: str | None = None
 
     @field_validator("businessName")
     @classmethod
@@ -119,15 +124,15 @@ class AutoProvisionRequest(BaseModel):
         return v.strip()
 
 
-@router.post("/auth/auto-provision")
-def auto_provision(
-    body: AutoProvisionRequest,
+@router.post("/business-registrations")
+def create_business_registration(
+    body: BusinessRegistrationRequest,
     user: Annotated[UserContext, Depends(get_current_user)],
 ):
     """
-    Called after Google sign-in on /register.
+    Called after landing authentication during business onboarding.
     Creates a DRAFT business and sets OWNER claims in one step so the user
-    lands directly in their Owner Dashboard without waiting for manual activation.
+    lands directly in the seller workspace without waiting for manual activation.
     """
     if not user.email:
         raise HTTPException(status_code=400, detail="No email on token")
@@ -150,6 +155,12 @@ def auto_provision(
         "status": BusinessStatus.REVIEW,
         "ownerEmail": user.email,
         "ownerUid": user.firebase_uid,
+        "type": body.type,
+        "whatsapp": body.whatsapp,
+        "city": body.city,
+        "state": body.state,
+        "tagline": body.tagline,
+        "contactName": body.contactName,
         "createdAt": now,
         "updatedAt": now,
     })
@@ -169,3 +180,43 @@ def auto_provision(
         raise HTTPException(status_code=500, detail=f"Failed to set claims: {e}")
 
     return {"provisioned": True, "slug": slug, "businessName": body.businessName}
+
+
+@router.post("/auth/exchanges")
+def create_exchange(
+    user: Annotated[UserContext, Depends(get_current_user)],
+):
+    code = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=2)
+    get_db().collection("auth_exchanges").document(code).set({
+        "uid": user.firebase_uid,
+        "expiresAt": expires_at,
+        "consumedAt": None,
+    })
+    return {"code": code, "expiresAt": expires_at.isoformat()}
+
+
+@router.post("/auth/exchanges/{code}/consume")
+def consume_exchange(code: str):
+    db = get_db()
+    ref = db.collection("auth_exchanges").document(code)
+    doc = ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Exchange not found")
+
+    data = doc.to_dict()
+    expires_at = data.get("expiresAt")
+    if data.get("consumedAt") or not expires_at or expires_at <= datetime.now(timezone.utc):
+        raise HTTPException(status_code=410, detail="Exchange expired")
+
+    try:
+        import firebase_admin
+        from firebase_admin import auth as firebase_auth
+        if not firebase_admin._apps:
+            get_db()
+        custom_token = firebase_auth.create_custom_token(data["uid"]).decode("utf-8")
+        ref.update({"consumedAt": datetime.now(timezone.utc)})
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=f"Failed to create custom token: {error}")
+
+    return {"customToken": custom_token}

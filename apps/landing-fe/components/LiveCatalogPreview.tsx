@@ -1,7 +1,7 @@
 import { ExternalLink } from 'lucide-react'
 
-const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? 'http://localhost:3010'
-const CATALOG_URL = `${STOREFRONT_URL}/heladeria-el-pinguino`
+const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL ?? 'http://localhost:3010'
+const CATALOG_URL = `${STORE_URL}/heladeria-el-pinguino`
 
 export default function LiveCatalogPreview() {
   return (

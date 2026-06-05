@@ -37,37 +37,37 @@ export function useDeleteItem(businessId: string) {
   })
 }
 
-// ── Owner-scoped hooks (call /owner/business/items — auth via JWT) ────────────
+// ── Seller-scoped hooks (auth via JWT) ────────────
 
-export function useOwnerItems(businessId: string, previewSlug?: string) {
+export function useSellerItems(businessId: string, reviewSlug?: string) {
   return useQuery<{ items: Item[] }>({
-    queryKey: ['owner-items', businessId, previewSlug ?? null],
-    queryFn: () => itemApi.ownerList(previewSlug),
+    queryKey: ['owner-items', businessId, reviewSlug ?? null],
+    queryFn: () => itemApi.sellerList(reviewSlug),
     enabled: !!businessId,
   })
 }
 
-export function useOwnerAddItem(businessId: string, businessOverride?: string) {
+export function useSellerAddItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: Partial<Item>) => itemApi.ownerAdd(data, businessOverride),
+    mutationFn: (data: Partial<Item>) => itemApi.sellerAdd(data, businessOverride),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
 
-export function useOwnerUpdateItem(businessId: string, businessOverride?: string) {
+export function useSellerUpdateItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ itemId, patch }: { itemId: string; patch: Partial<Item> }) =>
-      itemApi.ownerUpdate(itemId, patch, businessOverride),
+      itemApi.sellerUpdate(itemId, patch, businessOverride),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }
 
-export function useOwnerDeleteItem(businessId: string, businessOverride?: string) {
+export function useSellerDeleteItem(businessId: string, businessOverride?: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (itemId: string) => itemApi.ownerDelete(itemId, businessOverride),
+    mutationFn: (itemId: string) => itemApi.sellerDelete(itemId, businessOverride),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items', businessId] }),
   })
 }

@@ -1,5 +1,4 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { useImpersonationStore } from '../store/impersonation'
 import { useBusinesses, useBusinessAction } from '../hooks/useBusinesses'
 import ProductEditor from '../components/catalog/ProductEditor'
 import BusinessFormPanel from '../components/businesses/BusinessFormPanel'
@@ -9,13 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { BusinessStatus } from '@eguru/core'
 import { TYPE_LABELS } from '../components/businesses/businessFormConstants'
+import { isLocale, routes } from '@/lib/routes'
 
-const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
+const STORE_URL = import.meta.env.VITE_STORE_URL ?? 'http://localhost:3010'
 
 export default function ClientDetailPage() {
-  const { businessId } = useParams<{ businessId: string }>()
+  const { businessId, locale: localeParam } = useParams<{ businessId: string; locale: string }>()
+  const locale = isLocale(localeParam) ? localeParam : 'es'
   const navigate = useNavigate()
-  const { startImpersonation } = useImpersonationStore()
   const action = useBusinessAction()
 
   const { data, isLoading } = useBusinesses()
@@ -39,7 +39,7 @@ export default function ClientDetailPage() {
       <div className="text-center py-20 text-muted-foreground">
         <p className="text-4xl mb-3">🔍</p>
         <p className="font-medium">Negocio no encontrado</p>
-        <button onClick={() => navigate('/clientes')} className="mt-4 text-sm text-primary hover:underline">
+        <button onClick={() => navigate(routes.platformBusinesses(locale))} className="mt-4 text-sm text-primary hover:underline">
           Volver a Clientes
         </button>
       </div>
@@ -52,11 +52,10 @@ export default function ClientDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header + form — same max-width as /clientes/new */}
       <div className="max-w-xl space-y-6">
         <div>
           <button
-            onClick={() => navigate('/clientes')}
+            onClick={() => navigate(routes.platformBusinesses(locale))}
             className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 mb-3 transition-colors"
           >
             ← Volver a clientes
@@ -91,22 +90,22 @@ export default function ClientDetailPage() {
 
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-3">
-        <a href={`${STOREFRONT_URL}/demo/${business.slug}`} target="_blank" rel="noopener noreferrer">
+        <a href={`${STORE_URL}/store/${business.slug}`} target="_blank" rel="noopener noreferrer">
           <Button variant="outline" size="sm">Ver sitio ↗</Button>
         </a>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate(`/owner/preview/${business.slug}`)}
+          onClick={() => navigate(routes.platformStore(locale, business.id))}
         >
           Ver panel del cliente
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => { startImpersonation(business.slug, business.name); navigate('/owner') }}
+          onClick={() => navigate(routes.platformImpersonate(locale, business.id))}
         >
-          Act as Owner
+          Act as Seller
         </Button>
         {canActivate && (
           <Button

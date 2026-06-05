@@ -57,8 +57,8 @@ for (const name of extraInfra) {
 const pubsubTerraform = readFileSync(join(terraformDir, "_shared/app/pubsub-managed.tf"), "utf8");
 const notificationsTerraform = readFileSync(join(terraformDir, "notifications-webhook/app/main.tf"), "utf8");
 const eventFiles = [
-  "apps/catalog-api/app/domain/events.py",
-  "apps/demos-api/app/domain/events.py",
+  "apps/stores-api/app/domain/events.py",
+  "apps/stores-api/app/domain/events.py",
   "apps/prospects-api/app/domain/events.py",
 ];
 

@@ -37,8 +37,8 @@ async def receive_event(slug: str, request: Request):
         _handle_business_status_changed(payload)
     elif slug == "prospects-prospect-created-v1":
         _handle_prospect_created(payload)
-    elif slug == "demos-demo-accepted-v1":
-        _handle_demo_accepted(payload)
+    elif slug == "stores-store-accepted-v1":
+        _handle_store_accepted(payload)
 
     return {"status": "acknowledged", "event": slug}
 
@@ -60,5 +60,5 @@ def _handle_prospect_created(payload: dict) -> None:
     email_gateway.send_prospect_created(payload)
 
 
-def _handle_demo_accepted(payload: dict) -> None:
-    email_gateway.send_demo_accepted(payload)
+def _handle_store_accepted(payload: dict) -> None:
+    email_gateway.send_store_accepted(payload)

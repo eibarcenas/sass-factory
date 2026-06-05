@@ -21,7 +21,7 @@ module "notifications_webhook" {
     SMTP_PORT            = var.smtp_port
     SMTP_USER            = var.smtp_user
     SMTP_FROM            = var.smtp_from
-    STOREFRONT_URL       = var.storefront_url
+    STORE_URL       = var.storefront_url
     ADMIN_URL            = var.admin_url
   }
   secrets = {
@@ -71,12 +71,12 @@ resource "google_pubsub_subscription" "prospects_prospect_created_v1_to_notifica
   }
 }
 
-resource "google_pubsub_subscription" "demos_demo_accepted_v1_to_notifications_webhook" {
-  name  = "sub-demos-demo-accepted-v1-to-notifications-webhook"
-  topic = "projects/${var.project_id}/topics/topic-demos-demo-accepted-v1"
+resource "google_pubsub_subscription" "stores_store_accepted_v1_to_notifications_webhook" {
+  name  = "sub-stores-store-accepted-v1-to-notifications-webhook"
+  topic = "projects/${var.project_id}/topics/topic-stores-store-accepted-v1"
 
   push_config {
-    push_endpoint = "${module.notifications_webhook.url}/internal/events/demos-demo-accepted-v1"
+    push_endpoint = "${module.notifications_webhook.url}/internal/events/stores-store-accepted-v1"
 
     oidc_token {
       service_account_email = var.runtime_sa_email

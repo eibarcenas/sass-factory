@@ -31,8 +31,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     AuthMiddleware,
     public_prefixes=(
-        "/auth/",
-        "/api/v1/auth/check-slug",
+        "/api/v1/auth/exchanges/",
+        "/api/v1/business-slugs/",
     ),
 )
 

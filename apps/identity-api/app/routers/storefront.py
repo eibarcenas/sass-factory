@@ -5,11 +5,11 @@ from app.domain.business import BusinessStatus
 
 router = APIRouter(tags=["storefront"])
 
-@router.get("/storefront/{slug}")
+@router.get("/stores/{slug}")
 def get_storefront(slug: str, demo: bool = False):
     """
     Public catalog endpoint.
-    - demo=true  → bypass status gate (used by /demo/{slug} preview route)
+    - demo=true  → bypass status gate (used by /store/{slug} preview route)
     - demo=false → only serve ACTIVE businesses; anything else returns 403
     """
     db = get_db()
@@ -40,7 +40,7 @@ def get_storefront(slug: str, demo: bool = False):
 
     return business
 
-@router.post("/storefront/{slug}/whatsapp-click")
+@router.post("/stores/{slug}/whatsapp-clicks")
 def record_whatsapp_click(slug: str):
     """Fire-and-forget click counter. Called from storefront on every WhatsApp CTA tap."""
     try:

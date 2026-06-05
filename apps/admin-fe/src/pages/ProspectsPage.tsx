@@ -23,7 +23,7 @@ export default function ProspectsPage() {
       <div>
         <h1 className="text-2xl font-bold">Prospects</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          People who clicked "Yes, I want it" on a demo
+          People who requested a store
         </p>
       </div>
 
@@ -32,7 +32,7 @@ export default function ProspectsPage() {
           <span className="text-2xl">🎉</span>
           <div>
             <p className="font-semibold text-green-800">{newCount} new prospect{newCount > 1 ? 's' : ''}!</p>
-            <p className="text-sm text-green-600">Someone wants a catalog — reach out now.</p>
+            <p className="text-sm text-green-600">Someone wants a store — reach out now.</p>
           </div>
         </div>
       )}
@@ -52,7 +52,7 @@ export default function ProspectsPage() {
           ) : prospects.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               <p className="text-3xl mb-2">👥</p>
-              <p className="text-sm">No prospects yet — share your demos!</p>
+              <p className="text-sm">No prospects yet — share your stores!</p>
             </div>
           ) : (
             <div className="space-y-0">

@@ -18,7 +18,7 @@ variable "alert_email" {
 # SA emails — created in setup/, referenced here
 variable "api_sa_email" {
   type        = string
-  description = "email of catalog-mx-catalog-api SA. Get from: terraform -chdir=../setup output api_runtime_sa_email"
+  description = "email of catalog-mx-stores-api SA. Get from: terraform -chdir=../setup output api_runtime_sa_email"
 }
 
 variable "monitoring_channel_id" {

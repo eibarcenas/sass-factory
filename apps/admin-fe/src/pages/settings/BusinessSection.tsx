@@ -13,7 +13,7 @@ export default function BusinessSection({ currentWhatsapp }: BusinessSectionProp
   const qc = useQueryClient()
 
   const save = useMutation({
-    mutationFn: () => api.patch(`/api/v1/owner/business`, { whatsapp }),
+    mutationFn: () => api.patch(`/api/v1/seller/profile`, { whatsapp }),
     onSuccess: () => {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)

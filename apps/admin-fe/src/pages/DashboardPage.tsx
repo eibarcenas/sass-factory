@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { LayoutDashboard, Users, Plus, Menu } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { useProspects } from '../hooks/useProspects'
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BusinessStatus } from '@eguru/core'
+import { isLocale, routes } from '@/lib/routes'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,8 @@ function MetricCard({ label, value, highlight, loading, onClick }: {
 export function DashboardContent() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
+  const { locale: localeParam } = useParams()
+  const locale = isLocale(localeParam) ? localeParam : 'es'
   const { data: bizData, isLoading } = useBusinesses()
   const { data: prospectData } = useProspects()
 
@@ -92,7 +95,7 @@ export function DashboardContent() {
               : 'Todo en orden.'}
           </p>
         </div>
-        <Button onClick={() => navigate('/clientes/new')} className="shrink-0 self-start">
+        <Button onClick={() => navigate(routes.platformBusinessNew(locale))} className="shrink-0 self-start">
           <Plus className="w-4 h-4 mr-1.5" />
           Nuevo negocio
         </Button>
@@ -100,10 +103,10 @@ export function DashboardContent() {
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total negocios" value={total} loading={isLoading} onClick={() => navigate('/clientes')} />
-        <MetricCard label="Pendientes" value={pendingCount} loading={isLoading} highlight onClick={() => navigate('/clientes')} />
-        <MetricCard label="Activas" value={activeCount} loading={isLoading} onClick={() => navigate('/clientes')} />
-        <MetricCard label="Prospectos nuevos" value={newProspects} highlight loading={isLoading} onClick={() => navigate('/clientes')} />
+        <MetricCard label="Total negocios" value={total} loading={isLoading} onClick={() => navigate(routes.platformBusinesses(locale))} />
+        <MetricCard label="Pendientes" value={pendingCount} loading={isLoading} highlight onClick={() => navigate(routes.platformBusinesses(locale))} />
+        <MetricCard label="Activas" value={activeCount} loading={isLoading} onClick={() => navigate(routes.platformBusinesses(locale))} />
+        <MetricCard label="Prospectos nuevos" value={newProspects} highlight loading={isLoading} onClick={() => navigate(routes.platformBusinesses(locale))} />
       </div>
 
       {/* Recent activity */}
@@ -120,7 +123,7 @@ export function DashboardContent() {
             {recent.map(b => (
               <button
                 key={b.id}
-                onClick={() => navigate(`/clientes/${b.id}`)}
+                onClick={() => navigate(routes.platformBusiness(locale, b.id))}
                 className="w-full py-3 flex items-center gap-3 first:pt-0 last:pb-0 text-left hover:bg-muted/50 active:bg-muted -mx-6 px-6 transition-colors rounded-lg"
               >
                 <div
@@ -153,8 +156,8 @@ export function DashboardContent() {
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { key: 'dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard', path: '/dashboard' },
-  { key: 'clientes',  icon: <Users size={16} />,           label: 'Clientes',  path: '/clientes' },
+  { key: 'dashboard', icon: <LayoutDashboard size={16} />, label: 'Dashboard' },
+  { key: 'businesses', icon: <Users size={16} />, label: 'Businesses' },
 ] as const
 
 type NavKey = typeof NAV_ITEMS[number]['key']
@@ -163,16 +166,18 @@ function AdminSidebar({ pendingCount, onAfterNavigate }: { pendingCount: number;
   const { user, mockMode } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
+  const localeParam = location.pathname.split('/')[1]
+  const locale = isLocale(localeParam) ? localeParam : 'es'
 
-  const active: NavKey = location.pathname.startsWith('/clientes')
-    ? 'clientes'
+  const active: NavKey = location.pathname.includes('/platform/businesses')
+    ? 'businesses'
     : 'dashboard'
 
   const nav = NAV_ITEMS.map(n => ({
     key: n.key,
     icon: n.icon,
     label: n.label,
-    badge: n.key === 'clientes' ? pendingCount : undefined,
+    badge: n.key === 'businesses' ? pendingCount : undefined,
   }))
 
   return (
@@ -180,8 +185,7 @@ function AdminSidebar({ pendingCount, onAfterNavigate }: { pendingCount: number;
       nav={nav}
       active={active}
       onNavigate={(key) => {
-        const item = NAV_ITEMS.find(n => n.key === key)
-        if (item) navigate(item.path)
+        navigate(key === 'dashboard' ? routes.platformDashboard(locale) : routes.platformBusinesses(locale))
       }}
       onAfterNavigate={onAfterNavigate}
       headerSlot={mockMode && <Badge variant="secondary" className="text-[10px] px-1.5 h-4">mock</Badge>}
@@ -191,7 +195,7 @@ function AdminSidebar({ pendingCount, onAfterNavigate }: { pendingCount: number;
           displayName={user?.displayName}
           photoURL={user?.photoURL}
           role="Admin"
-          onSettings={() => navigate('/ajustes')}
+          onSettings={() => navigate(routes.platformProfile(locale))}
         />
       }
     />

@@ -4,13 +4,13 @@ Terraform mirrors `apps/` by deployable name:
 
 | Code | Infrastructure |
 | --- | --- |
-| `apps/catalog-api` | `infrastructure/iterraform/catalog-api` |
+| `apps/stores-api` | `infrastructure/iterraform/stores-api` |
 | `apps/identity-api` | `infrastructure/iterraform/identity-api` |
-| `apps/demos-api` | `infrastructure/iterraform/demos-api` |
+| `apps/stores-api` | `infrastructure/iterraform/stores-api` |
 | `apps/prospects-api` | `infrastructure/iterraform/prospects-api` |
 | `apps/notifications-webhook` | `infrastructure/iterraform/notifications-webhook` |
 | `apps/admin-fe` | `infrastructure/iterraform/admin-fe` |
-| `apps/storefront-fe` | `infrastructure/iterraform/storefront-fe` |
+| `apps/store-fe` | `infrastructure/iterraform/store-fe` |
 | `apps/landing-fe` | `infrastructure/iterraform/landing-fe` |
 
 Cross-cutting resources live under `infrastructure/iterraform/_shared`, including
