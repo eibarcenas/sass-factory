@@ -351,6 +351,18 @@ export default function CatalogView({ data, isDemo = false }: { data: CatalogDat
       window.localStorage.setItem(`catalog.mx.request.${hash}`, JSON.stringify(request))
     } catch {}
 
+    // Persist to backend (fire-and-forget; localStorage is fallback)
+    fetch(`/api/requests/${data.slug}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        hash,
+        items: request.items,
+        ...(showPrices ? { total: cartTotal } : {}),
+        customer_message: cartMessage || undefined,
+      }),
+    }).catch(() => {})
+
     const itemLines = cart.map(line => {
       const price = showPrices ? ` — $${(line.price * line.quantity).toLocaleString('es-MX')} MXN` : ''
       return `- ${line.name} x${line.quantity}${price}`

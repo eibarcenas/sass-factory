@@ -30,7 +30,7 @@ def transition_status(business_id: str, action: str) -> dict:
             raise BadRequestError(str(e)) from e
         raise InvalidTransitionError(str(e)) from e
     now = datetime.now(timezone.utc).isoformat()
-    extra = {"submittedAt": now} if new_status in {BusinessStatus.PENDING_REVIEW, BusinessStatus.REVIEW} else {}
+    extra = {"activatedAt": now} if new_status == BusinessStatus.ACTIVE else {}
     ref.update({"status": new_status, "updatedAt": now, **extra})
 
     publish_event(
@@ -57,15 +57,6 @@ def update_business_fields(slug: str, patch: dict) -> dict:
     ref.update(allowed)
     return {"updated": True, "slug": slug, **allowed}
 
-
-def owner_approve(slug: str) -> dict:
-    ref, business = get_business_or_404(slug)
-    current = business.get("status")
-    if current not in {BusinessStatus.REVIEW, BusinessStatus.PENDING_REVIEW}:
-        raise ConflictError(f"Cannot approve from status '{current}'")
-    now = datetime.now(timezone.utc).isoformat()
-    ref.update({"ownerApprovedAt": now, "updatedAt": now})
-    return {"approved": True, "slug": slug, "ownerApprovedAt": now}
 
 
 def list_businesses(status: str | None) -> dict:

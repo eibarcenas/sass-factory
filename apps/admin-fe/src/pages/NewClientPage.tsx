@@ -1,10 +1,8 @@
 import { useNavigate } from 'react-router-dom'
-import CreateDemoForm from '../components/demos/CreateDemoForm'
+import CreateBusinessForm from '../components/businesses/CreateBusinessForm'
 import { Card, CardContent } from '@/components/ui/card'
 
-const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
-
-export default function NewDemoPage() {
+export default function NewClientPage() {
   const navigate = useNavigate()
 
   return (
@@ -16,7 +14,7 @@ export default function NewDemoPage() {
         >
           ← Volver a clientes
         </button>
-        <h1 className="text-2xl font-bold">Nueva demo</h1>
+        <h1 className="text-2xl font-bold">Nuevo negocio</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Crea la página de catálogo para un nuevo cliente.
         </p>
@@ -24,10 +22,10 @@ export default function NewDemoPage() {
 
       <Card>
         <CardContent className="pt-5">
-          <CreateDemoForm
+          <CreateBusinessForm
+            mode="admin"
             onSuccess={(slug) => {
-              window.open(`${STOREFRONT_URL}/demo/${slug}`, '_blank')
-              navigate('/clientes')
+              navigate(`/owner/preview/${slug}`)
             }}
           />
         </CardContent>

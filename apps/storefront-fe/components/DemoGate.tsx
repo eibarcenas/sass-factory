@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { BusinessStatus } from '@eguru/core'
 import AuthWall from './AuthWall'
-import ReviewBadge from './ReviewBadge'
-import OwnerApproveButton from './OwnerApproveButton'
 import AdminFloatingButton from './AdminFloatingButton'
 import type { CatalogData } from '@/lib/api'
 import CatalogView from './CatalogView'
@@ -27,9 +24,18 @@ export default function DemoGate({ slug, data }: Props) {
       try {
         const { claims } = await user.getIdTokenResult()
         const r = claims.role as string | undefined
-        if (r === 'SUPER_ADMIN') setRole('super_admin')
-        else if (r === 'OWNER' && claims.business_id === slug) setRole('owner')
-        else setRole('other')
+        if (r === 'SUPER_ADMIN') {
+          setRole('super_admin')
+        } else if (r === 'OWNER' && claims.business_id === slug) {
+          setRole('owner')
+        } else if (!r && user.phoneNumber) {
+          // Phone-auth user: grant access if their number matches the business's registered WhatsApp
+          const authDigits = user.phoneNumber.replace(/\D/g, '')
+          const bizDigits = data.whatsapp.replace(/\D/g, '')
+          setRole(authDigits.endsWith(bizDigits) ? 'owner' : 'other')
+        } else {
+          setRole('other')
+        }
       } catch {
         setRole('other')
       }
@@ -64,23 +70,9 @@ export default function DemoGate({ slug, data }: Props) {
     )
   }
 
-  const isReview = data.status === BusinessStatus.Review || data.status === BusinessStatus.PendingReview
-
   return (
     <>
-      {isReview && <ReviewBadge />}
-
-      {/* Push content below the fixed banner */}
-      <div className={isReview ? 'pt-9' : ''}>
-        <CatalogView data={data} isDemo />
-      </div>
-
-      {/* Owner approve button — floats above catalog content */}
-      {role === 'owner' && isReview && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <OwnerApproveButton slug={slug} />
-        </div>
-      )}
+      <CatalogView data={data} isDemo />
 
       {/* Admin activate/archive — bottom right */}
       {role === 'super_admin' && (
@@ -89,3 +81,4 @@ export default function DemoGate({ slug, data }: Props) {
     </>
   )
 }
+

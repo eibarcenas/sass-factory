@@ -4,17 +4,9 @@ from enum import Enum
 
 
 class BusinessStatus(str, Enum):
-    DRAFT          = "draft"
-    PENDING_REVIEW = "pending_review"
-    REVIEW         = "review"
-    DEMO           = "demo"
-    SENT           = "sent"
-    ACCEPTED       = "accepted"
-    ACTIVE         = "active"
-    SUSPENDED      = "suspended"
-    EXPIRED        = "expired"
-    REJECTED       = "rejected"
-    ARCHIVED       = "archived"
+    PENDING  = "pending"
+    ACTIVE   = "active"
+    INACTIVE = "inactive"
 
 
 class BusinessType(str, Enum):
@@ -29,31 +21,18 @@ class BusinessType(str, Enum):
 
 
 VALID_TRANSITIONS: dict[BusinessStatus, list[BusinessStatus]] = {
-    BusinessStatus.DRAFT:          [BusinessStatus.PENDING_REVIEW, BusinessStatus.DEMO,     BusinessStatus.ARCHIVED],
-    BusinessStatus.PENDING_REVIEW: [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
-    BusinessStatus.REVIEW:         [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
-    BusinessStatus.DEMO:           [BusinessStatus.SENT,           BusinessStatus.ARCHIVED],
-    BusinessStatus.SENT:           [BusinessStatus.ACCEPTED,       BusinessStatus.REJECTED, BusinessStatus.EXPIRED],
-    BusinessStatus.ACCEPTED:       [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
-    BusinessStatus.ACTIVE:         [BusinessStatus.SUSPENDED,      BusinessStatus.ARCHIVED],
-    BusinessStatus.SUSPENDED:      [BusinessStatus.ACTIVE,         BusinessStatus.ARCHIVED],
-    BusinessStatus.EXPIRED:        [BusinessStatus.ARCHIVED],
-    BusinessStatus.REJECTED:       [BusinessStatus.ARCHIVED],
-    BusinessStatus.ARCHIVED:       [],
+    BusinessStatus.PENDING:  [BusinessStatus.ACTIVE],
+    BusinessStatus.ACTIVE:   [BusinessStatus.INACTIVE],
+    BusinessStatus.INACTIVE: [BusinessStatus.ACTIVE],
 }
 
 ACTION_TO_STATUS: dict[str, BusinessStatus] = {
-    "submit":     BusinessStatus.REVIEW,
-    "publish":    BusinessStatus.DEMO,
-    "send":       BusinessStatus.SENT,
-    "accept":     BusinessStatus.ACCEPTED,
     "activate":   BusinessStatus.ACTIVE,
-    "suspend":    BusinessStatus.SUSPENDED,
+    "deactivate": BusinessStatus.INACTIVE,
     "reactivate": BusinessStatus.ACTIVE,
-    "archive":    BusinessStatus.ARCHIVED,
 }
 
-OWNER_PATCH_FIELDS = frozenset({"tagline", "theme", "name", "whatsapp"})
+OWNER_PATCH_FIELDS = frozenset({"tagline", "theme", "name", "whatsapp", "city", "state", "type", "logo"})
 
 
 def resolve_new_status(current: BusinessStatus, action: str) -> BusinessStatus:

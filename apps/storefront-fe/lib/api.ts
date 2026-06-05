@@ -1,4 +1,4 @@
-import type { Business, Item } from '@eguru/core'
+import type { Business, Item, CatalogRequest } from '@eguru/core'
 
 // API_URL: server-side only (no NEXT_PUBLIC_ prefix = configurable at runtime in Cloud Run)
 // For local dev: http://localhost:8000
@@ -6,6 +6,18 @@ import type { Business, Item } from '@eguru/core'
 const API_URL = process.env.CATALOG_API_URL ?? process.env.API_URL ?? process.env.NEXT_PUBLIC_CATALOG_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 export type CatalogData = Business & { items: Item[] }
+
+export async function getRequest(hash: string): Promise<CatalogRequest | null> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/storefront/requests/${hash}`, {
+      cache: 'no-store',
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
 
 export type CatalogResult =
   | { type: 'ok'; data: CatalogData }

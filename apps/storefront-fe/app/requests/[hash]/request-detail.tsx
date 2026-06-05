@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { CatalogRequest } from '@eguru/core'
 
 type RequestItem = {
   product_id: string
@@ -20,15 +21,39 @@ type StoredRequest = {
   status: string
 }
 
-export default function RequestDetail({ hash }: { hash: string }) {
-  const [request, setRequest] = useState<StoredRequest | null>(null)
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  pending:   { label: 'Pendiente',   color: 'bg-yellow-100 text-yellow-800' },
+  reviewing: { label: 'En revisión', color: 'bg-blue-100 text-blue-800' },
+  approved:  { label: 'Aprobado',    color: 'bg-green-100 text-green-800' },
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_LABELS[status] ?? { label: status, color: 'bg-muted text-muted-foreground' }
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.color}`}>
+      {s.label}
+    </span>
+  )
+}
+
+export default function RequestDetail({
+  hash,
+  serverRequest,
+}: {
+  hash: string
+  serverRequest: CatalogRequest | null
+}) {
+  const [localRequest, setLocalRequest] = useState<StoredRequest | null>(null)
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(`catalog.mx.request.${hash}`)
-      if (raw) setRequest(JSON.parse(raw))
+      if (raw) setLocalRequest(JSON.parse(raw))
     } catch {}
   }, [hash])
+
+  // Server data (from API) takes priority over localStorage
+  const request = serverRequest ?? localRequest
 
   if (!request) {
     return (
@@ -36,22 +61,28 @@ export default function RequestDetail({ hash }: { hash: string }) {
         <div className="mx-auto max-w-lg rounded-2xl border bg-background p-6 text-center shadow-sm">
           <h1 className="text-lg font-bold">Solicitud no encontrada</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Esta vista local aparece cuando la solicitud fue creada en este dispositivo.
+            Esta solicitud no existe o el enlace es incorrecto.
           </p>
         </div>
       </main>
     )
   }
 
+  const slug = request.storefront_slug
+  const status = request.status ?? 'pending'
+
   return (
     <main className="min-h-screen bg-muted/30 px-4 py-10">
       <div className="mx-auto max-w-lg rounded-2xl border bg-background p-6 shadow-sm">
-        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          Solicitud #{request.hash}
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Solicitud #{request.hash}
+          </p>
+          <StatusBadge status={status} />
+        </div>
         <h1 className="mt-2 text-2xl font-bold">Detalle de solicitud</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {request.storefront_slug} · {new Date(request.created_at).toLocaleString('es-MX')}
+          {slug} · {new Date(request.created_at).toLocaleString('es-MX')}
         </p>
 
         <div className="mt-6 space-y-3">

@@ -10,7 +10,18 @@ from app.infrastructure.identity.firebase_owner_gateway import assign_owner_clai
 COLL = "businesses"
 
 
-def create_demo(name: str, type: str, whatsapp: str, city: str, tagline: str | None) -> dict:
+def create_demo(
+    name: str,
+    type: str,
+    whatsapp: str,
+    city: str,
+    tagline: str | None,
+    *,
+    state: str | None = None,
+    contact_name: str | None = None,
+    owner_email: str | None = None,
+    logo: str | None = None,
+) -> dict:
     db = get_db()
     slug = slugify(name)
 
@@ -27,14 +38,23 @@ def create_demo(name: str, type: str, whatsapp: str, city: str, tagline: str | N
         "city": city,
         "tagline": tagline,
         "theme": THEMES.get(type, THEMES["otro"]),
-        "status": BusinessStatus.DEMO,
+        "status": BusinessStatus.PENDING,
         "plan": "free",
         "createdAt": now,
         "updatedAt": now,
     }
+    if state:
+        business_data["state"] = state
+    if contact_name:
+        business_data["contactName"] = contact_name
+    if logo:
+        business_data["logo"] = logo
 
     biz_ref = db.collection(COLL).document(slug)
     biz_ref.set(business_data)
+
+    if owner_email:
+        activate_owner(owner_email, slug)
 
     templates = SAMPLE_ITEMS.get(type, SAMPLE_ITEMS["otro"])
     items = []

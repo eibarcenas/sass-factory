@@ -66,7 +66,7 @@ export function DashboardContent() {
 
   const businesses = bizData?.businesses ?? []
   const total = businesses.length
-  const readyCount = businesses.filter(b => b.status === BusinessStatus.Demo).length
+  const pendingCount = businesses.filter(b => b.status === BusinessStatus.Pending).length
   const activeCount = businesses.filter(b => b.status === BusinessStatus.Active).length
   const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
 
@@ -92,18 +92,18 @@ export function DashboardContent() {
               : 'Todo en orden.'}
           </p>
         </div>
-        <Button onClick={() => navigate('/clientes')} className="shrink-0 self-start">
+        <Button onClick={() => navigate('/clientes/new')} className="shrink-0 self-start">
           <Plus className="w-4 h-4 mr-1.5" />
-          Nueva demo
+          Nuevo negocio
         </Button>
       </div>
 
       {/* Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard label="Total demos" value={total} loading={isLoading} onClick={() => navigate('/clientes?tab=demos')} />
-        <MetricCard label="Demo lista" value={readyCount} loading={isLoading} onClick={() => navigate('/clientes?tab=demos')} />
-        <MetricCard label="Activas" value={activeCount} loading={isLoading} onClick={() => navigate('/clientes?tab=demos')} />
-        <MetricCard label="Prospectos nuevos" value={newProspects} highlight loading={isLoading} onClick={() => navigate('/clientes?tab=prospects')} />
+        <MetricCard label="Total negocios" value={total} loading={isLoading} onClick={() => navigate('/clientes')} />
+        <MetricCard label="Pendientes" value={pendingCount} loading={isLoading} highlight onClick={() => navigate('/clientes')} />
+        <MetricCard label="Activas" value={activeCount} loading={isLoading} onClick={() => navigate('/clientes')} />
+        <MetricCard label="Prospectos nuevos" value={newProspects} highlight loading={isLoading} onClick={() => navigate('/clientes')} />
       </div>
 
       {/* Recent activity */}
@@ -142,8 +142,8 @@ export function DashboardContent() {
       ) : (
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-4xl mb-3">✨</p>
-          <p className="font-medium">No hay demos todavía</p>
-          <p className="text-sm mt-1">Crea tu primera demo para empezar.</p>
+          <p className="font-medium">No hay negocios todavía</p>
+          <p className="text-sm mt-1">Crea el primer negocio para empezar.</p>
         </div>
       )}
     </div>
@@ -159,7 +159,7 @@ const NAV_ITEMS = [
 
 type NavKey = typeof NAV_ITEMS[number]['key']
 
-function AdminSidebar({ newProspects, onAfterNavigate }: { newProspects: number; onAfterNavigate?: () => void }) {
+function AdminSidebar({ pendingCount, onAfterNavigate }: { pendingCount: number; onAfterNavigate?: () => void }) {
   const { user, mockMode } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
@@ -172,7 +172,7 @@ function AdminSidebar({ newProspects, onAfterNavigate }: { newProspects: number;
     key: n.key,
     icon: n.icon,
     label: n.label,
-    badge: n.key === 'clientes' ? newProspects : undefined,
+    badge: n.key === 'clientes' ? pendingCount : undefined,
   }))
 
   return (
@@ -201,21 +201,21 @@ function AdminSidebar({ newProspects, onAfterNavigate }: { newProspects: number;
 // ── Admin layout (wraps all admin routes) ─────────────────────────────────────
 
 export default function AdminLayout() {
-  const { data: prospectData } = useProspects()
-  const newProspects = prospectData?.prospects.filter(p => p.status === 'new').length ?? 0
+  const { data: bizData } = useBusinesses()
+  const pendingCount = (bizData?.businesses ?? []).filter(b => b.status === BusinessStatus.Pending).length
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/20">
       {/* Desktop sidebar */}
-      <div className="hidden md:block">
-        <AdminSidebar newProspects={newProspects} />
+      <div className="hidden md:block h-full">
+        <AdminSidebar pendingCount={pendingCount} />
       </div>
 
       {/* Mobile drawer */}
       <MobileSidebar open={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)}>
         <AdminSidebar
-          newProspects={newProspects}
+          pendingCount={pendingCount}
           onAfterNavigate={() => setMobileSidebarOpen(false)}
         />
       </MobileSidebar>
