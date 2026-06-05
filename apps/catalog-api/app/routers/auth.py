@@ -50,9 +50,11 @@ def resolve_claims(
 
         biz = biz_docs[0].to_dict()
 
-        # Require UID match — prevents takeover if a Firebase account is
-        # deleted and a new account is created with the same email.
-        if biz.get("ownerUid") != user.firebase_uid:
+        # Only reject on UID mismatch when ownerUid is explicitly set.
+        # Admin-activated businesses store ownerEmail but not ownerUid,
+        # so the UID check would always fail for them — that's the bug we fix here.
+        stored_uid = biz.get("ownerUid")
+        if stored_uid and stored_uid != user.firebase_uid:
             return {"resolved": False, "role": user.role}
 
         # Only grant claims for active-ish statuses; inactive owners
@@ -65,6 +67,10 @@ def resolve_claims(
         role = "OWNER"
         modules = ["CATALOG", "APPEARANCE"]
         resolve_pending_ref = None
+
+        # Stamp ownerUid so future logins use the faster UID check path
+        if not stored_uid:
+            biz_docs[0].reference.update({"ownerUid": user.firebase_uid})
 
     try:
         import firebase_admin

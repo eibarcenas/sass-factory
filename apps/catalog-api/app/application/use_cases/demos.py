@@ -37,7 +37,7 @@ def create_demo(
         "city": city,
         "tagline": tagline,
         "theme": THEMES.get(type, THEMES["otro"]),
-        "status": BusinessStatus.DEMO,
+        "status": BusinessStatus.PENDING,
         "plan": "free",
         "createdAt": now,
         "updatedAt": now,

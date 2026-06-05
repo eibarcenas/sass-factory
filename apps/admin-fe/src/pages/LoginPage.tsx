@@ -40,9 +40,10 @@ export default function LoginPage() {
         }
       }
 
-      const { getAuth } = await import('firebase/auth')
-      await getAuth().signOut()
-      setError('pending')
+      // No business found for this account — redirect to register so the user
+      // can create or complete their business setup. Keep them signed in to Firebase
+      // so the Google popup on /register returns immediately.
+      navigate('/register', { replace: true })
       return
     }
 
@@ -75,17 +76,6 @@ export default function LoginPage() {
   }, [mockMode, navigate, redirectChecked, pending, signInWithGoogle, user])
 
   if (mockMode) return null
-
-  if (error === 'pending') {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-sm p-6 bg-amber-50 border border-amber-200 rounded-lg space-y-1 text-center">
-          <p className="text-sm font-medium text-amber-800">Tu cuenta esta en revision</p>
-          <p className="text-xs text-amber-700">Activamos tu catalogo en menos de 24 horas.</p>
-        </div>
-      </div>
-    )
-  }
 
   if (error?.includes('Safari')) {
     return (
