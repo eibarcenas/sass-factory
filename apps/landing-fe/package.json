@@ -6,8 +6,7 @@
     "dev": "next dev --port 3020",
     "build": "next build",
     "start": "next start --port 3020",
-    "typecheck": "tsc --noEmit",
-    "lint": "next lint"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "clsx": "^2.1.1",
