@@ -1,9 +1,10 @@
-import random
+import secrets
 import string
 from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from google.api_core.exceptions import AlreadyExists
 from pydantic import BaseModel
 from factory_auth import require_role, Role, UserContext
 
@@ -17,8 +18,9 @@ def _require_owner_or_admin():
     return require_role(Role.SUPER_ADMIN, Role.OWNER)
 
 
-def _make_hash(length: int = 12) -> str:
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+def _make_hash(length: int = 16) -> str:
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
 class RequestItem(BaseModel):
@@ -61,7 +63,10 @@ def create_request(slug: str, body: CreateRequestBody):
         "created_at": now,
     }
 
-    db.collection("requests").document(req_hash).set(request_data)
+    try:
+        db.collection("requests").document(req_hash).create(request_data)
+    except AlreadyExists:
+        raise HTTPException(status_code=409, detail="Request hash already exists")
     return {"hash": req_hash, "status": RequestStatus.PENDING}
 
 
