@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import AppSidebar, { SidebarProfile } from '../../components/layout/AppSidebar'
 import ProductEditor from '../../components/catalog/ProductEditor'
-import BusinessInfoCard from '../../components/businesses/BusinessInfoCard'
+import BusinessFormPanel from '../../components/businesses/BusinessFormPanel'
 import type { NavItem } from '../../components/layout/AppSidebar'
 import { MobileSidebar } from '@eguru/ui'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Menu } from 'lucide-react'
 import { BusinessStatus, BusinessType } from '@eguru/core'
+// BusinessType imported for bizData queryFn type annotation
 import SettingsPage from '../settings/SettingsPage'
 import OwnerRequestsPage from '../../components/owner/OwnerRequestsPage'
 
@@ -247,11 +248,11 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
           <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} readonly={false} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
         )}
         {page === 'appearance' && bizData && (
-          <BusinessInfoCard
-            business={{ ...bizData, status: bizData.status }}
-            editable={!isPreview}
+          <BusinessFormPanel
+            mode="owner"
+            defaultValues={{ ...bizData, slug: businessId }}
+            businessSlug={isImpersonating ? businessId : undefined}
             readonly={isPreview}
-            impersonateSlug={isImpersonating ? businessId : undefined}
             onSaved={() => refetchBiz()}
           />
         )}

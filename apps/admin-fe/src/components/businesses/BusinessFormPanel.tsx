@@ -1,11 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCreateDemo } from '@/hooks/useBusinesses'
-import { useGoogleAuth } from '@/hooks/useGoogleAuth'
-import { useAuthStore } from '@/store/auth'
-import { api } from '@/lib/api'
-import { BusinessType } from '@eguru/core'
 import type { Business } from '@eguru/core'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,165 +7,46 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import ImageUpload from '@/components/catalog/ImageUpload'
 import { BUSINESS_TYPES, MEXICO_STATES } from './businessFormConstants'
-
-const API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
-const SESSION_KEY = 'pendingBusinessForm'
-
-type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
+import { useBusinessFormState, type BusinessFormDefaults } from './hooks/useBusinessFormState'
+import { useRegisterFlow } from './hooks/useRegisterFlow'
+import { useUpdateBusiness } from './hooks/useUpdateBusiness'
 
 type RegisterProps = { mode: 'register' }
 type CreateProps  = { mode: 'create'; onSuccess?: (slug: string) => void }
 type EditProps    = {
   mode: 'edit'
   businessSlug: string
-  defaultValues: Pick<Business, 'logo' | 'type' | 'name' | 'whatsapp' | 'city' | 'state' | 'tagline' | 'theme' | 'ownerId' | 'ownerEmail' | 'contactName'>
+  defaultValues: BusinessFormDefaults & Pick<Business, 'status' | 'theme'>
   onSaved?: () => void
 }
-type Props = RegisterProps | CreateProps | EditProps
+type OwnerProps   = {
+  mode: 'owner'
+  defaultValues?: BusinessFormDefaults
+  businessSlug?: string
+  readonly?: boolean
+  onSaved?: () => void
+}
+type Props = RegisterProps | CreateProps | EditProps | OwnerProps
 
 export default function BusinessFormPanel(props: Props) {
   const { mode } = props
-  const navigate = useNavigate()
-  const { setUser } = useAuthStore()
+
+  const isEdit      = mode === 'edit' || mode === 'owner'
+  const isCreateMode = mode === 'register' || mode === 'create'
+  const readonly    = mode === 'owner' && !!(props as OwnerProps).readonly
+
+  const defaultValues = isEdit ? (props as EditProps | OwnerProps).defaultValues : undefined
+  const businessSlug  = isEdit ? ((props as EditProps | OwnerProps).businessSlug ?? '') : ''
+
+  const { values, setters, slugStatus, slug, error, setError, validate, reset } =
+    useBusinessFormState(mode, defaultValues)
+
+  const { register, pending: googlePending, redirectChecked } =
+    useRegisterFlow(setError, () => setError('Ese nombre ya está en uso. Prueba con otro.'))
+
+  const { save, isPending: savePending, saved } = useUpdateBusiness(businessSlug || undefined)
+
   const createDemo = useCreateDemo()
-  const qc = useQueryClient()
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
-
-  const defaultValues = mode === 'edit' ? (props as EditProps).defaultValues : undefined
-  const businessSlug  = mode === 'edit' ? (props as EditProps).businessSlug  : ''
-
-  const [logo,       setLogo]       = useState(defaultValues?.logo ?? '')
-  const [type,       setType]       = useState<BusinessType | ''>(defaultValues?.type ?? '')
-  const [name,       setName]       = useState(defaultValues?.name ?? '')
-  const [tagline,    setTagline]    = useState(defaultValues?.tagline ?? '')
-  const [whatsapp,   setWhatsapp]   = useState(defaultValues?.whatsapp ?? '')
-  const [ownerEmail, setOwnerEmail] = useState('')
-  const [city,       setCity]       = useState(defaultValues?.city ?? '')
-  const [state,      setState]      = useState(defaultValues?.state ?? 'Ciudad de México')
-  const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle')
-  const [slug,       setSlug]       = useState('')
-  const [error,      setError]      = useState('')
-  const [saved,      setSaved]      = useState(false)
-
-  // Sync form when edit defaultValues change (e.g. after query refetch)
-  useEffect(() => {
-    if (!defaultValues) return
-    setLogo(defaultValues.logo ?? '')
-    setType(defaultValues.type ?? '')
-    setName(defaultValues.name)
-    setTagline(defaultValues.tagline ?? '')
-    setWhatsapp(defaultValues.whatsapp ?? '')
-    setCity(defaultValues.city ?? '')
-    setState(defaultValues.state ?? 'Ciudad de México')
-  }, [defaultValues]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Slug availability check (register mode only)
-  useEffect(() => {
-    if (mode !== 'register') return
-    clearTimeout(debounceRef.current)
-    if (!name.trim()) { setSlugStatus('idle'); setSlug(''); return }
-    setSlugStatus('checking')
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/v1/auth/check-slug?name=${encodeURIComponent(name.trim())}`)
-        const data = await res.json()
-        setSlug(data.slug ?? '')
-        if (data.reason === 'invalid_name') setSlugStatus('invalid')
-        else setSlugStatus(data.available ? 'available' : 'taken')
-      } catch { setSlugStatus('idle') }
-    }, 250)
-    return () => clearTimeout(debounceRef.current)
-  }, [name, mode])
-
-  // Google auth callback (register mode only)
-  const { signInWithGoogle, pending: googlePending, redirectChecked } = useGoogleAuth(async (cred) => {
-    if (mode !== 'register') return
-    const persisted = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? 'null') ?? { name, type, whatsapp, city, state, tagline }
-    sessionStorage.removeItem(SESSION_KEY)
-
-    const token = await cred.user.getIdToken()
-    const res = await fetch(`${API_URL}/api/v1/auth/auto-provision`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        businessName: persisted.name,
-        type:         persisted.type    || undefined,
-        whatsapp:     persisted.whatsapp || undefined,
-        city:         persisted.city    || undefined,
-        state:        persisted.state   || undefined,
-        tagline:      persisted.tagline || undefined,
-      }),
-    })
-
-    if (res.status === 409) {
-      const errData = await res.json().catch(() => ({}))
-      if (errData.detail === 'Account already active') {
-        const { claims } = await cred.user.getIdTokenResult(true)
-        const role = (claims.role as string) ?? 'OWNER'
-        setUser({
-          uid: cred.user.uid, email: cred.user.email,
-          displayName: cred.user.displayName ?? null,
-          photoURL: cred.user.photoURL ?? null,
-          role, businessId: (claims.business_id as string) ?? '',
-          modules: (claims.modules as string[]) ?? [],
-        })
-        navigate(role === 'SUPER_ADMIN' ? '/dashboard' : '/owner', { replace: true })
-      } else {
-        setSlugStatus('taken')
-        const { getAuth } = await import('firebase/auth')
-        await getAuth().signOut()
-      }
-      return
-    }
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.detail ?? `Error ${res.status}`)
-    }
-
-    const data = await res.json()
-    const { claims } = await cred.user.getIdTokenResult(true)
-    setUser({
-      uid: cred.user.uid, email: cred.user.email,
-      displayName: cred.user.displayName ?? null,
-      photoURL: cred.user.photoURL ?? null,
-      role: (claims.role as string) ?? 'OWNER',
-      businessId: data.slug,
-      modules: (claims.modules as string[]) ?? [],
-    })
-    navigate('/owner', { replace: true })
-  })
-
-  // Edit mode save
-  const editSave = useMutation({
-    mutationFn: () => api.patch(`/api/v1/owner/business?business=${businessSlug}`, {
-      logo:     logo     || undefined,
-      type:     type     || undefined,
-      name,
-      whatsapp: whatsapp || undefined,
-      city:     city     || undefined,
-      state:    state    || undefined,
-      tagline:  tagline  || undefined,
-    }),
-    onSuccess: () => {
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
-      qc.invalidateQueries({ queryKey: ['businesses'] })
-      ;(props as EditProps).onSaved?.()
-    },
-  })
-
-  function validate() {
-    const msgs: string[] = []
-    if (!type) msgs.push('Selecciona el tipo de negocio')
-    if (name.trim().length < 2) msgs.push('El nombre debe tener al menos 2 caracteres')
-    if (mode === 'register' && slugStatus === 'taken')   msgs.push('Ese nombre ya está en uso')
-    if (mode === 'register' && slugStatus === 'invalid') msgs.push('El nombre no es válido')
-    if (whatsapp && !/^[0-9+]{7,15}$/.test(whatsapp.trim())) msgs.push('El WhatsApp debe ser un número válido')
-    if (mode === 'create' && ownerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail.trim()))
-      msgs.push('El email del dueño no es válido')
-    return msgs
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -182,79 +56,83 @@ export default function BusinessFormPanel(props: Props) {
 
     if (mode === 'register') {
       if (slugStatus !== 'available') { setError('Verifica que el nombre esté disponible'); return }
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ name, type, whatsapp, city, state, tagline }))
-      try { await signInWithGoogle() }
-      catch (err: unknown) { setError((err as Error).message ?? 'Ocurrió un error. Intenta de nuevo.') }
+      await register(values)
       return
     }
 
     if (mode === 'create') {
       try {
         const business = await createDemo.mutateAsync({
-          name, type: type as string, whatsapp, city, state,
-          tagline:    tagline    || undefined,
-          ownerEmail: ownerEmail || undefined,
-          logo:       logo       || undefined,
+          name:        values.name,
+          type:        values.type as string,
+          whatsapp:    values.whatsapp,
+          city:        values.city,
+          state:       values.state,
+          tagline:     values.tagline     || undefined,
+          contactName: values.contactName || undefined,
+          ownerEmail:  values.ownerEmail  || undefined,
+          logo:        values.logo        || undefined,
         })
         ;(props as CreateProps).onSuccess?.(business.slug)
-        setLogo(''); setType(''); setName(''); setTagline('')
-        setWhatsapp(''); setOwnerEmail(''); setCity(''); setState('Ciudad de México')
+        reset()
       } catch (err: unknown) {
         setError((err as Error).message ?? 'No se pudo crear el negocio')
       }
       return
     }
 
-    editSave.mutate()
+    save(values)
+    ;(props as EditProps | OwnerProps).onSaved?.()
   }
 
   const isPending =
     mode === 'register' ? (googlePending || !redirectChecked) :
     mode === 'create'   ? createDemo.isPending :
-                          editSave.isPending
+                          savePending
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
 
-      {/* Logo — create + edit only */}
-      {mode !== 'register' && (
+      {/* Logo — edit + owner only */}
+      {isEdit && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Logo{mode === 'create' && <span className="font-normal normal-case"> (opcional)</span>}
+              Logo
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-              {mode === 'edit' && (
-                logo
-                  ? <img src={logo} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
-                  : <div
-                      className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
-                      style={{ backgroundColor: (defaultValues?.theme?.primary ?? '#6366f1') + '20' }}
-                    >
-                      {defaultValues?.theme?.emoji ?? '🏪'}
-                    </div>
+              {values.logo
+                ? <img src={values.logo} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+                : <div
+                    className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
+                    style={{ backgroundColor: ((defaultValues as any)?.theme?.primary ?? '#6366f1') + '20' }}
+                  >
+                    {(defaultValues as any)?.theme?.emoji ?? '🏪'}
+                  </div>
+              }
+              {!readonly && (
+                <div className="flex-1">
+                  <ImageUpload
+                    max={1}
+                    folder="logos"
+                    currentUrls={values.logo ? [values.logo] : []}
+                    onChanged={urls => setters.setLogo(urls[0] ?? '')}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · máx. 2 MB</p>
+                </div>
               )}
-              <div className="flex-1">
-                <ImageUpload
-                  max={1}
-                  folder="logos"
-                  currentUrls={logo ? [logo] : []}
-                  onChanged={urls => setLogo(urls[0] ?? '')}
-                />
-                <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · máx. 2 MB</p>
-              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Type selector */}
+      {/* Type selector — grid always, interactive in create/register/owner, read-only in edit */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Tipo de negocio{mode !== 'edit' && <span className="text-destructive"> *</span>}
+            Tipo de negocio{isCreateMode && <span className="text-destructive"> *</span>}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -263,10 +141,13 @@ export default function BusinessFormPanel(props: Props) {
               <button
                 key={t.key}
                 type="button"
-                onClick={() => setType(t.key)}
+                onClick={!isEdit && !readonly ? () => setters.setType(t.key) : undefined}
+                disabled={isEdit && values.type !== t.key}
                 className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all ${
-                  type === t.key
+                  values.type === t.key
                     ? 'border-primary bg-primary/5'
+                    : isEdit
+                    ? 'border-border opacity-35'
                     : 'border-border hover:border-primary/30 hover:bg-muted/50'
                 }`}
               >
@@ -288,14 +169,15 @@ export default function BusinessFormPanel(props: Props) {
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="bfp-name">
-              Nombre del negocio{mode !== 'edit' && <span className="text-destructive"> *</span>}
+              Nombre del negocio{isCreateMode && <span className="text-destructive"> *</span>}
             </Label>
             <div className="relative">
               <Input
                 id="bfp-name"
-                value={name}
-                onChange={e => setName(e.target.value)}
+                value={values.name}
+                onChange={e => setters.setName(e.target.value)}
                 placeholder="Ej. Barbería El Tigre"
+                readOnly={readonly}
                 className={
                   mode === 'register'
                     ? slugStatus === 'taken' || slugStatus === 'invalid'
@@ -341,17 +223,27 @@ export default function BusinessFormPanel(props: Props) {
             <Label htmlFor="bfp-tagline">
               Tagline{' '}
               <span className="text-muted-foreground font-normal">
-                (opcional{mode === 'edit' ? ` · ${tagline.length}/120` : ''})
+                (opcional{isEdit ? ` · ${values.tagline.length}/120` : ''})
               </span>
             </Label>
             <Input
               id="bfp-tagline"
-              value={tagline}
-              onChange={e => setTagline(e.target.value)}
+              value={values.tagline}
+              onChange={e => setters.setTagline(e.target.value)}
               maxLength={120}
               placeholder="Los mejores cortes del sur de la ciudad"
+              readOnly={readonly}
             />
           </div>
+          {isEdit && defaultValues?.slug && (
+            <>
+              <Separator />
+              <div className="space-y-1">
+                <Label className="text-muted-foreground">URL del catálogo</Label>
+                <p className="text-sm font-mono py-1 text-primary">catalog.mx/{defaultValues.slug}</p>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -363,21 +255,45 @@ export default function BusinessFormPanel(props: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {isCreateMode ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="bfp-contact">
+                {mode === 'register' ? 'Tu nombre' : 'Nombre del dueño'}{' '}
+                <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                id="bfp-contact"
+                value={values.contactName}
+                onChange={e => setters.setContactName(e.target.value)}
+                placeholder="Ej. Juan Pérez"
+              />
+            </div>
+          ) : (
+            values.contactName && (
+              <div className="space-y-1">
+                <Label className="text-muted-foreground">Nombre de contacto</Label>
+                <p className="text-sm py-1">{values.contactName}</p>
+              </div>
+            )
+          )}
+
+          <Separator />
+
           <div className="space-y-1.5">
             <Label htmlFor="bfp-whatsapp">
               WhatsApp <span className="text-muted-foreground font-normal">(opcional)</span>
             </Label>
             <Input
               id="bfp-whatsapp"
-              value={whatsapp}
-              onChange={e => setWhatsapp(e.target.value.replace(/[^\d+]/g, ''))}
+              value={values.whatsapp}
+              onChange={e => setters.setWhatsapp(e.target.value.replace(/[^\d+]/g, ''))}
               placeholder="+52 55 1234 5678"
               type="tel"
               maxLength={16}
+              readOnly={readonly}
             />
           </div>
 
-          {/* ownerEmail — create: editable, edit: read-only admin info */}
           {mode === 'create' && (
             <>
               <Separator />
@@ -387,8 +303,8 @@ export default function BusinessFormPanel(props: Props) {
                 </Label>
                 <Input
                   id="bfp-owner-email"
-                  value={ownerEmail}
-                  onChange={e => setOwnerEmail(e.target.value)}
+                  value={values.ownerEmail}
+                  onChange={e => setters.setOwnerEmail(e.target.value)}
                   placeholder="dueno@gmail.com"
                   type="email"
                 />
@@ -432,18 +348,20 @@ export default function BusinessFormPanel(props: Props) {
               </Label>
               <Input
                 id="bfp-city"
-                value={city}
-                onChange={e => setCity(e.target.value)}
+                value={values.city}
+                onChange={e => setters.setCity(e.target.value)}
                 placeholder="Ej. Monterrey"
+                readOnly={readonly}
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="bfp-state">Estado</Label>
               <select
                 id="bfp-state"
-                value={state}
-                onChange={e => setState(e.target.value)}
-                className="w-full px-3.5 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background transition-shadow"
+                value={values.state}
+                onChange={e => setters.setState(e.target.value)}
+                disabled={readonly}
+                className="w-full px-3.5 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background transition-shadow disabled:opacity-50"
               >
                 {MEXICO_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -467,35 +385,37 @@ export default function BusinessFormPanel(props: Props) {
         )
       )}
 
-      {mode === 'register' ? (
-        <Button
-          type="submit"
-          className="w-full gap-2"
-          disabled={isPending || slugStatus === 'taken' || slugStatus === 'invalid' || slugStatus === 'checking'}
-        >
-          {googlePending ? (
-            <>
-              <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-              Conectando con Google...
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Continuar con Google
-            </>
-          )}
-        </Button>
-      ) : (
-        <Button type="submit" disabled={isPending} className="w-full">
-          {mode === 'create'
-            ? createDemo.isPending ? 'Creando...' : 'Crear negocio'
-            : saved ? '✓ Guardado' : editSave.isPending ? 'Guardando...' : 'Guardar cambios'}
-        </Button>
+      {!readonly && (
+        mode === 'register' ? (
+          <Button
+            type="submit"
+            className="w-full gap-2"
+            disabled={isPending || slugStatus === 'taken' || slugStatus === 'invalid' || slugStatus === 'checking'}
+          >
+            {googlePending ? (
+              <>
+                <span className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                Conectando con Google...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continuar con Google
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button type="submit" disabled={isPending} className="w-full">
+            {mode === 'create'
+              ? createDemo.isPending ? 'Creando...' : 'Crear negocio'
+              : saved ? '✓ Guardado' : savePending ? 'Guardando...' : 'Guardar cambios'}
+          </Button>
+        )
       )}
 
       {mode === 'register' && (
