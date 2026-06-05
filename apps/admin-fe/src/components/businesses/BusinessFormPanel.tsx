@@ -93,12 +93,12 @@ export default function BusinessFormPanel(props: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
 
-      {/* Logo — edit + owner only */}
-      {isEdit && (
+      {/* Logo — all modes except register */}
+      {mode !== 'register' && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Logo
+              Logo{mode === 'create' && <span className="font-normal normal-case"> (opcional)</span>}
             </CardTitle>
           </CardHeader>
           <CardContent>
