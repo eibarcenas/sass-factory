@@ -30,7 +30,7 @@ def _resolve_owner_slug(user: UserContext, business: str | None) -> str:
     return business
 
 
-@router.get("/admin/businesses")
+@router.get("/platform/businesses")
 def list_businesses(
     status: str | None = None,
     _: Annotated[UserContext, Depends(require_super_admin())] = None,
@@ -40,7 +40,7 @@ def list_businesses(
 
 # ── Item CRUD — admin (specific routes BEFORE /{action}) ──────────────────────
 
-@router.get("/admin/businesses/{id}/items")
+@router.get("/platform/businesses/{id}/products")
 def list_items(
     id: str,
     _: Annotated[UserContext, Depends(require_super_admin())] = None,
@@ -50,7 +50,7 @@ def list_items(
     except ApplicationError as error:
         raise_http(error)
 
-@router.post("/admin/businesses/{id}/items")
+@router.post("/platform/businesses/{id}/products")
 def add_item(
     id: str,
     item: dict,
@@ -61,7 +61,7 @@ def add_item(
     except ApplicationError as error:
         raise_http(error)
 
-@router.patch("/admin/businesses/{id}/items/{item_id}")
+@router.patch("/platform/businesses/{id}/products/{item_id}")
 def update_item(
     id: str,
     item_id: str,
@@ -73,7 +73,7 @@ def update_item(
     except ApplicationError as error:
         raise_http(error)
 
-@router.delete("/admin/businesses/{id}/items/{item_id}")
+@router.delete("/platform/businesses/{id}/products/{item_id}")
 def delete_item(
     id: str,
     item_id: str,
@@ -86,7 +86,7 @@ def delete_item(
 
 # ── Business lifecycle action ──────────────────────────────────────────────────
 
-@router.post("/admin/businesses/{id}/{action}")
+@router.post("/platform/businesses/{id}/actions/{action}")
 def business_action(
     id: str,
     action: str,
@@ -99,7 +99,7 @@ def business_action(
 
 # ── Owner endpoints ────────────────────────────────────────────────────────────
 
-@router.post("/owner/business/submit")
+@router.post("/seller/profile/submit")
 def owner_submit_for_review(
     business: str | None = None,
     user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
@@ -112,7 +112,7 @@ def owner_submit_for_review(
         raise_http(error)
 
 
-@router.patch("/owner/business/approve")
+@router.patch("/seller/profile/approve")
 def owner_approve_business(
     business: str | None = None,
     user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
@@ -124,7 +124,7 @@ def owner_approve_business(
         raise_http(error)
 
 
-@router.patch("/owner/business")
+@router.patch("/seller/profile")
 def owner_update_business(
     patch: dict,
     business: str | None = None,
@@ -139,7 +139,7 @@ def owner_update_business(
 
 # ── Item CRUD — owner ─────────────────────────────────────────────────────────
 
-@router.get("/owner/business/items")
+@router.get("/seller/products")
 def owner_list_items(
     business: str | None = None,
     user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
@@ -151,7 +151,7 @@ def owner_list_items(
         raise_http(error)
 
 
-@router.post("/owner/business/items")
+@router.post("/seller/products")
 def owner_add_item(
     item: dict,
     business: str | None = None,
@@ -164,7 +164,7 @@ def owner_add_item(
         raise_http(error)
 
 
-@router.patch("/owner/business/items/{item_id}")
+@router.patch("/seller/products/{item_id}")
 def owner_update_item(
     item_id: str,
     patch: dict,
@@ -178,7 +178,7 @@ def owner_update_item(
         raise_http(error)
 
 
-@router.delete("/owner/business/items/{item_id}")
+@router.delete("/seller/products/{item_id}")
 def owner_delete_item(
     item_id: str,
     business: str | None = None,
@@ -191,7 +191,7 @@ def owner_delete_item(
         raise_http(error)
 
 
-@router.delete("/owner/account")
+@router.delete("/seller/profile")
 def owner_delete_account(
     user: Annotated[UserContext, Depends(require_owner())] = None,
 ):

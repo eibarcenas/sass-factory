@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useLocale } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 
 const API_URL   = process.env.NEXT_PUBLIC_IDENTITY_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3000'
@@ -16,14 +18,16 @@ export default function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
+  const locale = useLocale()
+  const searchParams = useSearchParams()
 
   async function handleClick() {
     setLoading(true)
     setError('')
 
-    // No Firebase config in this environment — go straight to admin
     if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-      window.location.href = `${ADMIN_URL}?from=landing`
+      setError('Authentication is not configured.')
+      setLoading(false)
       return
     }
 
@@ -43,20 +47,29 @@ export default function GoogleSignInButton({
       const cred  = await signInWithPopup(auth, new GoogleAuthProvider())
       const token = await cred.user.getIdToken(true)
 
-      await fetch(`${API_URL}/api/v1/auth/resolve-claims`, {
+      await fetch(`${API_URL}/api/v1/auth/claims/resolve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => null)
 
-      // Redirect to admin — pass ?from=landing so it auto-triggers Google auth
-      window.location.href = `${ADMIN_URL}?from=landing`
+      const exchangeResponse = await fetch(`${API_URL}/api/v1/auth/exchanges`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${await cred.user.getIdToken(true)}` },
+      })
+      if (!exchangeResponse.ok) throw new Error('Could not create authentication exchange.')
+      const { code } = await exchangeResponse.json()
+      const callback = new URL(`${ADMIN_URL}/${locale}/auth/callback`)
+      callback.searchParams.set('code', code)
+      const returnTo = searchParams.get('returnTo')
+      if (returnTo?.startsWith(`/${locale}/`)) callback.searchParams.set('returnTo', returnTo)
+      window.location.replace(callback.toString())
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setLoading(false)
         return
       }
-      // Any Firebase error → fall back to admin login
-      window.location.href = `${ADMIN_URL}?from=landing`
+      setError(err.message ?? 'Authentication failed.')
+      setLoading(false)
     }
   }
 

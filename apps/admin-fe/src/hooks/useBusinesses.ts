@@ -15,7 +15,7 @@ export function useBusinesses(status?: string) {
   })
 }
 
-export function useCreateDemo() {
+export function useCreateStore() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: {
@@ -28,7 +28,7 @@ export function useCreateDemo() {
       contactName?: string
       ownerEmail?: string
       logo?: string
-    }) => api.post<Business>('/api/v1/admin/demos', {
+    }) => api.post<Business>('/api/v1/platform/businesses', {
       ...data,
       contact_name: data.contactName,
       owner_email: data.ownerEmail,

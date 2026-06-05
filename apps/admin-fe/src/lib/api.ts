@@ -1,18 +1,14 @@
 import { createApiClient } from '@eguru/client'
 
 const LEGACY_API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
-const CATALOG_API_URL = import.meta.env.VITE_CATALOG_API_URL ?? LEGACY_API_URL
+const STORES_API_URL = import.meta.env.VITE_STORES_API_URL ?? LEGACY_API_URL
 const IDENTITY_API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? LEGACY_API_URL
-const DEMOS_API_URL = import.meta.env.VITE_DEMOS_API_URL ?? LEGACY_API_URL
 const PROSPECTS_API_URL = import.meta.env.VITE_PROSPECTS_API_URL ?? LEGACY_API_URL
 
 function resolveApiUrl(path: string): string {
   if (path.startsWith('/api/v1/auth/')) return IDENTITY_API_URL
-  if (path.startsWith('/api/v1/demos/') || path === '/api/v1/admin/demos' || path === '/api/v1/admin/owners') {
-    return DEMOS_API_URL
-  }
-  if (path.startsWith('/api/v1/prospects') || path.startsWith('/api/v1/admin/prospects')) return PROSPECTS_API_URL
-  return CATALOG_API_URL
+  if (path.startsWith('/api/v1/prospects') || path.startsWith('/api/v1/platform/prospects')) return PROSPECTS_API_URL
+  return STORES_API_URL
 }
 
 async function getToken(): Promise<string | null> {

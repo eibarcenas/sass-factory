@@ -36,7 +36,7 @@ jobs:
       SERVICE: admin-fe
       IMAGE_NAME: catalog-mx-admin
       CLOUD_RUN_SERVICE: catalog-mx-admin-dev
-      STOREFRONT_URL: https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app
+      STORE_URL: https://catalog-mx-store-dev-q3peeste7q-uc.a.run.app
       ADMIN_URL: https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
       LANDING_URL: https://catalog-mx-landing-dev-q3peeste7q-uc.a.run.app
 
@@ -62,21 +62,19 @@ jobs:
 
       - name: Build and push image
         run: |
-          CATALOG_API_URL=$(gcloud run services describe catalog-mx-catalog-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
+          STORES_API_URL=$(gcloud run services describe catalog-mx-stores-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
           IDENTITY_API_URL=$(gcloud run services describe catalog-mx-identity-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
-          DEMOS_API_URL=$(gcloud run services describe catalog-mx-demos-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
           PROSPECTS_API_URL=$(gcloud run services describe catalog-mx-prospects-api-${ENV_SUFFIX} --region=${REGION} --project=${PROJECT} --format='value(status.url)')
           IMAGE="${AR_URL}/${IMAGE_NAME}:${GITHUB_SHA}"
           docker buildx build \
             --push \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
-            --build-arg VITE_API_URL="${CATALOG_API_URL}" \
-            --build-arg VITE_CATALOG_API_URL="${CATALOG_API_URL}" \
+            --build-arg VITE_API_URL="${STORES_API_URL}" \
+            --build-arg VITE_STORES_API_URL="${STORES_API_URL}" \
             --build-arg VITE_IDENTITY_API_URL="${IDENTITY_API_URL}" \
-            --build-arg VITE_DEMOS_API_URL="${DEMOS_API_URL}" \
             --build-arg VITE_PROSPECTS_API_URL="${PROSPECTS_API_URL}" \
-            --build-arg VITE_STOREFRONT_URL="${STOREFRONT_URL}" \
+            --build-arg VITE_STORE_URL="${STORE_URL}" \
             --build-arg VITE_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
             --build-arg VITE_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
             --build-arg VITE_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \

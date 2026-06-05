@@ -1,4 +1,4 @@
-# catalog-api
+# stores-api
 
 FastAPI microservice for catalog.mx.
 

@@ -20,6 +20,6 @@ def create_prospect(body: ProspectRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/admin/prospects")
+@router.get("/platform/prospects")
 def list_prospects(businessId: str | None = None):
     return prospect_use_cases.list_prospects(businessId)

@@ -62,7 +62,7 @@ fi
 echo ""
 echo "Granting Cloud Run service account access to SMTP_PASS..."
 
-SA=$(gcloud run services describe catalog-mx-catalog-api-dev \
+SA=$(gcloud run services describe catalog-mx-stores-api-dev \
   --region=us-central1 \
   --project="$GCP_PROJECT" \
   --format='value(spec.template.spec.serviceAccountName)')

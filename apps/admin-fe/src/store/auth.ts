@@ -1,7 +1,7 @@
 import { createAuthStore } from '@eguru/auth'
 import type { AuthUser } from '@eguru/auth'
 
-export type UserRole = 'SUPER_ADMIN' | 'OWNER'
+export type UserRole = 'SUPER_ADMIN' | 'OWNER' | 'UNASSIGNED'
 export type { AuthUser }
 
 const MOCK_MODE = !import.meta.env.VITE_FIREBASE_API_KEY

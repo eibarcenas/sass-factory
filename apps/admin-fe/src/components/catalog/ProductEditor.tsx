@@ -1,8 +1,8 @@
 import ImageUpload from './ImageUpload'
 import { useState } from 'react'
-import { useItems, useAddItem, useUpdateItem, useDeleteItem, useOwnerItems, useOwnerAddItem, useOwnerUpdateItem, useOwnerDeleteItem, type Item } from '../../hooks/useItems'
+import { useItems, useAddItem, useUpdateItem, useDeleteItem, useSellerItems, useSellerAddItem, useSellerUpdateItem, useSellerDeleteItem, type Item } from '../../hooks/useItems'
 
-type Scope = 'admin' | 'owner'
+type Scope = 'admin' | 'seller'
 
 // ── Shared form fields ────────────────────────────────────────────────────────
 
@@ -79,11 +79,11 @@ function ItemRow({ item, businessId, scope, readonly = false, impersonateSlug, o
     images: item.images ?? (item.image ? [item.image] : []) as string[],
   })
   const adminUpdate = useUpdateItem(businessId)
-  const ownerUpdate = useOwnerUpdateItem(businessId, impersonateSlug)
+  const sellerUpdate = useSellerUpdateItem(businessId, impersonateSlug)
   const adminDelete = useDeleteItem(businessId)
-  const ownerDelete = useOwnerDeleteItem(businessId, impersonateSlug)
-  const updateItem = scope === 'owner' ? ownerUpdate : adminUpdate
-  const deleteItem = scope === 'owner' ? ownerDelete : adminDelete
+  const sellerDelete = useSellerDeleteItem(businessId, impersonateSlug)
+  const updateItem = scope === 'seller' ? sellerUpdate : adminUpdate
+  const deleteItem = scope === 'seller' ? sellerDelete : adminDelete
 
   async function save() {
     await updateItem.mutateAsync({
@@ -194,8 +194,8 @@ function AddItemForm({ businessId, scope, impersonateSlug, onAdded, open, onOpen
 }) {
   const [form, setForm] = useState({ name: '', price: 0, description: '', images: [] as string[] })
   const adminAdd = useAddItem(businessId)
-  const ownerAdd = useOwnerAddItem(businessId, impersonateSlug)
-  const addItem = scope === 'owner' ? ownerAdd : adminAdd
+  const sellerAdd = useSellerAddItem(businessId, impersonateSlug)
+  const addItem = scope === 'seller' ? sellerAdd : adminAdd
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -248,19 +248,19 @@ function AddItemForm({ businessId, scope, impersonateSlug, onAdded, open, onOpen
 
 // ── Product editor ────────────────────────────────────────────────────────────
 
-export default function ProductEditor({ businessId, businessSlug, scope = 'admin', previewSlug, impersonateSlug, readonly = false }: {
+export default function ProductEditor({ businessId, businessSlug, scope = 'admin', reviewSlug, impersonateSlug, readonly = false }: {
   businessId: string
   businessSlug: string
   scope?: Scope
-  previewSlug?: string
+  reviewSlug?: string
   impersonateSlug?: string
   readonly?: boolean
 }) {
   const adminData = useItems(businessId)
-  const ownerData = useOwnerItems(businessId, previewSlug ?? impersonateSlug)
-  const { data, isLoading, refetch } = scope === 'owner' ? ownerData : adminData
+  const ownerData = useSellerItems(businessId, reviewSlug ?? impersonateSlug)
+  const { data, isLoading, refetch } = scope === 'seller' ? ownerData : adminData
   const [addOpen, setAddOpen] = useState(false)
-  const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
+  const STORE_URL = import.meta.env.VITE_STORE_URL ?? 'http://localhost:3010'
 
   return (
     <div className="space-y-3">
@@ -270,12 +270,12 @@ export default function ProductEditor({ businessId, businessSlug, scope = 'admin
         </p>
         <div className="flex items-center gap-2">
           <a
-            href={`${STOREFRONT_URL}/demo/${businessSlug}`}
+            href={`${STORE_URL}/store/${businessSlug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-indigo-600 hover:underline hidden sm:inline"
           >
-            Preview →
+            Review store →
           </a>
           {!readonly && (
             <button

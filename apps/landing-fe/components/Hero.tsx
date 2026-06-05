@@ -1,8 +1,8 @@
 import { getTranslations } from 'next-intl/server'
 import LiveCatalogPreview from './LiveCatalogPreview'
+import GoogleSignInButton from './GoogleSignInButton'
 
-const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:5173'
-const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL ?? 'http://localhost:3010'
+const STORE_URL = process.env.NEXT_PUBLIC_STORE_URL ?? 'http://localhost:3010'
 
 export default async function Hero() {
   const t = await getTranslations('hero')
@@ -44,14 +44,9 @@ export default async function Hero() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
+              <GoogleSignInButton label={t('cta_primary')} />
               <a
-                href={`${ADMIN_URL}/register`}
-                className="btn rounded-xl bg-zinc-900 px-6 py-3 text-sm font-semibold text-white hover:bg-zinc-700"
-              >
-                {t('cta_primary')}
-              </a>
-              <a
-                href={`${STOREFRONT_URL}/heladeria-el-pinguino`}
+                href={`${STORE_URL}/heladeria-el-pinguino`}
                 className="text-sm font-medium text-zinc-500 underline-offset-4 transition-colors hover:text-zinc-700 hover:underline"
               >
                 {t('cta_secondary')} →

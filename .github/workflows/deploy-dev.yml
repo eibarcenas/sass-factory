@@ -14,7 +14,7 @@ env:
   AR_URL: us-central1-docker.pkg.dev/ei-catalog-dev/catalog-mx
   ENV_SUFFIX: dev
   ADMIN_URL: https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app
-  STOREFRONT_URL: https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app
+  STORE_URL: https://catalog-mx-store-dev-q3peeste7q-uc.a.run.app
   LANDING_URL: https://catalog-mx-landing-dev-q3peeste7q-uc.a.run.app
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
         run: |
           git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
           trap 'git config --global --unset-all url."https://x-access-token:${GH_PAT}@github.com/".insteadOf || true' EXIT
-          for service in catalog-api identity-api demos-api prospects-api notifications-webhook; do
+          for service in stores-api identity-api stores-api prospects-api notifications-webhook; do
             (cd "apps/${service}" && uv venv --python 3.13 && uv pip install -e ".[dev]")
           done
       - run: pnpm install --frozen-lockfile
@@ -43,7 +43,7 @@ jobs:
       - run: pnpm -F admin-fe test
       - name: Run backend tests
         run: |
-          for service in catalog-api identity-api demos-api prospects-api notifications-webhook; do
+          for service in stores-api identity-api stores-api prospects-api notifications-webhook; do
             (cd "apps/${service}" && .venv/bin/pytest -q)
           done
         env:
@@ -78,7 +78,7 @@ jobs:
           DOCKER_BUILDKIT: "1"
           FIREBASE_AUTH_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
         run: |
-          for service in catalog-api identity-api demos-api prospects-api notifications-webhook; do
+          for service in stores-api identity-api stores-api prospects-api notifications-webhook; do
             IMAGE="${{ env.AR_URL }}/catalog-mx-${service}:${{ github.sha }}"
             docker buildx build \
               --push \
@@ -92,13 +92,13 @@ jobs:
             AUTH_FLAG="--allow-unauthenticated"
             SECRET_FLAGS=()
 
-            if [ "$service" = "catalog-api" ]; then
+            if [ "$service" = "stores-api" ]; then
               ENV_VARS="${ENV_VARS},PUBSUB_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev"
-            elif [ "$service" = "demos-api" ] || [ "$service" = "prospects-api" ]; then
+            elif [ "$service" = "stores-api" ] || [ "$service" = "prospects-api" ]; then
               ENV_VARS="${ENV_VARS},PUBSUB_PROJECT_ID=${{ env.PROJECT }}"
             elif [ "$service" = "notifications-webhook" ]; then
               AUTH_FLAG="--no-allow-unauthenticated"
-              ENV_VARS="${ENV_VARS},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},STOREFRONT_URL=${{ env.STOREFRONT_URL }},ADMIN_URL=${{ env.ADMIN_URL }}"
+              ENV_VARS="${ENV_VARS},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},STORE_URL=${{ env.STORE_URL }},ADMIN_URL=${{ env.ADMIN_URL }}"
               SECRET_FLAGS=(--update-secrets="SMTP_PASS=SMTP_PASS:latest")
             fi
 
@@ -113,15 +113,12 @@ jobs:
               --quiet
           done
 
-      - name: Deploy Storefront (catalog-mx-storefront-dev)
+      - name: Deploy Store (catalog-mx-store-dev)
         run: |
-          API_URL=$(gcloud run services describe catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
+          API_URL=$(gcloud run services describe catalog-mx-stores-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
           IDENTITY_API_URL=$(gcloud run services describe catalog-mx-identity-api-${{ env.ENV_SUFFIX }} \
-            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
-            --format='value(status.url)')
-          DEMOS_API_URL=$(gcloud run services describe catalog-mx-demos-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
           PROSPECTS_API_URL=$(gcloud run services describe catalog-mx-prospects-api-${{ env.ENV_SUFFIX }} \
@@ -130,55 +127,51 @@ jobs:
           ADMIN_URL=$(gcloud run services describe catalog-mx-admin-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
-          IMAGE="${{ env.AR_URL }}/catalog-mx-storefront:${{ github.sha }}"
+          IMAGE="${{ env.AR_URL }}/catalog-mx-store:${{ github.sha }}"
           docker buildx build \
             --push \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
             --build-arg NEXT_PUBLIC_API_URL="${API_URL}" \
-            --build-arg NEXT_PUBLIC_CATALOG_API_URL="${API_URL}" \
+            --build-arg NEXT_PUBLIC_STORES_API_URL="${API_URL}" \
             --build-arg NEXT_PUBLIC_IDENTITY_API_URL="${IDENTITY_API_URL}" \
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
             --build-arg NEXT_PUBLIC_SUPPORT_WHATSAPP="${{ vars.SUPPORT_WHATSAPP }}" \
-            -t "$IMAGE" -f apps/storefront-fe/Dockerfile .
-          gcloud run deploy catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
+            -t "$IMAGE" -f apps/store-fe/Dockerfile .
+          gcloud run deploy catalog-mx-store-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" \
             --region "${{ env.REGION }}" \
             --project "${{ env.PROJECT }}" \
             --service-account "${{ vars.RUNTIME_SA_DEV }}" \
-            --set-env-vars="API_URL=${API_URL},CATALOG_API_URL=${API_URL},DEMOS_API_URL=${DEMOS_API_URL},PROSPECTS_API_URL=${PROSPECTS_API_URL}" \
+            --set-env-vars="API_URL=${API_URL},STORES_API_URL=${API_URL},PROSPECTS_API_URL=${PROSPECTS_API_URL},LANDING_URL=${{ env.LANDING_URL }}" \
             --allow-unauthenticated \
             --quiet
 
       - name: Deploy Admin (catalog-mx-admin-dev)
         run: |
-          CATALOG_API_URL=$(gcloud run services describe catalog-mx-catalog-api-${{ env.ENV_SUFFIX }} \
+          STORES_API_URL=$(gcloud run services describe catalog-mx-stores-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
           IDENTITY_API_URL=$(gcloud run services describe catalog-mx-identity-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
-          DEMOS_API_URL=$(gcloud run services describe catalog-mx-demos-api-${{ env.ENV_SUFFIX }} \
-            --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
-            --format='value(status.url)')
           PROSPECTS_API_URL=$(gcloud run services describe catalog-mx-prospects-api-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
-          STOREFRONT_URL="${{ env.STOREFRONT_URL }}"
+          STORE_URL="${{ env.STORE_URL }}"
           IMAGE="${{ env.AR_URL }}/catalog-mx-admin:${{ github.sha }}"
           docker buildx build \
             --push \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
-            --build-arg VITE_API_URL="${CATALOG_API_URL}" \
-            --build-arg VITE_CATALOG_API_URL="${CATALOG_API_URL}" \
+            --build-arg VITE_API_URL="${STORES_API_URL}" \
+            --build-arg VITE_STORES_API_URL="${STORES_API_URL}" \
             --build-arg VITE_IDENTITY_API_URL="${IDENTITY_API_URL}" \
-            --build-arg VITE_DEMOS_API_URL="${DEMOS_API_URL}" \
             --build-arg VITE_PROSPECTS_API_URL="${PROSPECTS_API_URL}" \
-            --build-arg VITE_STOREFRONT_URL="${STOREFRONT_URL}" \
+            --build-arg VITE_STORE_URL="${STORE_URL}" \
             --build-arg VITE_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
             --build-arg VITE_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
             --build-arg VITE_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
@@ -198,7 +191,7 @@ jobs:
           ADMIN_URL=$(gcloud run services describe catalog-mx-admin-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
-          STOREFRONT_URL=$(gcloud run services describe catalog-mx-storefront-${{ env.ENV_SUFFIX }} \
+          STORE_URL=$(gcloud run services describe catalog-mx-store-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
             --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-landing:${{ github.sha }}"
@@ -207,7 +200,7 @@ jobs:
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
-            --build-arg NEXT_PUBLIC_STOREFRONT_URL="${STOREFRONT_URL}" \
+            --build-arg NEXT_PUBLIC_STORE_URL="${STORE_URL}" \
             -t "$IMAGE" \
             -f apps/landing-fe/Dockerfile .
           gcloud run deploy catalog-mx-landing-${{ env.ENV_SUFFIX }} \
@@ -221,7 +214,7 @@ jobs:
       - name: Print URLs
         run: |
           echo "━━━ ei-catalog-dev URLs ━━━"
-          for svc in catalog-mx-catalog-api-dev catalog-mx-identity-api-dev catalog-mx-demos-api-dev catalog-mx-prospects-api-dev catalog-mx-notifications-webhook-dev catalog-mx-storefront-dev catalog-mx-admin-dev catalog-mx-landing-dev; do
+          for svc in catalog-mx-stores-api-dev catalog-mx-identity-api-dev catalog-mx-stores-api-dev catalog-mx-prospects-api-dev catalog-mx-notifications-webhook-dev catalog-mx-store-dev catalog-mx-admin-dev catalog-mx-landing-dev; do
             URL=$(gcloud run services describe $svc \
               --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
               --format='value(status.url)' 2>/dev/null)

@@ -3,36 +3,36 @@ import type { Item } from '@eguru/core'
 
 export const itemApi = {
   list: (businessId: string) =>
-    api.get<{ items: Item[] }>(`/api/v1/admin/businesses/${businessId}/items`),
+    api.get<{ items: Item[] }>(`/api/v1/platform/businesses/${businessId}/products`),
 
   add: (businessId: string, data: Partial<Item>) =>
-    api.post<Item>(`/api/v1/admin/businesses/${businessId}/items`, data),
+    api.post<Item>(`/api/v1/platform/businesses/${businessId}/products`, data),
 
   update: (businessId: string, itemId: string, patch: Partial<Item>) =>
-    api.patch<Item>(`/api/v1/admin/businesses/${businessId}/items/${itemId}`, patch),
+    api.patch<Item>(`/api/v1/platform/businesses/${businessId}/products/${itemId}`, patch),
 
   delete: (businessId: string, itemId: string) =>
-    api.del(`/api/v1/admin/businesses/${businessId}/items/${itemId}`),
+    api.del(`/api/v1/platform/businesses/${businessId}/products/${itemId}`),
 
-  ownerList: (previewSlug?: string) =>
+  sellerList: (reviewSlug?: string) =>
     api.get<{ items: Item[] }>(
-      `/api/v1/owner/business/items${previewSlug ? `?business=${previewSlug}` : ''}`
+      `/api/v1/seller/products${reviewSlug ? `?business=${reviewSlug}` : ''}`
     ),
 
-  ownerAdd: (data: Partial<Item>, businessOverride?: string) =>
+  sellerAdd: (data: Partial<Item>, businessOverride?: string) =>
     api.post<Item>(
-      `/api/v1/owner/business/items${businessOverride ? `?business=${businessOverride}` : ''}`,
+      `/api/v1/seller/products${businessOverride ? `?business=${businessOverride}` : ''}`,
       data
     ),
 
-  ownerUpdate: (itemId: string, patch: Partial<Item>, businessOverride?: string) =>
+  sellerUpdate: (itemId: string, patch: Partial<Item>, businessOverride?: string) =>
     api.patch<Item>(
-      `/api/v1/owner/business/items/${itemId}${businessOverride ? `?business=${businessOverride}` : ''}`,
+      `/api/v1/seller/products/${itemId}${businessOverride ? `?business=${businessOverride}` : ''}`,
       patch
     ),
 
-  ownerDelete: (itemId: string, businessOverride?: string) =>
+  sellerDelete: (itemId: string, businessOverride?: string) =>
     api.del(
-      `/api/v1/owner/business/items/${itemId}${businessOverride ? `?business=${businessOverride}` : ''}`
+      `/api/v1/seller/products/${itemId}${businessOverride ? `?business=${businessOverride}` : ''}`
     ),
 }

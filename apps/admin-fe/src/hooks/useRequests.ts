@@ -5,7 +5,7 @@ import type { CatalogRequest, RequestStatus } from '@eguru/core'
 export function useRequests() {
   return useQuery<{ requests: CatalogRequest[] }>({
     queryKey: ['owner-requests'],
-    queryFn: () => api.get('/api/v1/owner/requests'),
+    queryFn: () => api.get('/api/v1/seller/requests'),
   })
 }
 
@@ -13,7 +13,7 @@ export function useUpdateRequestStatus() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ hash, status }: { hash: string; status: RequestStatus }) =>
-      api.patch(`/api/v1/owner/requests/${hash}/status`, { status }),
+      api.patch(`/api/v1/seller/requests/${hash}/status`, { status }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['owner-requests'] }),
   })
 }

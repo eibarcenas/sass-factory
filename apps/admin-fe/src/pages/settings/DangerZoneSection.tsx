@@ -13,7 +13,7 @@ export default function DangerZoneSection({ onSignOut }: DangerZoneSectionProps)
   async function handleDeleteAccount() {
     setDeleting(true)
     try {
-      await api.del('/api/v1/owner/account')
+      await api.del('/api/v1/seller/profile')
       onSignOut?.()
     } catch {
       setDeleting(false)
@@ -31,7 +31,7 @@ export default function DangerZoneSection({ onSignOut }: DangerZoneSectionProps)
           <div>
             <p className="text-sm font-medium">Delete account</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Permanently deletes your account and catalog. This action cannot be undone.
+              Permanently deletes your account and store. This action cannot be undone.
             </p>
           </div>
           {confirmDelete ? (

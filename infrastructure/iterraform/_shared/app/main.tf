@@ -60,7 +60,7 @@ module "monitoring" {
   project_id            = var.project_id
   alert_email           = var.alert_email
   notification_channels = var.monitoring_channel_id != "" ? [var.monitoring_channel_id] : []
-  services              = ["catalog-mx-storefront", "catalog-mx-admin", "catalog-mx-catalog-api", "catalog-mx-landing"]
+  services              = ["catalog-mx-store", "catalog-mx-admin", "catalog-mx-stores-api", "catalog-mx-landing"]
   error_rate_threshold  = 0.05
   latency_threshold_ms  = 5000
 }

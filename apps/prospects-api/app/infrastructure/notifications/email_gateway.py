@@ -27,7 +27,7 @@ SMTP_PASS  = os.getenv("SMTP_PASS", "")
 SMTP_FROM  = os.getenv("SMTP_FROM", SMTP_USER)
 ADMIN_EMAIL = os.getenv("ADMIN_NOTIFY_EMAIL", "")
 
-STOREFRONT_URL = os.getenv("STOREFRONT_URL", "https://catalog.mx")
+STORE_URL = os.getenv("STORE_URL", "https://catalog.mx")
 ADMIN_URL      = os.getenv("ADMIN_URL", "https://admin.catalog.mx")
 
 
@@ -56,7 +56,7 @@ def _send(to: str, subject: str, html: str) -> None:
 
 def send_catalog_activated(owner_email: str, business_name: str, slug: str) -> None:
     """Notify the owner that their catalog is now live."""
-    catalog_url = f"{STOREFRONT_URL}/{slug}"
+    catalog_url = f"{STORE_URL}/{slug}"
     _send(
         to=owner_email,
         subject=f"¡Tu catálogo está listo! — {business_name}",
@@ -122,7 +122,7 @@ def send_review_submitted(business_name: str, slug: str, owner_email: str) -> No
     """Notify the admin team that a new catalog is waiting for review."""
     if not ADMIN_EMAIL:
         return
-    solicitudes_url = f"{ADMIN_URL}/clientes"
+    solicitudes_url = f"{ADMIN_URL}/es/platform/businesses"
     _send(
         to=ADMIN_EMAIL,
         subject=f"[catalog.mx] {business_name} envió su catálogo para revisión",

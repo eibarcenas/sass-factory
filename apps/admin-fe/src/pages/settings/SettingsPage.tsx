@@ -18,7 +18,7 @@ export default function SettingsPage({ onSignOut }: SettingsPageProps) {
     queryKey: ['owner-business', user?.businessId],
     queryFn: () =>
       api.get<{ name: string; slug: string; tagline?: string; whatsapp?: string; status: BusinessStatus; whatsappClicks?: number }>(
-        `/api/v1/storefront/${user!.businessId}`
+        `/api/v1/stores/${user!.businessId}`
       ),
     enabled: user?.role === 'OWNER' && !!user?.businessId,
   })

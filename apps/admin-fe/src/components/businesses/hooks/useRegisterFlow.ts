@@ -1,80 +1,76 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useState } from 'react'
 import { useAuthStore } from '@/store/auth'
-import { useGoogleAuth } from '@/hooks/useGoogleAuth'
+import { homeForRole, isLocale, routes } from '@/lib/routes'
 import type { BusinessFormValues } from './useBusinessFormState'
 
-const API_URL    = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
-const SESSION_KEY = 'pendingBusinessForm'
+const API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
 
 export function useRegisterFlow(onError: (msg: string) => void, onSlugTaken: () => void) {
-  const navigate  = useNavigate()
-  const { setUser } = useAuthStore()
+  const navigate = useNavigate()
+  const { locale: localeParam } = useParams()
+  const locale = isLocale(localeParam) ? localeParam : 'es'
+  const setUser = useAuthStore(state => state.setUser)
+  const [pending, setPending] = useState(false)
 
-  const { signInWithGoogle, pending, redirectChecked } = useGoogleAuth(async (cred) => {
-    const saved: BusinessFormValues = JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? 'null') ?? {}
-    sessionStorage.removeItem(SESSION_KEY)
-
-    const token = await cred.user.getIdToken()
-    const res   = await fetch(`${API_URL}/api/v1/auth/auto-provision`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body:    JSON.stringify({
-        businessName: saved.name,
-        type:         saved.type     || undefined,
-        whatsapp:     saved.whatsapp || undefined,
-        city:         saved.city     || undefined,
-        state:        saved.state    || undefined,
-        tagline:      saved.tagline  || undefined,
-      }),
-    })
-
-    if (res.status === 409) {
-      const errData = await res.json().catch(() => ({}))
-      if (errData.detail === 'Account already active') {
-        const { claims } = await cred.user.getIdTokenResult(true)
-        const role = (claims.role as string) ?? 'OWNER'
-        setUser({
-          uid: cred.user.uid, email: cred.user.email,
-          displayName: cred.user.displayName ?? null,
-          photoURL:    cred.user.photoURL    ?? null,
-          role, businessId: (claims.business_id as string) ?? '',
-          modules: (claims.modules as string[]) ?? [],
-        })
-        navigate(role === 'SUPER_ADMIN' ? '/dashboard' : '/owner', { replace: true })
-      } else {
-        onSlugTaken()
-        const { getAuth } = await import('firebase/auth')
-        await getAuth().signOut()
-      }
+  async function register(values: BusinessFormValues) {
+    const { getAuth } = await import('firebase/auth')
+    const firebaseUser = getAuth().currentUser
+    if (!firebaseUser) {
+      window.location.replace(`${LANDING_URL}/${locale}`)
       return
     }
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.detail ?? `Error ${res.status}`)
-    }
-
-    const data = await res.json()
-    const { claims } = await cred.user.getIdTokenResult(true)
-    setUser({
-      uid: cred.user.uid, email: cred.user.email,
-      displayName: cred.user.displayName ?? null,
-      photoURL:    cred.user.photoURL    ?? null,
-      role:        (claims.role       as string)   ?? 'OWNER',
-      businessId:  data.slug,
-      modules:     (claims.modules    as string[]) ?? [],
-    })
-    navigate('/owner', { replace: true })
-  })
-
-  async function register(values: BusinessFormValues) {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(values))
+    setPending(true)
     try {
-      await signInWithGoogle()
-    } catch (err: unknown) {
-      onError((err as Error).message ?? 'Ocurrió un error. Intenta de nuevo.')
+      const response = await fetch(`${API_URL}/api/v1/business-registrations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await firebaseUser.getIdToken()}`,
+        },
+        body: JSON.stringify({
+          businessName: values.name,
+          type: values.type || undefined,
+          whatsapp: values.whatsapp || undefined,
+          city: values.city || undefined,
+          state: values.state || undefined,
+          tagline: values.tagline || undefined,
+          contactName: values.contactName || undefined,
+        }),
+      })
+
+      if (response.status === 409) {
+        const error = await response.json().catch(() => ({}))
+        if (error.detail !== 'Account already active') {
+          onSlugTaken()
+          return
+        }
+      } else if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error.detail ?? `Error ${response.status}`)
+      }
+
+      const data = response.ok ? await response.json() : null
+      const { claims } = await firebaseUser.getIdTokenResult(true)
+      const role = (claims.role as string) ?? 'OWNER'
+      setUser({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        photoURL: firebaseUser.photoURL,
+        role,
+        businessId: (claims.business_id as string) ?? data?.slug ?? '',
+        modules: (claims.modules as string[]) ?? [],
+      })
+      navigate(data?.slug ? routes.sellerProducts(locale) : homeForRole(locale, role), { replace: true })
+    } catch (error) {
+      onError((error as Error).message ?? 'Ocurrió un error. Intenta de nuevo.')
+    } finally {
+      setPending(false)
     }
   }
 
-  return { register, pending, redirectChecked }
+  return { register, pending, redirectChecked: true }
 }

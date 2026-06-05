@@ -3,7 +3,7 @@ import { BusinessType } from '@eguru/core'
 
 const API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
-export type BusinessFormMode = 'register' | 'create' | 'edit' | 'owner'
+export type BusinessFormMode = 'register' | 'create' | 'edit' | 'seller'
 export type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
 
 export interface BusinessFormValues {
@@ -48,7 +48,7 @@ export function useBusinessFormState(mode: BusinessFormMode, defaultValues?: Bus
   const [slug,       setSlug]       = useState('')
   const [error,      setError]      = useState('')
 
-  // Sync form fields when defaultValues change (edit/owner modes after query refetch)
+  // Sync form fields when defaultValues change (edit/seller modes after query refetch)
   useEffect(() => {
     if (!defaultValues || mode === 'register' || mode === 'create') return
     setLogo(defaultValues.logo             ?? '')
@@ -69,7 +69,7 @@ export function useBusinessFormState(mode: BusinessFormMode, defaultValues?: Bus
     setSlugStatus('checking')
     debounceRef.current = setTimeout(async () => {
       try {
-        const res  = await fetch(`${API_URL}/api/v1/auth/check-slug?name=${encodeURIComponent(name.trim())}`)
+        const res = await fetch(`${API_URL}/api/v1/business-slugs/${encodeURIComponent(name.trim())}/availability`)
         const data = await res.json()
         setSlug(data.slug ?? '')
         if (data.reason === 'invalid_name') setSlugStatus('invalid')
@@ -87,7 +87,7 @@ export function useBusinessFormState(mode: BusinessFormMode, defaultValues?: Bus
     if (mode === 'register' && slugStatus === 'invalid') msgs.push('El nombre no es válido')
     if (whatsapp && !/^[0-9+]{7,15}$/.test(whatsapp.trim())) msgs.push('WhatsApp debe ser un número válido')
     if (mode === 'create' && ownerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail.trim()))
-      msgs.push('El email del dueño no es válido')
+      msgs.push('El email del vendedor no es válido')
     return msgs
   }
 

@@ -10,7 +10,7 @@ export function useUpdateBusiness(businessSlug?: string) {
   const mutation = useMutation({
     mutationFn: (values: Partial<BusinessFormValues>) => {
       const qs = businessSlug ? `?business=${businessSlug}` : ''
-      return api.patch(`/api/v1/owner/business${qs}`, {
+      return api.patch(`/api/v1/seller/profile${qs}`, {
         logo:     values.logo     || undefined,
         type:     values.type     || undefined,
         name:     values.name,
@@ -24,7 +24,7 @@ export function useUpdateBusiness(businessSlug?: string) {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
       qc.invalidateQueries({ queryKey: ['businesses'] })
-      qc.invalidateQueries({ queryKey: ['owner-business'] })
+      qc.invalidateQueries({ queryKey: ['seller-profile'] })
     },
   })
 

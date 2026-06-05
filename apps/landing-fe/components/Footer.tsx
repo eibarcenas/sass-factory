@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 
 export default async function Footer() {
   const t = await getTranslations('footer')
@@ -11,13 +11,13 @@ export default async function Footer() {
           catalog.mx
         </Link>
         <nav className="flex items-center gap-6 text-sm text-zinc-600" aria-label="Footer">
-          <Link href="/privacidad" className="transition-colors hover:text-zinc-400">
+          <Link href="/legal/privacy" className="transition-colors hover:text-zinc-400">
             {t('privacy')}
           </Link>
-          <Link href="/terminos" className="transition-colors hover:text-zinc-400">
+          <Link href="/legal/terms" className="transition-colors hover:text-zinc-400">
             {t('terms')}
           </Link>
-          <Link href="/cookies" className="transition-colors hover:text-zinc-400">
+          <Link href="/legal/cookies" className="transition-colors hover:text-zinc-400">
             {t('cookies')}
           </Link>
           <a

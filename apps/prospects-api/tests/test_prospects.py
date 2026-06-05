@@ -1,7 +1,7 @@
 """
 Prospect endpoint tests.
 POST /api/v1/prospects is public (no auth).
-GET  /api/v1/admin/prospects requires auth.
+GET  /api/v1/platform/prospects requires auth.
 """
 import os
 from unittest.mock import MagicMock, patch
@@ -73,16 +73,16 @@ def test_create_prospect_email_only_succeeds(public_client, db):
 
 
 # ---------------------------------------------------------------------------
-# GET /api/v1/admin/prospects — requires auth
+# GET /api/v1/platform/prospects — requires auth
 # ---------------------------------------------------------------------------
 
 def test_list_prospects_no_auth_returns_401(public_client, db):
     with patch("app.application.use_cases.prospects.get_db", return_value=db):
-        resp = public_client.get("/api/v1/admin/prospects")
+        resp = public_client.get("/api/v1/platform/prospects")
     assert resp.status_code == 401
 
 
 def test_list_prospects_authed_returns_list(authed_client, db):
     with patch("app.application.use_cases.prospects.get_db", return_value=db):
-        resp = authed_client.get("/api/v1/admin/prospects")
+        resp = authed_client.get("/api/v1/platform/prospects")
     assert resp.status_code == 200

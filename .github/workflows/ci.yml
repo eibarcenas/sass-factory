@@ -57,9 +57,8 @@ jobs:
       fail-fast: false
       matrix:
         service:
-          - catalog-api
+          - stores-api
           - identity-api
-          - demos-api
           - prospects-api
           - notifications-webhook
     steps:

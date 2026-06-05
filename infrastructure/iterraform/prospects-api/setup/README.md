@@ -1,4 +1,4 @@
-# catalog-api Setup
+# stores-api Setup
 
 No service-specific bootstrap resources are required yet.
 

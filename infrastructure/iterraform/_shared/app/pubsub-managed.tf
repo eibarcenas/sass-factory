@@ -23,8 +23,8 @@ resource "google_pubsub_topic" "prospects_prospect_created_v1" {
   labels  = { managed-by = "terraform-shared" }
 }
 
-resource "google_pubsub_topic" "demos_demo_accepted_v1" {
-  name    = "topic-demos-demo-accepted-v1"
+resource "google_pubsub_topic" "stores_store_accepted_v1" {
+  name    = "topic-stores-store-accepted-v1"
   project = var.project_id
   labels  = { managed-by = "terraform-shared" }
 }
