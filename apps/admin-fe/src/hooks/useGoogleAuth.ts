@@ -26,7 +26,9 @@ async function initFirebase() {
 
 async function doRedirect(auth: Awaited<ReturnType<typeof initFirebase>>) {
   const { GoogleAuthProvider, signInWithRedirect } = await import('firebase/auth')
-  await signInWithRedirect(auth, new GoogleAuthProvider())
+  const provider = new GoogleAuthProvider()
+  provider.setCustomParameters({ prompt: 'select_account' })
+  await signInWithRedirect(auth, provider)
 }
 
 export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<void>) {
@@ -77,6 +79,7 @@ export function useGoogleAuth(onCredential: (cred: UserCredential) => Promise<vo
       const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth')
       const auth = await initFirebase()
       const provider = new GoogleAuthProvider()
+      provider.setCustomParameters({ prompt: 'select_account' })
 
       // Try popup on all platforms first. Chrome blocks third-party cookies since 2024,
       // which breaks signInWithRedirect when authDomain differs from the app domain.
