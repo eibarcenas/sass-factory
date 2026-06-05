@@ -1,5 +1,6 @@
 project_id         = "ei-catalog-prod"
 project_number     = "633619387575"
+firebase_auth_project_id = "catalog-mx-prod"
 region             = "us-central1"
 billing_account_id = "01D723-FAA09C-E568B4"
 alert_email        = "eibarcenas.m@gmail.com"

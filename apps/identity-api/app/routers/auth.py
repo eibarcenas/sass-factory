@@ -22,7 +22,14 @@ def get_firebase_app():
         "FIREBASE_AUTH_PROJECT_ID",
         os.getenv("FIRESTORE_PROJECT_ID"),
     )
-    return firebase_admin.initialize_app(options={"projectId": project_id})
+    signer_service_account = os.getenv(
+        "FIREBASE_TOKEN_SIGNER_SERVICE_ACCOUNT",
+        f"catalog-mx-api@{project_id}.iam.gserviceaccount.com",
+    )
+    return firebase_admin.initialize_app(options={
+        "projectId": project_id,
+        "serviceAccountId": signer_service_account,
+    })
 
 
 @router.post("/auth/claims/resolve")

@@ -32,7 +32,10 @@ def test_consume_exchange_initializes_firebase_and_returns_custom_token():
 
     assert response.status_code == 200
     assert response.json() == {"customToken": "custom-token"}
-    initialize_app.assert_called_once_with(options={"projectId": "catalog-mx-dev"})
+    initialize_app.assert_called_once_with(options={
+        "projectId": "catalog-mx-dev",
+        "serviceAccountId": "catalog-mx-api@catalog-mx-dev.iam.gserviceaccount.com",
+    })
     create_custom_token.assert_called_once_with("owner-uid", app=firebase_app)
     exchange_ref.update.assert_called_once()
 
