@@ -52,27 +52,30 @@ export default function ClientDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <button
-          onClick={() => navigate('/clientes')}
-          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 mb-3 transition-colors"
-        >
-          ← Volver a clientes
-        </button>
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl font-bold">{business.name}</h1>
-          <StatusBadge status={business.status} />
+      {/* Header + form — same max-width as /clientes/new */}
+      <div className="max-w-xl space-y-6">
+        <div>
+          <button
+            onClick={() => navigate('/clientes')}
+            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 mb-3 transition-colors"
+          >
+            ← Volver a clientes
+          </button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl font-bold">{business.name}</h1>
+            <StatusBadge status={business.status} />
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {[business.city, typeLabel].filter(Boolean).join(' · ')}
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {[business.city, typeLabel].filter(Boolean).join(' · ')}
-        </p>
-      </div>
 
-      <BusinessFormPanel
-        mode="edit"
-        businessSlug={business.id}
-        defaultValues={business}
-      />
+        <BusinessFormPanel
+          mode="edit"
+          businessSlug={business.id}
+          defaultValues={business}
+        />
+      </div>
 
       {/* Products */}
       <Card>

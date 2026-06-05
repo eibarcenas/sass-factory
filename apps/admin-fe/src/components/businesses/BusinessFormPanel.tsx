@@ -102,28 +102,26 @@ export default function BusinessFormPanel(props: Props) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-4">
-              {values.logo
-                ? <img src={values.logo} alt="" className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />
+            {readonly ? (
+              values.logo
+                ? <img src={values.logo} alt="" className="w-16 h-16 rounded-xl object-cover" />
                 : <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 text-2xl"
+                    className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl"
                     style={{ backgroundColor: ((defaultValues as any)?.theme?.primary ?? '#6366f1') + '20' }}
                   >
                     {(defaultValues as any)?.theme?.emoji ?? '🏪'}
                   </div>
-              }
-              {!readonly && (
-                <div className="flex-1">
-                  <ImageUpload
-                    max={1}
-                    folder="logos"
-                    currentUrls={values.logo ? [values.logo] : []}
-                    onChanged={urls => setters.setLogo(urls[0] ?? '')}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · máx. 2 MB</p>
-                </div>
-              )}
-            </div>
+            ) : (
+              <>
+                <ImageUpload
+                  max={1}
+                  folder="logos"
+                  currentUrls={values.logo ? [values.logo] : []}
+                  onChanged={urls => setters.setLogo(urls[0] ?? '')}
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · máx. 2 MB</p>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
