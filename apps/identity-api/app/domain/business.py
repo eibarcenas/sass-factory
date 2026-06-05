@@ -4,9 +4,17 @@ from enum import Enum
 
 
 class BusinessStatus(str, Enum):
-    PENDING  = "pending"
-    ACTIVE   = "active"
-    INACTIVE = "inactive"
+    DRAFT          = "draft"
+    PENDING_REVIEW = "pending_review"
+    REVIEW         = "review"
+    DEMO           = "demo"
+    SENT           = "sent"
+    ACCEPTED       = "accepted"
+    ACTIVE         = "active"
+    SUSPENDED      = "suspended"
+    EXPIRED        = "expired"
+    REJECTED       = "rejected"
+    ARCHIVED       = "archived"
 
 
 class BusinessType(str, Enum):
