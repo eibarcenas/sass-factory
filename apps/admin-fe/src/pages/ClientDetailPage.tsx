@@ -104,14 +104,21 @@ export default function ClientDetailPage() {
         </CardHeader>
         <CardContent className="divide-y divide-border">
           <InfoRow label="Nicho" value={typeLabel} />
-          <InfoRow label="Ciudad" value={business.city} />
+          <InfoRow label="Ciudad" value={
+            business.state ? `${business.city}, ${business.state}` : business.city
+          } />
           <InfoRow label="WhatsApp" value={
             <span className="font-mono text-xs">{business.whatsapp}</span>
           } />
+          {business.contactName && (
+            <InfoRow label="Contacto" value={business.contactName} />
+          )}
           <InfoRow label="Dueño" value={
-            business.ownerId
-              ? <span className="text-emerald-600 text-xs font-medium">Registrado</span>
-              : <span className="text-muted-foreground text-xs">Sin asignar</span>
+            business.ownerEmail
+              ? <span className="text-emerald-600 text-xs font-medium">{business.ownerEmail}</span>
+              : business.ownerId
+                ? <span className="text-emerald-600 text-xs font-medium">Registrado</span>
+                : <span className="text-muted-foreground text-xs">Sin asignar</span>
           } />
           {business.tagline && (
             <div className="pt-3 pb-1">

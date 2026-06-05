@@ -12,6 +12,9 @@ class CreateDemoRequest(BaseModel):
     type: str
     whatsapp: str
     city: str
+    state: str | None = None
+    contact_name: str | None = None
+    owner_email: str | None = None
     tagline: str | None = None
 
 
@@ -27,7 +30,10 @@ class AcceptDemoRequest(BaseModel):
 
 @router.post("/admin/demos")
 def create_demo(body: CreateDemoRequest):
-    return demo_use_cases.create_demo(body.name, body.type, body.whatsapp, body.city, body.tagline)
+    return demo_use_cases.create_demo(
+        body.name, body.type, body.whatsapp, body.city, body.tagline,
+        state=body.state, contact_name=body.contact_name, owner_email=body.owner_email,
+    )
 
 
 @router.post("/admin/owners")
