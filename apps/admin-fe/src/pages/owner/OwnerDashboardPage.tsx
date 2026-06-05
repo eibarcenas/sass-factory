@@ -15,11 +15,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Menu } from 'lucide-react'
-import { BusinessStatus } from '@eguru/core'
+import { BusinessStatus, BusinessType } from '@eguru/core'
 import SettingsPage from '../settings/SettingsPage'
 import OwnerRequestsPage from '../../components/owner/OwnerRequestsPage'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
+
+const TYPES: { key: BusinessType; label: string; emoji: string }[] = [
+  { key: BusinessType.Heladeria,   label: 'Heladería',   emoji: '🍦' },
+  { key: BusinessType.Barberia,    label: 'Barbería',    emoji: '💈' },
+  { key: BusinessType.Estetica,    label: 'Estética',    emoji: '💅' },
+  { key: BusinessType.Restaurante, label: 'Restaurante', emoji: '🍽️' },
+  { key: BusinessType.Panaderia,   label: 'Panadería',   emoji: '🥐' },
+  { key: BusinessType.Gym,         label: 'Gimnasio',    emoji: '💪' },
+  { key: BusinessType.Mecanico,    label: 'Mecánico',    emoji: '🔧' },
+  { key: BusinessType.Otro,        label: 'Otro',        emoji: '🏪' },
+]
 
 type Page = 'catalog' | 'appearance' | 'settings' | 'requests'
 
@@ -124,57 +135,102 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, readonly,
 }
 
 // ── Appearance page ───────────────────────────────────────────────────────────
-function AppearancePage({ businessId, currentTagline, currentWhatsapp, readonly = false, impersonateSlug }: {
+function AppearancePage({ businessId, currentType, currentName, currentTagline, currentWhatsapp, currentCity, readonly = false, impersonateSlug }: {
   businessId: string
+  currentType?: BusinessType
+  currentName?: string
   currentTagline?: string
   currentWhatsapp?: string
+  currentCity?: string
   readonly?: boolean
   impersonateSlug?: string
 }) {
+  const [type, setType] = useState<BusinessType | ''>(currentType ?? '')
+  const [name, setName] = useState(currentName ?? '')
   const [tagline, setTagline] = useState(currentTagline ?? '')
   const [whatsapp, setWhatsapp] = useState(currentWhatsapp ?? '')
+  const [city, setCity] = useState(currentCity ?? '')
   const [saved, setSaved] = useState(false)
   const qc = useQueryClient()
 
-  useEffect(() => {
-    if (currentTagline !== undefined) setTagline(currentTagline)
-  }, [currentTagline])
-
-  useEffect(() => {
-    if (currentWhatsapp !== undefined) setWhatsapp(currentWhatsapp)
-  }, [currentWhatsapp])
+  useEffect(() => { if (currentType !== undefined) setType(currentType) }, [currentType])
+  useEffect(() => { if (currentName !== undefined) setName(currentName) }, [currentName])
+  useEffect(() => { if (currentTagline !== undefined) setTagline(currentTagline) }, [currentTagline])
+  useEffect(() => { if (currentWhatsapp !== undefined) setWhatsapp(currentWhatsapp) }, [currentWhatsapp])
+  useEffect(() => { if (currentCity !== undefined) setCity(currentCity) }, [currentCity])
 
   const qs = impersonateSlug ? `?business=${impersonateSlug}` : ''
   const save = useMutation({
-    mutationFn: () => api.patch(`/api/v1/owner/business${qs}`, { tagline, whatsapp }),
+    mutationFn: () => api.patch(`/api/v1/owner/business${qs}`, { type: type || undefined, name, tagline, whatsapp, city }),
     onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); qc.invalidateQueries({ queryKey: ['owner-business'] }) },
   })
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Appearance</h1>
-        <p className="text-muted-foreground text-sm mt-1">Customize how your catalog looks</p>
+        <h1 className="text-2xl font-bold">Mi negocio</h1>
+        <p className="text-muted-foreground text-sm mt-1">Edita la información de tu catálogo</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Tagline</CardTitle>
+          <CardTitle className="text-base">Tipo de negocio</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-2">
+            {TYPES.map(t => (
+              <Button
+                key={t.key}
+                type="button"
+                variant="outline"
+                className={`flex flex-col h-auto gap-1 p-2.5 rounded-xl transition-all ${
+                  type === t.key
+                    ? 'border-2 border-primary bg-primary/5 text-primary'
+                    : 'border border-border'
+                }`}
+                onClick={() => !readonly && setType(t.key)}
+                disabled={readonly}
+              >
+                <span className="text-xl">{t.emoji}</span>
+                <span className="text-xs font-medium text-center leading-tight">{t.label}</span>
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Datos del negocio</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-1">
-            <Label>Tagline <span className="text-muted-foreground font-normal text-xs">({tagline.length}/120)</span></Label>
-            <Input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={120}
-              placeholder="The best ice cream in Monterrey 🍦" disabled={readonly} />
+            <Label>Nombre del negocio</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Nombre del negocio" disabled={readonly} />
           </div>
           <div className="space-y-1">
-            <Label>WhatsApp number</Label>
-            <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
-              placeholder="+52 55 1234 5678" disabled={readonly} />
+            <Label>WhatsApp</Label>
+            <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value.replace(/[^\d+]/g, ''))} placeholder="+52 55 1234 5678" disabled={readonly} />
           </div>
+          <div className="space-y-1">
+            <Label>Ciudad</Label>
+            <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Ciudad" disabled={readonly} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Tagline <span className="text-muted-foreground font-normal text-xs">({tagline.length}/120)</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={120}
+            placeholder="Los mejores cortes del sur de la ciudad" disabled={readonly} />
           {!readonly && (
             <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
-              {saved ? '✓ Saved' : save.isPending ? 'Saving...' : 'Save'}
+              {saved ? '✓ Guardado' : save.isPending ? 'Guardando...' : 'Guardar cambios'}
             </Button>
           )}
         </CardContent>
@@ -206,7 +262,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
 
   const { data: bizData } = useQuery({
     queryKey: ['owner-business', businessId],
-    queryFn: () => api.get<{ name: string; slug: string; tagline?: string; whatsapp?: string; status: BusinessStatus; whatsappClicks?: number }>(`/api/v1/storefront/${businessId}`),
+    queryFn: () => api.get<{ name: string; slug: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; status: BusinessStatus; whatsappClicks?: number }>(`/api/v1/storefront/${businessId}`),
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
@@ -303,7 +359,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
           <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} readonly={isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
         )}
         {page === 'appearance' && (
-          <AppearancePage businessId={businessId} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} readonly={isPreview || isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} />
+          <AppearancePage businessId={businessId} currentType={bizData?.type} currentName={bizData?.name} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} currentCity={bizData?.city} readonly={isPreview || isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} />
         )}
         {page === 'requests' && (
           <div className="space-y-4">
