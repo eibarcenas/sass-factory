@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import ImageUpload from '../catalog/ImageUpload'
 
 const API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 const SESSION_KEY = 'pendingBusinessForm'
@@ -47,6 +48,7 @@ export default function CreateBusinessForm(props: Props) {
   const createDemo = useCreateDemo()
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
+  const [logo, setLogo] = useState('')
   const [form, setForm] = useState({
     type: '' as BusinessType | '',
     name: '',
@@ -181,8 +183,10 @@ export default function CreateBusinessForm(props: Props) {
         tagline:    form.tagline || undefined,
         contactName: form.contactName || undefined,
         ownerEmail: form.ownerEmail || undefined,
+        logo:       logo || undefined,
       })
       if (props.mode === 'admin') props.onSuccess?.(business.slug)
+      setLogo('')
       setForm({ type: '', name: '', contactName: '', whatsapp: '', ownerEmail: '', city: '', state: 'Ciudad de México', tagline: '' })
     } catch (err: any) {
       setError(err.message ?? 'No se pudo crear el negocio')
@@ -193,6 +197,26 @@ export default function CreateBusinessForm(props: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+
+      {/* Logo — admin mode only */}
+      {mode === 'admin' && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Logo <span className="font-normal normal-case">(opcional)</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ImageUpload
+              max={1}
+              folder="logos"
+              currentUrls={logo ? [logo] : []}
+              onChanged={urls => setLogo(urls[0] ?? '')}
+            />
+            <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG o WebP · máx. 2 MB</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Type selector */}
       <Card>

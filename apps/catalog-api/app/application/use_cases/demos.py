@@ -20,6 +20,7 @@ def create_demo(
     state: str | None = None,
     contact_name: str | None = None,
     owner_email: str | None = None,
+    logo: str | None = None,
 ) -> dict:
     db = get_db()
     slug = slugify(name)
@@ -46,6 +47,8 @@ def create_demo(
         business_data["state"] = state
     if contact_name:
         business_data["contactName"] = contact_name
+    if logo:
+        business_data["logo"] = logo
 
     biz_ref = db.collection(COLL).document(slug)
     biz_ref.set(business_data)

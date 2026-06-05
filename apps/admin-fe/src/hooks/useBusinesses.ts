@@ -27,6 +27,7 @@ export function useCreateDemo() {
       tagline?: string
       contactName?: string
       ownerEmail?: string
+      logo?: string
     }) => api.post<Business>('/api/v1/admin/demos', {
       ...data,
       contact_name: data.contactName,
