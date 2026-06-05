@@ -250,7 +250,7 @@ export default function BusinessFormPanel(props: Props) {
         </Card>
       )}
 
-      {/* Type selector */}
+      {/* Type selector — same grid in all modes, read-only in edit */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -263,10 +263,13 @@ export default function BusinessFormPanel(props: Props) {
               <button
                 key={t.key}
                 type="button"
-                onClick={() => setType(t.key)}
+                onClick={mode !== 'edit' ? () => setType(t.key) : undefined}
+                disabled={mode === 'edit' && type !== t.key}
                 className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all ${
                   type === t.key
                     ? 'border-primary bg-primary/5'
+                    : mode === 'edit'
+                    ? 'border-border opacity-35'
                     : 'border-border hover:border-primary/30 hover:bg-muted/50'
                 }`}
               >
