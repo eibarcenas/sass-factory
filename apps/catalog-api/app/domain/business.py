@@ -32,7 +32,7 @@ ACTION_TO_STATUS: dict[str, BusinessStatus] = {
     "reactivate": BusinessStatus.ACTIVE,
 }
 
-OWNER_PATCH_FIELDS = frozenset({"tagline", "theme", "name", "whatsapp"})
+OWNER_PATCH_FIELDS = frozenset({"tagline", "theme", "name", "whatsapp", "city", "type"})
 
 
 def resolve_new_status(current: BusinessStatus, action: str) -> BusinessStatus:
