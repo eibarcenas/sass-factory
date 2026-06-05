@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, type UserRole } from '../store/auth'
 import { useGoogleAuth } from '../hooks/useGoogleAuth'
@@ -10,7 +10,6 @@ export default function LoginPage() {
   const { mockMode, user, setUser } = useAuthStore()
   const navigate = useNavigate()
   const [error, setError] = useState('')
-  const autoStarted = useRef(false)
 
   const { signInWithGoogle, redirectChecked, pending } = useGoogleAuth(async (cred) => {
     setError('')
@@ -66,13 +65,7 @@ export default function LoginPage() {
       navigate(user.role === 'SUPER_ADMIN' ? '/' : '/owner', { replace: true })
       return
     }
-    if (redirectChecked && !pending && !autoStarted.current) {
-      autoStarted.current = true
-      signInWithGoogle().catch((err: any) => {
-        setError(err.message ?? 'Sign in failed')
-      })
-    }
-  }, [mockMode, navigate, redirectChecked, pending, signInWithGoogle, user])
+  }, [mockMode, navigate, user])
 
   if (mockMode) return null
 
@@ -106,29 +99,25 @@ export default function LoginPage() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="w-full max-w-sm space-y-4 text-center">
-          <p className="text-sm text-destructive">{error}</p>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setError('')
-              autoStarted.current = false
-              signInWithGoogle().catch((err: any) => setError(err.message ?? 'Sign in failed'))
-            }}
-          >
-            Reintentar
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-6 h-6 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin" />
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-sm space-y-5 rounded-lg border bg-white p-6 text-center shadow-sm">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold">Inicia sesión</h1>
+          <p className="text-sm text-muted-foreground">Continúa con tu cuenta de Google.</p>
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button
+          className="w-full"
+          disabled={!redirectChecked || pending}
+          onClick={() => {
+            setError('')
+            signInWithGoogle().catch((err: any) => setError(err.message ?? 'Sign in failed'))
+          }}
+        >
+          {pending ? 'Iniciando sesión...' : error ? 'Reintentar con Google' : 'Continuar con Google'}
+        </Button>
+      </div>
     </div>
   )
 }
