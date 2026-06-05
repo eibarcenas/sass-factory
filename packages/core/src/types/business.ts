@@ -32,6 +32,8 @@ export interface Business {
   type: BusinessType
   whatsapp: string
   city: string
+  state?: string
+  contactName?: string
   logo?: string
   tagline?: string
   theme: BusinessTheme
