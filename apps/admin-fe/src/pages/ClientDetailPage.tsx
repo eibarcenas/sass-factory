@@ -2,11 +2,13 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useImpersonationStore } from '../store/impersonation'
 import { useBusinesses, useBusinessAction } from '../hooks/useBusinesses'
 import ProductEditor from '../components/catalog/ProductEditor'
-import BusinessInfoCard from '../components/businesses/BusinessInfoCard'
+import BusinessFormPanel from '../components/businesses/BusinessFormPanel'
+import StatusBadge from '@/components/ui/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { BusinessStatus } from '@eguru/core'
+import { TYPE_LABELS } from '../components/businesses/businessFormConstants'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
@@ -46,18 +48,31 @@ export default function ClientDetailPage() {
 
   const canActivate   = business.status === BusinessStatus.Pending || business.status === BusinessStatus.Inactive
   const canDeactivate = business.status === BusinessStatus.Active
+  const typeLabel     = TYPE_LABELS[business.type ?? ''] ?? business.type ?? '—'
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={() => navigate('/clientes')}
-        className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
-      >
-        ← Volver a clientes
-      </button>
+      <div>
+        <button
+          onClick={() => navigate('/clientes')}
+          className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 mb-3 transition-colors"
+        >
+          ← Volver a clientes
+        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-2xl font-bold">{business.name}</h1>
+          <StatusBadge status={business.status} />
+        </div>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {[business.city, typeLabel].filter(Boolean).join(' · ')}
+        </p>
+      </div>
 
-      {/* Unified business info — read-only, admin fields shown */}
-      <BusinessInfoCard business={business} showAdminFields />
+      <BusinessFormPanel
+        mode="edit"
+        businessSlug={business.id}
+        defaultValues={business}
+      />
 
       {/* Products */}
       <Card>

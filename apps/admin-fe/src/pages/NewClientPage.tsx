@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import CreateBusinessForm from '../components/businesses/CreateBusinessForm'
-import { Card, CardContent } from '@/components/ui/card'
+import BusinessFormPanel from '../components/businesses/BusinessFormPanel'
 
 export default function NewClientPage() {
   const navigate = useNavigate()
@@ -20,16 +19,10 @@ export default function NewClientPage() {
         </p>
       </div>
 
-      <Card>
-        <CardContent className="pt-5">
-          <CreateBusinessForm
-            mode="admin"
-            onSuccess={(slug) => {
-              navigate(`/owner/preview/${slug}`)
-            }}
-          />
-        </CardContent>
-      </Card>
+      <BusinessFormPanel
+        mode="create"
+        onSuccess={(slug) => navigate(`/owner/preview/${slug}`)}
+      />
     </div>
   )
 }
