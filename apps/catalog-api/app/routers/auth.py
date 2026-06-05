@@ -105,6 +105,12 @@ def check_slug(name: str):
 
 class AutoProvisionRequest(BaseModel):
     businessName: str
+    type: str | None = None
+    whatsapp: str | None = None
+    city: str | None = None
+    state: str | None = None
+    tagline: str | None = None
+    contactName: str | None = None
 
     @field_validator("businessName")
     @classmethod
@@ -139,7 +145,7 @@ def auto_provision(
         raise HTTPException(status_code=409, detail="Business name already taken")
 
     now = datetime.now(timezone.utc).isoformat()
-    biz_ref.set({
+    biz_data: dict = {
         "name": body.businessName,
         "slug": slug,
         "status": BusinessStatus.PENDING,
@@ -147,7 +153,14 @@ def auto_provision(
         "ownerUid": user.firebase_uid,
         "createdAt": now,
         "updatedAt": now,
-    })
+    }
+    if body.type:        biz_data["type"] = body.type
+    if body.whatsapp:    biz_data["whatsapp"] = body.whatsapp
+    if body.city:        biz_data["city"] = body.city
+    if body.state:       biz_data["state"] = body.state
+    if body.tagline:     biz_data["tagline"] = body.tagline
+    if body.contactName: biz_data["contactName"] = body.contactName
+    biz_ref.set(biz_data)
 
     try:
         import firebase_admin
