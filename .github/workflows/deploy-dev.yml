@@ -76,6 +76,7 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           DOCKER_BUILDKIT: "1"
+          FIREBASE_AUTH_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
         run: |
           for service in catalog-api identity-api demos-api prospects-api notifications-webhook; do
             IMAGE="${{ env.AR_URL }}/catalog-mx-${service}:${{ github.sha }}"
@@ -87,7 +88,7 @@ jobs:
               -t "$IMAGE" "apps/${service}/"
 
             SERVICE_NAME="catalog-mx-${service}-${{ env.ENV_SUFFIX }}"
-            ENV_VARS="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=${{ env.PROJECT }},CORS_ALLOWED_ORIGINS=*"
+            ENV_VARS="FIRESTORE_PROJECT_ID=${{ env.PROJECT }},ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=${FIREBASE_AUTH_PROJECT_ID},CORS_ALLOWED_ORIGINS=*"
             AUTH_FLAG="--allow-unauthenticated"
             SECRET_FLAGS=()
 
