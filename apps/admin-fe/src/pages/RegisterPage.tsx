@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
-import CreateBusinessForm from '../components/businesses/CreateBusinessForm'
-import { Card, CardContent } from '@/components/ui/card'
+import BusinessFormPanel from '../components/businesses/BusinessFormPanel'
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
 
@@ -34,11 +33,7 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <Card>
-          <CardContent className="pt-5">
-            <CreateBusinessForm mode="register" />
-          </CardContent>
-        </Card>
+        <BusinessFormPanel mode="register" />
       </div>
     </div>
   )
