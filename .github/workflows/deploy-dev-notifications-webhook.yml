@@ -76,7 +76,7 @@ jobs:
       - name: Deploy Cloud Run service
         run: |
           IMAGE="${AR_URL}/${IMAGE_NAME}:${GITHUB_SHA}"
-          ENV_VARS="FIRESTORE_PROJECT_ID=${PROJECT},ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=catalog-mx-dev,CORS_ALLOWED_ORIGINS=*"
+          ENV_VARS="FIRESTORE_PROJECT_ID=${PROJECT},ENVIRONMENT=development,FIREBASE_AUTH_PROJECT_ID=${PROJECT},CORS_ALLOWED_ORIGINS=*"
           ENV_VARS="${ENV_VARS},ADMIN_NOTIFY_EMAIL=${{ vars.ADMIN_NOTIFY_EMAIL }},SMTP_HOST=${{ vars.SMTP_HOST }},SMTP_PORT=${{ vars.SMTP_PORT }},SMTP_USER=${{ vars.SMTP_USER }},SMTP_FROM=${{ vars.SMTP_FROM }},STOREFRONT_URL=https://catalog-mx-storefront-dev-q3peeste7q-uc.a.run.app,ADMIN_URL=https://catalog-mx-admin-dev-q3peeste7q-uc.a.run.app"
           gcloud run deploy "${CLOUD_RUN_SERVICE}" \
             --image "$IMAGE" \

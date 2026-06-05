@@ -84,3 +84,36 @@ Multi-tenant SaaS: businesses create catalog pages, customers browse and order v
 - Sidebar is always hidden on mobile via `hidden md:block`; mobile navigation uses `MobileSidebar` drawer
 - Content padding scales: `p-4 md:p-8`
 - Kanban board uses `TouchSensor` (200ms delay) alongside `PointerSensor` for touch drag support
+
+## Engineering Protocol
+
+**Do not code immediately.** First, analyze the issue and ask questions if anything is unclear.
+
+Rules:
+- Do not guess.
+- Do not invent requirements.
+- Do not refactor unrelated code.
+- Do not change files outside the required scope.
+- Before editing, explain the root cause hypothesis.
+- Before editing, list the files you plan to touch.
+- Before editing, list the risks and affected flows.
+- If the issue may affect mobile, iOS, responsive design, authentication, deployment, images, or storefront rendering, explicitly validate that.
+- If you need more information, ask before implementing.
+- Make small, isolated changes.
+- After coding, provide a verification checklist.
+
+Issue template:
+
+**Task**: [DESCRIBE THE ISSUE HERE]
+**Expected behavior**: [WRITE WHAT SHOULD HAPPEN]
+**Current behavior**: [WRITE WHAT IS HAPPENING]
+**Evidence**: [ADD SCREENSHOTS, URL, DEVICE, BROWSER, STEPS TO REPRODUCE]
+
+**Definition of done:**
+- Build passes.
+- No unrelated UI changes.
+- Desktop works.
+- Mobile responsive works.
+- iOS Safari works if applicable.
+- The change is visible after deployment.
+- Existing flows are not broken.
