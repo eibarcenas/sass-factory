@@ -1,15 +1,22 @@
-"""Seed heladeria-pinguino demo business in catalog-mx-dev Firestore."""
+"""Seed heladeria-pinguino demo business into Firestore (reads FIRESTORE_PROJECT_ID from .env)."""
 import os, sys
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.path.dirname(__file__), "service-account.json")
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from datetime import datetime, timezone
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+project_id = os.getenv("FIRESTORE_PROJECT_ID")
+if not project_id:
+    sys.exit("Error: FIRESTORE_PROJECT_ID is not set. Check your .env file.")
+
 now = datetime.now(timezone.utc).isoformat()
 
 cred = credentials.Certificate("apps/catalog-api/service-account.json")
-firebase_admin.initialize_app(cred, {"projectId": "catalog-mx-dev"})
+firebase_admin.initialize_app(cred, {"projectId": project_id})
 db = firestore.client()
 
 SLUG = "heladeria-pinguino"

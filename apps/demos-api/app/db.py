@@ -8,7 +8,7 @@ load_dotenv()
 
 @lru_cache(maxsize=1)
 def get_db() -> firestore.Client:
-    project = os.getenv("FIRESTORE_PROJECT_ID", "catalog-mx-dev")
+    project = os.getenv("FIRESTORE_PROJECT_ID")
     creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
     if creds_path and os.path.exists(creds_path):
