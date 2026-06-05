@@ -23,6 +23,7 @@ export default function NewClientPage() {
       <Card>
         <CardContent className="pt-5">
           <CreateBusinessForm
+            mode="admin"
             onSuccess={(slug) => {
               navigate(`/owner/preview/${slug}`)
             }}

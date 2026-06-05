@@ -1,18 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
 import { useSignOut } from '../../hooks/useSignOut'
 import { useImpersonationStore } from '../../store/impersonation'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import AppSidebar, { SidebarProfile } from '../../components/layout/AppSidebar'
 import ProductEditor from '../../components/catalog/ProductEditor'
+import BusinessInfoCard from '../../components/businesses/BusinessInfoCard'
 import type { NavItem } from '../../components/layout/AppSidebar'
 import { MobileSidebar } from '@eguru/ui'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Menu } from 'lucide-react'
 import { BusinessStatus, BusinessType } from '@eguru/core'
@@ -21,32 +20,27 @@ import OwnerRequestsPage from '../../components/owner/OwnerRequestsPage'
 
 const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL ?? 'http://localhost:3010'
 
-const TYPES: { key: BusinessType; label: string; emoji: string }[] = [
-  { key: BusinessType.Heladeria,   label: 'Heladería',   emoji: '🍦' },
-  { key: BusinessType.Barberia,    label: 'Barbería',    emoji: '💈' },
-  { key: BusinessType.Estetica,    label: 'Estética',    emoji: '💅' },
-  { key: BusinessType.Restaurante, label: 'Restaurante', emoji: '🍽️' },
-  { key: BusinessType.Panaderia,   label: 'Panadería',   emoji: '🥐' },
-  { key: BusinessType.Gym,         label: 'Gimnasio',    emoji: '💪' },
-  { key: BusinessType.Mecanico,    label: 'Mecánico',    emoji: '🔧' },
-  { key: BusinessType.Otro,        label: 'Otro',        emoji: '🏪' },
-]
-
 type Page = 'catalog' | 'appearance' | 'settings' | 'requests'
 
 // ── Pending activation banner ─────────────────────────────────────────────────
-function PendingBanner() {
+function PendingBanner({ onGoToAppearance }: { onGoToAppearance: () => void }) {
   return (
-    <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+    <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
       <div className="flex items-start gap-3">
-        <svg viewBox="0 0 20 20" className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" fill="currentColor">
+        <svg viewBox="0 0 20 20" className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" fill="currentColor">
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
         </svg>
-        <div>
-          <p className="text-sm font-semibold text-blue-900">Tu sitio está pendiente de activación</p>
-          <p className="text-xs text-blue-700 mt-0.5">
-            Agrega tus productos y personaliza tu página. Lo activamos pronto.
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-amber-900">Completa tu negocio</p>
+          <p className="text-xs text-amber-700 mt-0.5">
+            Agrega tus productos y completa la información de tu negocio. Lo activamos en menos de 24 horas.
           </p>
+          <button
+            onClick={onGoToAppearance}
+            className="mt-2 text-xs font-medium text-amber-800 underline underline-offset-2"
+          >
+            Completar información →
+          </button>
         </div>
       </div>
     </div>
@@ -134,111 +128,6 @@ function CatalogPage({ businessId, previewSlug, catalogUrl, isPreview, readonly,
   )
 }
 
-// ── Appearance page ───────────────────────────────────────────────────────────
-function AppearancePage({ businessId, currentType, currentName, currentTagline, currentWhatsapp, currentCity, readonly = false, impersonateSlug }: {
-  businessId: string
-  currentType?: BusinessType
-  currentName?: string
-  currentTagline?: string
-  currentWhatsapp?: string
-  currentCity?: string
-  readonly?: boolean
-  impersonateSlug?: string
-}) {
-  const [type, setType] = useState<BusinessType | ''>(currentType ?? '')
-  const [name, setName] = useState(currentName ?? '')
-  const [tagline, setTagline] = useState(currentTagline ?? '')
-  const [whatsapp, setWhatsapp] = useState(currentWhatsapp ?? '')
-  const [city, setCity] = useState(currentCity ?? '')
-  const [saved, setSaved] = useState(false)
-  const qc = useQueryClient()
-
-  useEffect(() => { if (currentType !== undefined) setType(currentType) }, [currentType])
-  useEffect(() => { if (currentName !== undefined) setName(currentName) }, [currentName])
-  useEffect(() => { if (currentTagline !== undefined) setTagline(currentTagline) }, [currentTagline])
-  useEffect(() => { if (currentWhatsapp !== undefined) setWhatsapp(currentWhatsapp) }, [currentWhatsapp])
-  useEffect(() => { if (currentCity !== undefined) setCity(currentCity) }, [currentCity])
-
-  const qs = impersonateSlug ? `?business=${impersonateSlug}` : ''
-  const save = useMutation({
-    mutationFn: () => api.patch(`/api/v1/owner/business${qs}`, { type: type || undefined, name, tagline, whatsapp, city }),
-    onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); qc.invalidateQueries({ queryKey: ['owner-business'] }) },
-  })
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Mi negocio</h1>
-        <p className="text-muted-foreground text-sm mt-1">Edita la información de tu catálogo</p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Tipo de negocio</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-2">
-            {TYPES.map(t => (
-              <Button
-                key={t.key}
-                type="button"
-                variant="outline"
-                className={`flex flex-col h-auto gap-1 p-2.5 rounded-xl transition-all ${
-                  type === t.key
-                    ? 'border-2 border-primary bg-primary/5 text-primary'
-                    : 'border border-border'
-                }`}
-                onClick={() => !readonly && setType(t.key)}
-                disabled={readonly}
-              >
-                <span className="text-xl">{t.emoji}</span>
-                <span className="text-xs font-medium text-center leading-tight">{t.label}</span>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Datos del negocio</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-1">
-            <Label>Nombre del negocio</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Nombre del negocio" disabled={readonly} />
-          </div>
-          <div className="space-y-1">
-            <Label>WhatsApp</Label>
-            <Input value={whatsapp} onChange={e => setWhatsapp(e.target.value.replace(/[^\d+]/g, ''))} placeholder="+52 55 1234 5678" disabled={readonly} />
-          </div>
-          <div className="space-y-1">
-            <Label>Ciudad</Label>
-            <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Ciudad" disabled={readonly} />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Tagline <span className="text-muted-foreground font-normal text-xs">({tagline.length}/120)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Input value={tagline} onChange={e => setTagline(e.target.value)} maxLength={120}
-            placeholder="Los mejores cortes del sur de la ciudad" disabled={readonly} />
-          {!readonly && (
-            <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
-              {saved ? '✓ Guardado' : save.isPending ? 'Guardando...' : 'Guardar cambios'}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 interface OwnerDashboardProps {
   previewSlug?: string
@@ -260,13 +149,12 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
     setMobileSidebarOpen(false)
   }
 
-  const { data: bizData } = useQuery({
+  const { data: bizData, refetch: refetchBiz } = useQuery({
     queryKey: ['owner-business', businessId],
-    queryFn: () => api.get<{ name: string; slug: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; status: BusinessStatus; whatsappClicks?: number }>(`/api/v1/storefront/${businessId}`),
+    queryFn: () => api.get<{ name: string; slug: string; logo?: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; state?: string; status: BusinessStatus; theme?: any; whatsappClicks?: number }>(`/api/v1/storefront/${businessId}`),
   })
 
   const catalogUrl = `${STOREFRONT_URL}/demo/${businessId}`
-  const isUnderReview = !isImpersonating && !isPreview && bizData?.status === BusinessStatus.Pending
 
   const sidebarFooter = (
     <div className="space-y-2">
@@ -334,7 +222,7 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
         {bizData?.status === BusinessStatus.Pending && !isPreview && !isImpersonating && (
-          <PendingBanner />
+          <PendingBanner onGoToAppearance={() => navigate_to('appearance')} />
         )}
 
         {isImpersonating && (
@@ -356,10 +244,16 @@ export default function OwnerDashboardPage({ previewSlug }: OwnerDashboardProps)
         )}
 
         {page === 'catalog' && (
-          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} readonly={isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
+          <CatalogPage businessId={businessId} previewSlug={previewSlug} catalogUrl={catalogUrl} isPreview={isPreview} readonly={false} impersonateSlug={isImpersonating ? businessId : undefined} whatsappClicks={bizData?.whatsappClicks} />
         )}
-        {page === 'appearance' && (
-          <AppearancePage businessId={businessId} currentType={bizData?.type} currentName={bizData?.name} currentTagline={bizData?.tagline} currentWhatsapp={bizData?.whatsapp} currentCity={bizData?.city} readonly={isPreview || isUnderReview} impersonateSlug={isImpersonating ? businessId : undefined} />
+        {page === 'appearance' && bizData && (
+          <BusinessInfoCard
+            business={{ ...bizData, status: bizData.status }}
+            editable={!isPreview}
+            readonly={isPreview}
+            impersonateSlug={isImpersonating ? businessId : undefined}
+            onSaved={() => refetchBiz()}
+          />
         )}
         {page === 'requests' && (
           <div className="space-y-4">

@@ -16,6 +16,7 @@ class CreateDemoRequest(BaseModel):
     contact_name: str | None = None
     owner_email: str | None = None
     tagline: str | None = None
+    logo: str | None = None
 
 
 class CreateOwnerRequest(BaseModel):
@@ -33,6 +34,7 @@ def create_demo(body: CreateDemoRequest):
     return demo_use_cases.create_demo(
         body.name, body.type, body.whatsapp, body.city, body.tagline,
         state=body.state, contact_name=body.contact_name, owner_email=body.owner_email,
+        logo=body.logo,
     )
 
 
