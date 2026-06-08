@@ -9,8 +9,9 @@ module "identity_api" {
   max_instances   = 5
   memory          = "512Mi"
   env_vars = {
-    FIRESTORE_PROJECT_ID = var.project_id
-    ENVIRONMENT          = var.environment
-    CORS_ALLOWED_ORIGINS = "*"
+    FIRESTORE_PROJECT_ID     = var.project_id
+    FIREBASE_AUTH_PROJECT_ID = var.project_id
+    ENVIRONMENT              = var.environment
+    CORS_ALLOWED_ORIGINS     = "*"
   }
 }

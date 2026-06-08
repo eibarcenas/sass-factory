@@ -5,6 +5,7 @@ on:
     branches: [develop]
     paths:
       - 'apps/identity-api/**'
+      - '.firebaserc'
       - 'infrastructure/iterraform/identity-api/**'
       - '.github/workflows/deploy-dev-identity-api.yml'
 
@@ -36,6 +37,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
+      - name: Validate Firebase project
+        run: |
+          CONFIG_PROJECT=$(jq -r '.projects.dev // .projects.default' .firebaserc)
+          if [ "$CONFIG_PROJECT" != "$PROJECT" ]; then
+            echo "::error::Firebase project configuration must match ${PROJECT}"
+            exit 1
+          fi
 
       - name: Backend tests
         env:

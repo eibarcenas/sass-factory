@@ -41,7 +41,13 @@ export default function GoogleSignInButton({
         method: 'POST',
         headers: { Authorization: `Bearer ${await cred.user.getIdToken(true)}` },
       })
-      if (!exchangeResponse.ok) throw new Error('Could not create authentication exchange.')
+      if (!exchangeResponse.ok) {
+        const responseBody = await exchangeResponse.json().catch(() => null)
+        const detail = responseBody?.detail ?? responseBody?.message
+        throw new Error(
+          `Could not create authentication exchange (${exchangeResponse.status})${detail ? `: ${detail}` : '.'}`,
+        )
+      }
       const { code } = await exchangeResponse.json()
       const callback = new URL(`${ADMIN_URL}/${locale}/auth/callback`)
       callback.searchParams.set('code', code)
