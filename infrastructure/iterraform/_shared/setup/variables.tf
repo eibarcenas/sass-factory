@@ -7,6 +7,11 @@ variable "project_number" {
   description = "GCP project number (numeric). Run: gcloud projects describe PROJECT_ID --format='value(projectNumber)'"
 }
 
+variable "firebase_auth_project_id" {
+  type        = string
+  description = "Firebase project that issues ID tokens and accepts custom tokens"
+}
+
 variable "region" {
   type    = string
   default = "us-central1"

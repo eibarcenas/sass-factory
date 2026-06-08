@@ -10,6 +10,28 @@ from factory_auth import get_current_user, UserContext
 router = APIRouter(tags=["auth"])
 
 
+def get_firebase_app():
+    import firebase_admin
+
+    if firebase_admin._apps:
+        return firebase_admin.get_app()
+
+    import os
+
+    project_id = os.getenv(
+        "FIREBASE_AUTH_PROJECT_ID",
+        os.getenv("FIRESTORE_PROJECT_ID"),
+    )
+    signer_service_account = os.getenv(
+        "FIREBASE_TOKEN_SIGNER_SERVICE_ACCOUNT",
+        f"catalog-mx-api@{project_id}.iam.gserviceaccount.com",
+    )
+    return firebase_admin.initialize_app(options={
+        "projectId": project_id,
+        "serviceAccountId": signer_service_account,
+    })
+
+
 @router.post("/auth/claims/resolve")
 def resolve_claims(
     user: Annotated[UserContext, Depends(get_current_user)],
@@ -73,17 +95,13 @@ def resolve_claims(
         resolve_pending_ref = None
 
     try:
-        import firebase_admin
         from firebase_admin import auth as fa
-
-        if not firebase_admin._apps:
-            get_db()
 
         fa.set_custom_user_claims(user.firebase_uid, {
             "role": role,
             "business_id": business_id,
             "modules": modules,
-        })
+        }, app=get_firebase_app())
 
         if resolve_pending_ref:
             resolve_pending_ref.update({"resolvedAt": datetime.now(timezone.utc).isoformat(), "resolvedUid": user.firebase_uid})
@@ -166,15 +184,13 @@ def create_business_registration(
     })
 
     try:
-        import firebase_admin
         from firebase_admin import auth as fa
-        if not firebase_admin._apps:
-            get_db()
+
         fa.set_custom_user_claims(user.firebase_uid, {
             "role": "OWNER",
             "business_id": slug,
             "modules": ["CATALOG", "APPEARANCE"],
-        })
+        }, app=get_firebase_app())
     except Exception as e:
         biz_ref.delete()
         raise HTTPException(status_code=500, detail=f"Failed to set claims: {e}")
@@ -210,11 +226,12 @@ def consume_exchange(code: str):
         raise HTTPException(status_code=410, detail="Exchange expired")
 
     try:
-        import firebase_admin
         from firebase_admin import auth as firebase_auth
-        if not firebase_admin._apps:
-            get_db()
-        custom_token = firebase_auth.create_custom_token(data["uid"]).decode("utf-8")
+
+        custom_token = firebase_auth.create_custom_token(
+            data["uid"],
+            app=get_firebase_app(),
+        ).decode("utf-8")
         ref.update({"consumedAt": datetime.now(timezone.utc)})
     except Exception as error:
         raise HTTPException(status_code=500, detail=f"Failed to create custom token: {error}")

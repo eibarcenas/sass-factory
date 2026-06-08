@@ -109,8 +109,8 @@ def test_resolve_claims_sets_claims_when_pending(roleless_client):
     db = _db_with_pending("owner@example.com", "heladeria-el-pinguino")
     with (
         patch("app.routers.auth.get_db", return_value=db),
+        patch("app.routers.auth.get_firebase_app"),
         patch("firebase_admin.auth.set_custom_user_claims"),
-        patch("firebase_admin._apps", {"default": MagicMock()}),
     ):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
     assert resp.status_code == 200
@@ -134,8 +134,8 @@ def test_resolve_claims_fallback_to_businesses(roleless_client):
     )
     with (
         patch("app.routers.auth.get_db", return_value=db),
+        patch("app.routers.auth.get_firebase_app"),
         patch("firebase_admin.auth.set_custom_user_claims"),
-        patch("firebase_admin._apps", {"default": MagicMock()}),
     ):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
     assert resp.status_code == 200
