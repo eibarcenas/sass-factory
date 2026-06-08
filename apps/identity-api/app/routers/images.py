@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from google.cloud import storage
-from app.db import get_db
+from factory_auth import get_current_user, UserContext
 import uuid
 import os
 
@@ -10,10 +12,11 @@ BUCKET_NAME = os.getenv("GCS_BUCKET", "catalog-mx-images")
 ALLOWED_MIME = {"image/jpeg", "image/png", "image/webp"}
 MAX_BYTES = 2 * 1024 * 1024  # 2MB
 
-@router.post("/images/upload")
+@router.post("/business-registration-images")
 async def upload_image(
+    user: Annotated[UserContext, Depends(get_current_user)],
     file: UploadFile = File(...),
-    folder: str = "products",
+    folder: str = Form("products"),
 ):
     """Upload image to Cloud Storage. Returns public URL."""
     if file.content_type not in ALLOWED_MIME:
@@ -31,14 +34,18 @@ async def upload_image(
         raise HTTPException(status_code=400, detail="File content does not match declared type.")
 
     ext = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}.get(file.content_type, "jpg")
-    filename = f"{folder}/{uuid.uuid4().hex}.{ext}"
+    safe_folder = "logos" if folder == "logos" else "products"
+    filename = f"registrations/{user.firebase_uid}/{safe_folder}/{uuid.uuid4().hex}.{ext}"
 
     try:
         client = storage.Client()
         bucket = client.bucket(BUCKET_NAME)
         blob = bucket.blob(filename)
         blob.upload_from_string(content, content_type=file.content_type)
-        blob.make_public()
+        try:
+            blob.make_public()
+        except Exception:
+            pass
         public_url = f"https://storage.googleapis.com/{BUCKET_NAME}/{filename}"
         return {"url": public_url, "filename": filename}
     except Exception as e:

@@ -10,7 +10,6 @@ export interface BusinessFormValues {
   logo: string
   type: BusinessType | ''
   name: string
-  tagline: string
   contactName: string
   whatsapp: string
   ownerEmail: string
@@ -22,7 +21,6 @@ export interface BusinessFormDefaults {
   logo?: string
   type?: BusinessType
   name?: string
-  tagline?: string
   contactName?: string
   whatsapp?: string
   ownerEmail?: string
@@ -38,7 +36,6 @@ export function useBusinessFormState(mode: BusinessFormMode, defaultValues?: Bus
   const [logo,        setLogo]        = useState(defaultValues?.logo        ?? '')
   const [type,        setType]        = useState<BusinessType | ''>(defaultValues?.type ?? '')
   const [name,        setName]        = useState(defaultValues?.name        ?? '')
-  const [tagline,     setTagline]     = useState(defaultValues?.tagline     ?? '')
   const [contactName, setContactName] = useState(defaultValues?.contactName ?? '')
   const [whatsapp,    setWhatsapp]    = useState(defaultValues?.whatsapp    ?? '')
   const [ownerEmail,  setOwnerEmail]  = useState(defaultValues?.ownerEmail  ?? '')
@@ -54,7 +51,6 @@ export function useBusinessFormState(mode: BusinessFormMode, defaultValues?: Bus
     setLogo(defaultValues.logo             ?? '')
     setType(defaultValues.type             ?? '')
     setName(defaultValues.name             ?? '')
-    setTagline(defaultValues.tagline       ?? '')
     setContactName(defaultValues.contactName ?? '')
     setWhatsapp(defaultValues.whatsapp     ?? '')
     setCity(defaultValues.city             ?? '')
@@ -83,6 +79,11 @@ export function useBusinessFormState(mode: BusinessFormMode, defaultValues?: Bus
     const msgs: string[] = []
     if (!type) msgs.push('Selecciona el tipo de negocio')
     if (name.trim().length < 2) msgs.push('El nombre debe tener al menos 2 caracteres')
+    if (mode === 'register' && !logo) msgs.push('Agrega el logo de tu negocio')
+    if (mode === 'register' && contactName.trim().length < 2) msgs.push('Escribe tu nombre')
+    if (mode === 'register' && !whatsapp.trim()) msgs.push('Escribe tu WhatsApp')
+    if (mode === 'register' && city.trim().length < 2) msgs.push('Escribe tu ciudad')
+    if (mode === 'register' && !state) msgs.push('Selecciona tu estado')
     if (mode === 'register' && slugStatus === 'taken')   msgs.push('Ese nombre ya está en uso')
     if (mode === 'register' && slugStatus === 'invalid') msgs.push('El nombre no es válido')
     if (whatsapp && !/^[0-9+]{7,15}$/.test(whatsapp.trim())) msgs.push('WhatsApp debe ser un número válido')
@@ -92,15 +93,15 @@ export function useBusinessFormState(mode: BusinessFormMode, defaultValues?: Bus
   }
 
   function reset() {
-    setLogo(''); setType(''); setName(''); setTagline('')
+    setLogo(''); setType(''); setName('')
     setContactName(''); setWhatsapp(''); setOwnerEmail('')
     setCity(''); setState('Ciudad de México')
     setSlugStatus('idle'); setSlug(''); setError('')
   }
 
   return {
-    values: { logo, type, name, tagline, contactName, whatsapp, ownerEmail, city, state } as BusinessFormValues,
-    setters: { setLogo, setType, setName, setTagline, setContactName, setWhatsapp, setOwnerEmail, setCity, setState },
+    values: { logo, type, name, contactName, whatsapp, ownerEmail, city, state } as BusinessFormValues,
+    setters: { setLogo, setType, setName, setContactName, setWhatsapp, setOwnerEmail, setCity, setState },
     slugStatus,
     slug,
     error,

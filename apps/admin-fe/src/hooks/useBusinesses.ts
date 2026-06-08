@@ -24,7 +24,6 @@ export function useCreateStore() {
       whatsapp: string
       city: string
       state?: string
-      tagline?: string
       contactName?: string
       ownerEmail?: string
       logo?: string

@@ -11,7 +11,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from app.routers import health, auth
+from app.routers import health, auth, images
 from factory_auth import AuthMiddleware
 
 def _client_ip(request: Request) -> str:
@@ -47,3 +47,4 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(auth.router, prefix="/api/v1")
+app.include_router(images.router, prefix="/api/v1")
