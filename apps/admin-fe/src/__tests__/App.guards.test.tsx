@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
+import { RootRedirect } from '@/App'
 import { useAuthStore } from '@/store/auth'
 
 // Inline the guard components to avoid circular imports from App.tsx
@@ -25,6 +26,23 @@ function RequireOwner({ children }: { children: React.ReactNode }) {
 function Protected({ label }: { label: string }) {
   return <div data-testid="protected">{label}</div>
 }
+
+function CurrentPath() {
+  return <div data-testid="current-path">{useLocation().pathname}</div>
+}
+
+describe('RootRedirect', () => {
+  it('resolves the unlocalized root using the browser locale', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <RootRedirect />
+        <CurrentPath />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/en')
+  })
+})
 
 describe('RequireAuth', () => {
   it('renders children when user is set', () => {
