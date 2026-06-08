@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "sass-factory-local"
+    "default": "ei-catalog-dev",
+    "dev": "ei-catalog-dev"
   }
 }
