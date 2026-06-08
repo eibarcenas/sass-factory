@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router-dom'
-import { RootRedirect } from '@/App'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { RequireOnboarding, RootRedirect } from '@/App'
 import { useAuthStore } from '@/store/auth'
 
 // Inline the guard components to avoid circular imports from App.tsx
@@ -124,5 +124,43 @@ describe('RequireOwner', () => {
     )
     expect(screen.queryByTestId('protected')).not.toBeInTheDocument()
     expect(screen.getByTestId('redirected-root')).toBeInTheDocument()
+  })
+})
+
+describe('RequireOnboarding', () => {
+  it('allows UNASSIGNED users', () => {
+    useAuthStore.setState({
+      user: { uid: 'u1', email: 'new@business.com', role: 'UNASSIGNED', modules: [] },
+      mockMode: false,
+    })
+    render(
+      <MemoryRouter initialEntries={['/es/onboarding/business']}>
+        <Routes>
+          <Route element={<RequireOnboarding />}>
+            <Route path="/:locale/onboarding/business" element={<Protected label="onboarding" />} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    )
+    expect(screen.getByTestId('protected')).toBeInTheDocument()
+  })
+
+  it('redirects SUPER_ADMIN users to the platform dashboard', () => {
+    useAuthStore.setState({
+      user: { uid: 'u1', email: 'admin@catalog.mx', role: 'SUPER_ADMIN', modules: [] },
+      mockMode: false,
+    })
+    render(
+      <MemoryRouter initialEntries={['/es/onboarding/business']}>
+        <Routes>
+          <Route element={<RequireOnboarding />}>
+            <Route path="/:locale/onboarding/business" element={<Protected label="onboarding" />} />
+          </Route>
+          <Route path="/es/platform/dashboard" element={<CurrentPath />} />
+        </Routes>
+      </MemoryRouter>
+    )
+    expect(screen.queryByTestId('protected')).not.toBeInTheDocument()
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/es/platform/dashboard')
   })
 })

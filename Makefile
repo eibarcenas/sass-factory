@@ -12,6 +12,8 @@ PORT_stores-api           := 8000
 PORT_identity-api         := 8001
 PORT_prospects-api        := 8003
 PORT_notifications-webhook := 8004
+LOCAL_GCP_PROJECT           ?= ei-catalog-dev
+LOCAL_API_SERVICE_ACCOUNT   ?= catalog-mx-api@$(LOCAL_GCP_PROJECT).iam.gserviceaccount.com
 
 SERVICES := admin-fe store-fe landing-fe stores-api identity-api prospects-api notifications-webhook
 API_BASE ?= http://localhost:$(PORT_stores-api)
@@ -86,7 +88,13 @@ up: ## Start one service. Usage: make up service=landing-fe
 	  identity-api) \
 	    fuser -k $(PORT_identity-api)/tcp 2>/dev/null || true; \
 	    echo "▶ identity-api → http://localhost:$(PORT_identity-api)"; \
-	    cd apps/identity-api && uv run uvicorn main:app --reload --host 127.0.0.1 --port $(PORT_identity-api) ;; \
+	    cd apps/identity-api && \
+	      GOOGLE_APPLICATION_CREDENTIALS= \
+	      GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=$(LOCAL_API_SERVICE_ACCOUNT) \
+	      DEV_USER_EMAIL= \
+	      FIRESTORE_PROJECT_ID=$(LOCAL_GCP_PROJECT) \
+	      FIREBASE_AUTH_PROJECT_ID=$(LOCAL_GCP_PROJECT) \
+	      uv run uvicorn main:app --reload --host 127.0.0.1 --port $(PORT_identity-api) ;; \
 	  stores-api) \
 	    fuser -k $(PORT_stores-api)/tcp 2>/dev/null || true; \
 	    echo "▶ stores-api → http://localhost:$(PORT_stores-api)"; \

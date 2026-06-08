@@ -5,7 +5,7 @@ import secrets
 from pydantic import BaseModel, field_validator
 from app.db import get_db
 from app.domain.business import BusinessStatus, BusinessType, slugify
-from factory_auth import get_current_user, UserContext
+from factory_auth import get_current_user, Role, UserContext
 
 router = APIRouter(tags=["auth"])
 
@@ -13,8 +13,11 @@ router = APIRouter(tags=["auth"])
 def get_firebase_app():
     import firebase_admin
 
-    if firebase_admin._apps:
-        return firebase_admin.get_app()
+    app_name = "identity-token-signer"
+    try:
+        return firebase_admin.get_app(app_name)
+    except ValueError:
+        pass
 
     import os
 
@@ -26,10 +29,13 @@ def get_firebase_app():
         "FIREBASE_TOKEN_SIGNER_SERVICE_ACCOUNT",
         f"catalog-mx-api@{project_id}.iam.gserviceaccount.com",
     )
-    return firebase_admin.initialize_app(options={
-        "projectId": project_id,
-        "serviceAccountId": signer_service_account,
-    })
+    return firebase_admin.initialize_app(
+        options={
+            "projectId": project_id,
+            "serviceAccountId": signer_service_account,
+        },
+        name=app_name,
+    )
 
 
 @router.post("/auth/claims/resolve")
@@ -47,6 +53,8 @@ def resolve_claims(
     """
     if not user.email:
         raise HTTPException(status_code=400, detail="No email on token")
+    if user.role == Role.SUPER_ADMIN:
+        return {"resolved": False, "role": Role.SUPER_ADMIN.value}
 
     db = get_db()
 
@@ -287,11 +295,14 @@ def create_exchange(
 ):
     code = secrets.token_urlsafe(32)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=2)
-    get_db().collection("auth_exchanges").document(code).set({
-        "uid": user.firebase_uid,
-        "expiresAt": expires_at,
-        "consumedAt": None,
-    })
+    try:
+        get_db().collection("auth_exchanges").document(code).set({
+            "uid": user.firebase_uid,
+            "expiresAt": expires_at,
+            "consumedAt": None,
+        })
+    except Exception as error:
+        raise HTTPException(status_code=503, detail=f"Authentication storage unavailable: {error}")
     return {"code": code, "expiresAt": expires_at.isoformat()}
 
 

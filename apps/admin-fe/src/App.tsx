@@ -60,6 +60,16 @@ function RequireSeller() {
   return <Outlet />
 }
 
+export function RequireOnboarding() {
+  const locale = useLocaleParam()
+  const { user } = useAuthStore()
+  if (!locale) return <NotFound />
+  if (user?.role !== 'UNASSIGNED') {
+    return <Navigate to={homeForRole(locale, user?.role)} replace />
+  }
+  return <Outlet />
+}
+
 function LocalizedRoot() {
   const locale = useLocaleParam()
   const { user, mockMode } = useAuthStore()
@@ -112,7 +122,9 @@ export default function App() {
 
       <Route element={<RequireAuth />}>
         <Route path="/:locale" element={<LocalizedRoot />} />
-        <Route path="/:locale/onboarding/business" element={<RegisterPage />} />
+        <Route element={<RequireOnboarding />}>
+          <Route path="/:locale/onboarding/business" element={<RegisterPage />} />
+        </Route>
 
         <Route element={<RequirePlatform />}>
           <Route element={<AdminLayout />}>
