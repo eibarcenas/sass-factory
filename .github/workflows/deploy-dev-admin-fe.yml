@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/admin-fe/**'
       - 'packages/**'
+      - '.firebaserc'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -52,6 +53,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm -F admin-fe typecheck
+      - name: Validate Firebase project
+        run: |
+          CONFIG_PROJECT=$(jq -r '.projects.dev // .projects.default' .firebaserc)
+          if [ "$CONFIG_PROJECT" != "$PROJECT" ] || [ "${{ vars.FIREBASE_PROJECT_ID }}" != "$PROJECT" ]; then
+            echo "::error::Firebase project configuration must match ${PROJECT}"
+            exit 1
+          fi
 
       - name: Auth GCP — ei-catalog-dev
         uses: google-github-actions/auth@v2

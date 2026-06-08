@@ -73,6 +73,12 @@ resource "google_project_iam_member" "api_runtime_roles" {
   member  = "serviceAccount:${google_service_account.api_runtime.email}"
 }
 
+resource "google_service_account_iam_member" "api_runtime_token_creator" {
+  service_account_id = google_service_account.api_runtime.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.api_runtime.email}"
+}
+
 # ── Service Account — Deployer (GitHub Actions CI/CD) ─────────────────────────
 resource "google_service_account" "deployer" {
   project      = var.project_id
