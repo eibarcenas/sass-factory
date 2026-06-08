@@ -120,6 +120,8 @@ jobs:
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           STORE_URL=$(gcloud run services describe catalog-mx-store-${{ env.ENV_SUFFIX }} \
             --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
+          IDENTITY_API_URL=$(gcloud run services describe catalog-mx-identity-api-${{ env.ENV_SUFFIX }} \
+            --region=${{ env.REGION }} --project=${{ env.PROJECT }} --format='value(status.url)')
           IMAGE="${{ env.AR_URL }}/catalog-mx-landing:${{ github.sha }}"
           docker buildx build \
             --push \
@@ -127,6 +129,10 @@ jobs:
             --cache-to type=gha,mode=max \
             --build-arg NEXT_PUBLIC_ADMIN_URL="${ADMIN_URL}" \
             --build-arg NEXT_PUBLIC_STORE_URL="${STORE_URL}" \
+            --build-arg NEXT_PUBLIC_IDENTITY_API_URL="${IDENTITY_API_URL}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ vars.FIREBASE_API_KEY }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ vars.FIREBASE_AUTH_DOMAIN }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ vars.FIREBASE_PROJECT_ID }}" \
             -t "$IMAGE" -f apps/landing-fe/Dockerfile .
           gcloud run deploy catalog-mx-landing-${{ env.ENV_SUFFIX }} \
             --image "$IMAGE" --region "${{ env.REGION }}" --project "${{ env.PROJECT }}" \
