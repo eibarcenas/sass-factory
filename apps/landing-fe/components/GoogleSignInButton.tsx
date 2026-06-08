@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useLocale } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
+import { getFirebaseAuth } from '@/lib/firebase'
 
 const API_URL   = process.env.NEXT_PUBLIC_IDENTITY_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3000'
@@ -25,25 +26,9 @@ export default function GoogleSignInButton({
     setLoading(true)
     setError('')
 
-    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
-      setError('Authentication is not configured.')
-      setLoading(false)
-      return
-    }
-
     try {
-      const { getAuth, signInWithPopup, GoogleAuthProvider } = await import('firebase/auth')
-      const { initializeApp, getApps }                       = await import('firebase/app')
-
-      if (!getApps().length) {
-        initializeApp({
-          apiKey:     process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-          projectId:  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-        })
-      }
-
-      const auth  = getAuth()
+      const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth')
+      const auth  = await getFirebaseAuth()
       const cred  = await signInWithPopup(auth, new GoogleAuthProvider())
       const token = await cred.user.getIdToken(true)
 
