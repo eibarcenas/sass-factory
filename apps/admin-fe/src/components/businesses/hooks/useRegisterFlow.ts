@@ -20,16 +20,16 @@ export function useRegisterFlow(onError: (msg: string) => void, onSlugTaken: () 
     products: DraftProduct[],
     acceptedTerms: boolean,
   ) {
-    const { getAuth } = await import('firebase/auth')
-    const { initializeApp, getApps } = await import('firebase/app')
-    if (!getApps().length) {
-      initializeApp({
-        apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
-        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-        projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
-      })
-    }
-    const firebaseUser = getAuth().currentUser
+    const [{ initializeApp, getApps, getApp }, { getAuth }] = await Promise.all([
+      import('firebase/app'),
+      import('firebase/auth'),
+    ])
+    const app = getApps().length ? getApp() : initializeApp({
+      apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    })
+    const firebaseUser = getAuth(app).currentUser
     if (!firebaseUser) {
       window.location.replace(`${LANDING_URL}/${locale}`)
       return

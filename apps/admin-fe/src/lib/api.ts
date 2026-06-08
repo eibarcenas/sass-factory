@@ -17,16 +17,16 @@ function resolveApiUrl(path: string): string {
 async function getToken(): Promise<string | null> {
   if (!import.meta.env.VITE_FIREBASE_API_KEY) return null
   try {
-    const { getAuth } = await import('firebase/auth')
-    const { initializeApp, getApps } = await import('firebase/app')
-    if (!getApps().length) {
-      initializeApp({
-        apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
-        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-        projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
-      })
-    }
-    const auth = getAuth()
+    const [{ initializeApp, getApps, getApp }, { getAuth }] = await Promise.all([
+      import('firebase/app'),
+      import('firebase/auth'),
+    ])
+    const app = getApps().length ? getApp() : initializeApp({
+      apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    })
+    const auth = getAuth(app)
     if (!auth.currentUser) return null
     return await auth.currentUser.getIdToken()
   } catch {
