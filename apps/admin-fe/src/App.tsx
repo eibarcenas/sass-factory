@@ -12,7 +12,7 @@ import PlatformImpersonatePage from './pages/PlatformImpersonatePage'
 import { useAuthStore, type UserRole } from './store/auth'
 import { useSignOut } from './hooks/useSignOut'
 import { useImpersonationStore } from './store/impersonation'
-import { homeForRole, isLocale, routes, type Locale } from './lib/routes'
+import { browserLocale, homeForRole, isLocale, routes, type Locale } from './lib/routes'
 
 const API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8001'
 const RESOLVE_CLAIMS_URL = `${API_URL}/api/v1/auth/claims/resolve`
@@ -67,6 +67,10 @@ function LocalizedRoot() {
   return <Navigate to={homeForRole(locale, mockMode ? 'SUPER_ADMIN' : user?.role)} replace />
 }
 
+export function RootRedirect() {
+  return <Navigate to={`/${browserLocale()}`} replace />
+}
+
 function PlatformStoreReview() {
   const { businessId } = useParams()
   return <SellerDashboardPage reviewSlug={businessId} />
@@ -103,6 +107,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/" element={<RootRedirect />} />
       <Route path="/:locale/auth/callback" element={<AuthCallbackPage />} />
 
       <Route element={<RequireAuth />}>

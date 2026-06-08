@@ -79,7 +79,8 @@
     "terms": "Terms",
     "cookies": "Cookies",
     "contact": "Contact",
-    "copyright": "© {year} catalog.mx. All rights reserved. Operated in Mexico."
+    "language": "Select language",
+    "copyright": "© {year} catalog.mx. All rights reserved."
   },
   "privacy": {
     "title": "Privacy Notice",
