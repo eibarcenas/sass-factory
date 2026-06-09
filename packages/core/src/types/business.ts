@@ -1,7 +1,9 @@
 export enum BusinessStatus {
-  Pending  = 'pending',
-  Active   = 'active',
-  Inactive = 'inactive',
+  Draft         = 'draft',
+  PendingReview = 'pending_review',
+  Pending       = 'pending',
+  Active        = 'active',
+  Inactive      = 'inactive',
 }
 
 export enum BusinessType {
