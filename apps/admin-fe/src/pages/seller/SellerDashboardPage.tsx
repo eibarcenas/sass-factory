@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
 import { useSignOut } from '../../hooks/useSignOut'
 import { useImpersonationStore } from '../../store/impersonation'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import AppSidebar, { SidebarProfile } from '../../components/layout/AppSidebar'
 import ProductEditor from '../../components/catalog/ProductEditor'
@@ -25,24 +25,21 @@ const STORE_URL = import.meta.env.VITE_STORE_URL ?? 'http://localhost:3010'
 
 type Page = 'products' | 'profile' | 'requests'
 
-// ── Onboarding stepper (shown only while status === 'draft') ──────────────────
+// ── Onboarding stepper (shown while status === 'pending', i.e. awaiting activation) ──
 type OnboardingBizData = { logo?: string; whatsapp?: string; city?: string; status: BusinessStatus }
 
-function OnboardingStepper({ bizData, businessId, onNavigate, onSubmitSuccess }: {
+function OnboardingStepper({ bizData, businessId, onNavigate }: {
   bizData: OnboardingBizData
   businessId: string
   onNavigate: (page: Page) => void
-  onSubmitSuccess: () => void
 }) {
   const { data: itemsData } = useSellerItems(businessId)
-  const { mutate: submitForReview, isPending: isSubmitting } = useMutation({
-    mutationFn: () => api.post('/api/v1/seller/profile/submit', {}),
-    onSuccess: onSubmitSuccess,
-  })
 
   const step1Done = !!(bizData.logo && bizData.whatsapp && bizData.city)
   const step2Done = (itemsData?.items?.length ?? 0) >= 1
 
+  // Registration already sets status to 'pending' — no separate submit needed.
+  // Step 3 is always informational: the business is under admin review.
   const steps = [
     {
       title: 'Completa tu perfil',
@@ -61,12 +58,12 @@ function OnboardingStepper({ bizData, businessId, onNavigate, onSubmitSuccess }:
       actionLabel: 'Ir a Productos →',
     },
     {
-      title: 'Envía tu solicitud',
-      desc: 'Revisaremos y activaremos tu tienda en menos de 24h',
-      done: false,
+      title: 'Solicitud enviada — en revisión',
+      desc: 'Activaremos tu tienda en menos de 24h',
+      done: step1Done && step2Done,
       blocked: !step1Done || !step2Done,
-      onAction: () => submitForReview(),
-      actionLabel: isSubmitting ? 'Enviando...' : 'Enviar solicitud',
+      onAction: undefined,
+      actionLabel: '',
     },
   ]
 
@@ -89,11 +86,10 @@ function OnboardingStepper({ bizData, businessId, onNavigate, onSubmitSuccess }:
             {step.done && (
               <span className="shrink-0 text-xs text-green-600 font-medium self-center">Completado</span>
             )}
-            {!step.done && !step.blocked && (
+            {!step.done && !step.blocked && step.onAction && (
               <button
                 onClick={step.onAction}
-                disabled={isSubmitting}
-                className="shrink-0 text-xs font-medium text-indigo-700 hover:text-indigo-900 underline underline-offset-2 self-center disabled:opacity-50"
+                className="shrink-0 text-xs font-medium text-indigo-700 hover:text-indigo-900 underline underline-offset-2 self-center"
               >
                 {step.actionLabel}
               </button>
@@ -210,8 +206,10 @@ export default function SellerDashboardPage({ reviewSlug }: SellerDashboardProps
   }
 
   const { data: bizData, refetch: refetchBiz } = useQuery({
-    queryKey: ['seller-profile', businessId],
-    queryFn: () => api.get<{ name: string; slug: string; logo?: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; state?: string; status: BusinessStatus; theme?: any; whatsappClicks?: number }>(`/api/v1/stores/${businessId}?review=${isReview ? '1' : '0'}`),
+    queryKey: ['seller-profile', businessId, isReview],
+    queryFn: () => isReview
+      ? api.get<{ name: string; slug: string; logo?: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; state?: string; status: BusinessStatus; theme?: any; whatsappClicks?: number }>(`/api/v1/stores/${businessId}?demo=true`)
+      : api.get<{ name: string; slug: string; logo?: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; state?: string; status: BusinessStatus; theme?: any; whatsappClicks?: number }>(`/api/v1/seller/profile${isImpersonating ? `?business=${businessId}` : ''}`),
   })
 
   const storeUrl = isReview ? `${STORE_URL}/store/${businessId}` : `${STORE_URL}/${businessId}`
@@ -281,12 +279,11 @@ export default function SellerDashboardPage({ reviewSlug }: SellerDashboardProps
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-        {bizData?.status === BusinessStatus.Draft && !isReview && !isImpersonating && (
+        {bizData?.status === BusinessStatus.Pending && !isReview && !isImpersonating && (
           <OnboardingStepper
             bizData={bizData}
             businessId={businessId}
             onNavigate={navigate_to}
-            onSubmitSuccess={() => refetchBiz()}
           />
         )}
 
