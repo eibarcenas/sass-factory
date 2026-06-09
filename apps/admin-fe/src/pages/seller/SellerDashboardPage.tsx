@@ -210,8 +210,10 @@ export default function SellerDashboardPage({ reviewSlug }: SellerDashboardProps
   }
 
   const { data: bizData, refetch: refetchBiz } = useQuery({
-    queryKey: ['seller-profile', businessId],
-    queryFn: () => api.get<{ name: string; slug: string; logo?: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; state?: string; status: BusinessStatus; theme?: any; whatsappClicks?: number }>(`/api/v1/stores/${businessId}?review=${isReview ? '1' : '0'}`),
+    queryKey: ['seller-profile', businessId, isReview],
+    queryFn: () => isReview
+      ? api.get<{ name: string; slug: string; logo?: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; state?: string; status: BusinessStatus; theme?: any; whatsappClicks?: number }>(`/api/v1/stores/${businessId}?demo=true`)
+      : api.get<{ name: string; slug: string; logo?: string; type?: BusinessType; tagline?: string; whatsapp?: string; city?: string; state?: string; status: BusinessStatus; theme?: any; whatsappClicks?: number }>(`/api/v1/seller/profile${isImpersonating ? `?business=${businessId}` : ''}`),
   })
 
   const storeUrl = isReview ? `${STORE_URL}/store/${businessId}` : `${STORE_URL}/${businessId}`
@@ -281,7 +283,7 @@ export default function SellerDashboardPage({ reviewSlug }: SellerDashboardProps
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-        {bizData?.status === BusinessStatus.Draft && !isReview && !isImpersonating && (
+        {bizData?.status === BusinessStatus.Pending && !isReview && !isImpersonating && (
           <OnboardingStepper
             bizData={bizData}
             businessId={businessId}

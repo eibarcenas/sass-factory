@@ -124,6 +124,23 @@ def owner_approve_business(
         raise_http(error)
 
 
+@router.get("/seller/profile")
+def owner_get_profile(
+    business: str | None = None,
+    user: Annotated[UserContext, Depends(require_owner_or_admin())] = None,
+):
+    """Returns seller's own business data regardless of status (no public status gate)."""
+    slug = _resolve_owner_slug(user, business)
+    db = get_db()
+    doc = db.collection("businesses").document(slug).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Business not found")
+    data = doc.to_dict()
+    data["id"] = doc.id
+    data["slug"] = doc.id
+    return data
+
+
 @router.patch("/seller/profile")
 def owner_update_business(
     patch: dict,
