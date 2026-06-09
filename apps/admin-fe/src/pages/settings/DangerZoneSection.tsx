@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, Button } from '@eguru/ui'
 import { api } from '../../lib/api'
 
 interface DangerZoneSectionProps {
-  onSignOut?: () => void
+  onSignOut?: () => void | Promise<void>
 }
 
 export default function DangerZoneSection({ onSignOut }: DangerZoneSectionProps) {
@@ -14,7 +14,7 @@ export default function DangerZoneSection({ onSignOut }: DangerZoneSectionProps)
     setDeleting(true)
     try {
       await api.del('/api/v1/seller/profile')
-      onSignOut?.()
+      await onSignOut?.()
     } catch {
       setDeleting(false)
       setConfirmDelete(false)

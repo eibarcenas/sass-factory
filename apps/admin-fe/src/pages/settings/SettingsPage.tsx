@@ -8,7 +8,7 @@ import { Button } from '@eguru/ui'
 import { BusinessStatus } from '@eguru/core'
 
 interface SettingsPageProps {
-  onSignOut?: () => void
+  onSignOut?: () => void | Promise<void>
 }
 
 export default function SettingsPage({ onSignOut }: SettingsPageProps) {
