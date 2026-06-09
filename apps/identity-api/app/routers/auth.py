@@ -3,39 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone, timedelta
 import secrets
 from pydantic import BaseModel, field_validator
-from app.db import get_db
+from app.db import get_db, get_firebase_app
 from app.domain.business import BusinessStatus, BusinessType, slugify
 from factory_auth import get_current_user, Role, UserContext
 
 router = APIRouter(tags=["auth"])
-
-
-def get_firebase_app():
-    import firebase_admin
-
-    app_name = "identity-token-signer"
-    try:
-        return firebase_admin.get_app(app_name)
-    except ValueError:
-        pass
-
-    import os
-
-    project_id = os.getenv(
-        "FIREBASE_AUTH_PROJECT_ID",
-        os.getenv("FIRESTORE_PROJECT_ID"),
-    )
-    signer_service_account = os.getenv(
-        "FIREBASE_TOKEN_SIGNER_SERVICE_ACCOUNT",
-        f"catalog-mx-api@{project_id}.iam.gserviceaccount.com",
-    )
-    return firebase_admin.initialize_app(
-        options={
-            "projectId": project_id,
-            "serviceAccountId": signer_service_account,
-        },
-        name=app_name,
-    )
 
 
 @router.post("/auth/claims/resolve")

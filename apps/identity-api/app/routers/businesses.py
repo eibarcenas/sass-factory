@@ -4,7 +4,7 @@ from factory_auth import require_role, Role, UserContext
 from app.application.errors import ApplicationError
 from app.application.use_cases import businesses as business_use_cases
 from app.application.use_cases import items as item_use_cases
-from app.db import get_db
+from app.db import get_db, get_firebase_app
 from app.presentation.http.errors import raise_http
 
 def require_super_admin():
@@ -208,11 +208,8 @@ def owner_delete_account(
     db.collection("businesses").document(user.business_id).delete()
 
     try:
-        import firebase_admin
         from firebase_admin import auth as fa
-        if not firebase_admin._apps:
-            get_db()
-        fa.delete_user(user.firebase_uid)
+        fa.delete_user(user.firebase_uid, app=get_firebase_app())
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete Firebase user: {e}")
 
