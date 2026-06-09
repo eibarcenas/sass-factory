@@ -237,7 +237,7 @@ def create_business_registration(
     business = {
         "name": body.businessName,
         "slug": slug,
-        "status": BusinessStatus.REVIEW,
+        "status": "pending",
         "ownerEmail": user.email,
         "ownerUid": user.firebase_uid,
         "type": body.type.value,
