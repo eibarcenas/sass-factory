@@ -33,15 +33,15 @@ function PendingBanner({ onGoToAppearance }: { onGoToAppearance: () => void }) {
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
         </svg>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-amber-900">Completa tu negocio</p>
+          <p className="text-sm font-semibold text-amber-900">Tu tienda está en revisión</p>
           <p className="text-xs text-amber-700 mt-0.5">
-            Agrega tus productos y completa la información de tu negocio. Lo activamos en menos de 24 horas.
+            Recibimos tu solicitud. La revisamos y activamos tu tienda en menos de 24 horas.
           </p>
           <button
             onClick={onGoToAppearance}
             className="mt-2 text-xs font-medium text-amber-800 underline underline-offset-2"
           >
-            Completar información →
+            Ver mi perfil →
           </button>
         </div>
       </div>
