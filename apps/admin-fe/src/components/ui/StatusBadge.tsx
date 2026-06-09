@@ -1,9 +1,11 @@
 import { BusinessStatus } from '@eguru/core'
 
 const CONFIG: Record<BusinessStatus, { label: string; classes: string }> = {
-  [BusinessStatus.Pending]:  { label: 'Pendiente', classes: 'bg-amber-100 text-amber-700'   },
-  [BusinessStatus.Active]:   { label: 'Activa',    classes: 'bg-emerald-100 text-emerald-700' },
-  [BusinessStatus.Inactive]: { label: 'Inactiva',  classes: 'bg-slate-100 text-slate-500'   },
+  [BusinessStatus.Draft]:         { label: 'Borrador',  classes: 'bg-gray-100 text-gray-600'      },
+  [BusinessStatus.PendingReview]: { label: 'En revisión', classes: 'bg-blue-100 text-blue-700'    },
+  [BusinessStatus.Pending]:       { label: 'Pendiente', classes: 'bg-amber-100 text-amber-700'    },
+  [BusinessStatus.Active]:        { label: 'Activa',    classes: 'bg-emerald-100 text-emerald-700' },
+  [BusinessStatus.Inactive]:      { label: 'Inactiva',  classes: 'bg-slate-100 text-slate-500'    },
 }
 
 export default function StatusBadge({ status }: { status: BusinessStatus }) {

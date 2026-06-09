@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuthStore } from '../../store/auth'
 import { useSignOut } from '../../hooks/useSignOut'
 import { useImpersonationStore } from '../../store/impersonation'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import AppSidebar, { SidebarProfile } from '../../components/layout/AppSidebar'
 import ProductEditor from '../../components/catalog/ProductEditor'
@@ -13,37 +13,93 @@ import { MobileSidebar } from '@eguru/ui'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Menu } from 'lucide-react'
+import { Menu, Check } from 'lucide-react'
 import { BusinessStatus, BusinessType } from '@eguru/core'
 // BusinessType imported for bizData queryFn type annotation
 import SettingsPage from '../settings/SettingsPage'
 import SellerRequestsPage from '../../components/seller/SellerRequestsPage'
 import { isLocale, routes } from '@/lib/routes'
+import { useSellerItems } from '../../hooks/useItems'
 
 const STORE_URL = import.meta.env.VITE_STORE_URL ?? 'http://localhost:3010'
 
 type Page = 'products' | 'profile' | 'requests'
 
-// ── Pending activation banner ─────────────────────────────────────────────────
-function PendingBanner({ onGoToAppearance }: { onGoToAppearance: () => void }) {
+// ── Onboarding stepper (shown only while status === 'draft') ──────────────────
+type OnboardingBizData = { logo?: string; whatsapp?: string; city?: string; status: BusinessStatus }
+
+function OnboardingStepper({ bizData, businessId, onNavigate, onSubmitSuccess }: {
+  bizData: OnboardingBizData
+  businessId: string
+  onNavigate: (page: Page) => void
+  onSubmitSuccess: () => void
+}) {
+  const { data: itemsData } = useSellerItems(businessId)
+  const { mutate: submitForReview, isPending: isSubmitting } = useMutation({
+    mutationFn: () => api.post('/api/v1/seller/profile/submit', {}),
+    onSuccess: onSubmitSuccess,
+  })
+
+  const step1Done = !!(bizData.logo && bizData.whatsapp && bizData.city)
+  const step2Done = (itemsData?.items?.length ?? 0) >= 1
+
+  const steps = [
+    {
+      title: 'Completa tu perfil',
+      desc: 'Agrega logo, WhatsApp y ciudad',
+      done: step1Done,
+      blocked: false,
+      onAction: () => onNavigate('profile'),
+      actionLabel: 'Ir a Perfil →',
+    },
+    {
+      title: 'Agrega productos',
+      desc: 'Sube al menos un producto con imagen',
+      done: step2Done,
+      blocked: !step1Done,
+      onAction: () => onNavigate('products'),
+      actionLabel: 'Ir a Productos →',
+    },
+    {
+      title: 'Envía tu solicitud',
+      desc: 'Revisaremos y activaremos tu tienda en menos de 24h',
+      done: false,
+      blocked: !step1Done || !step2Done,
+      onAction: () => submitForReview(),
+      actionLabel: isSubmitting ? 'Enviando...' : 'Enviar solicitud',
+    },
+  ]
+
   return (
-    <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
-      <div className="flex items-start gap-3">
-        <svg viewBox="0 0 20 20" className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" fill="currentColor">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clipRule="evenodd" />
-        </svg>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-amber-900">Tu tienda está en revisión</p>
-          <p className="text-xs text-amber-700 mt-0.5">
-            Recibimos tu solicitud. La revisamos y activamos tu tienda en menos de 24 horas.
-          </p>
-          <button
-            onClick={onGoToAppearance}
-            className="mt-2 text-xs font-medium text-amber-800 underline underline-offset-2"
-          >
-            Ver mi perfil →
-          </button>
-        </div>
+    <div className="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 p-4">
+      <p className="text-sm font-semibold text-indigo-900 mb-4">
+        👋 Bienvenido — activa tu tienda en 3 pasos
+      </p>
+      <div className="space-y-3">
+        {steps.map((step, i) => (
+          <div key={i} className={`flex items-start gap-3 ${step.blocked ? 'opacity-40' : ''}`}>
+            <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mt-0.5
+              ${step.done ? 'bg-green-500 text-white' : step.blocked ? 'bg-gray-200 text-gray-400' : 'bg-indigo-600 text-white'}`}>
+              {step.done ? <Check size={12} /> : i + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-medium ${step.blocked ? 'text-gray-400' : 'text-gray-900'}`}>{step.title}</p>
+              <p className={`text-xs mt-0.5 ${step.blocked ? 'text-gray-300' : 'text-gray-500'}`}>{step.desc}</p>
+            </div>
+            {step.done && (
+              <span className="shrink-0 text-xs text-green-600 font-medium self-center">Completado</span>
+            )}
+            {!step.done && !step.blocked && (
+              <button
+                onClick={step.onAction}
+                disabled={isSubmitting}
+                className="shrink-0 text-xs font-medium text-indigo-700 hover:text-indigo-900 underline underline-offset-2 self-center disabled:opacity-50"
+              >
+                {step.actionLabel}
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -225,8 +281,13 @@ export default function SellerDashboardPage({ reviewSlug }: SellerDashboardProps
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-        {bizData?.status === BusinessStatus.Pending && !isReview && !isImpersonating && (
-          <PendingBanner onGoToAppearance={() => navigate_to('profile')} />
+        {bizData?.status === BusinessStatus.Draft && !isReview && !isImpersonating && (
+          <OnboardingStepper
+            bizData={bizData}
+            businessId={businessId}
+            onNavigate={navigate_to}
+            onSubmitSuccess={() => refetchBiz()}
+          />
         )}
 
         {isImpersonating && (
