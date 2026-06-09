@@ -9,6 +9,7 @@ function resolveApiUrl(path: string): string {
   if (
     path.startsWith('/api/v1/auth/')
     || path.startsWith('/api/v1/business-registration-images')
+    || path.startsWith('/api/v1/seller/profile')
   ) return IDENTITY_API_URL
   if (path.startsWith('/api/v1/prospects') || path.startsWith('/api/v1/platform/prospects')) return PROSPECTS_API_URL
   return STORES_API_URL
