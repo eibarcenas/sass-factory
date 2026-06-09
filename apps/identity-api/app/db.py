@@ -1,4 +1,4 @@
-"""Firestore client — single instance shared across all routers."""
+"""Firestore and Firebase Admin clients — single instances shared across all routers."""
 import os
 from functools import lru_cache
 import google.auth
@@ -7,6 +7,32 @@ from google.auth import impersonated_credentials
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def get_firebase_app():
+    """Return the named Firebase Admin app used for Auth operations (token signing, user management).
+
+    Uses a named app 'identity-token-signer' so it never conflicts with any default app.
+    Always pass app=get_firebase_app() to firebase_admin.auth calls.
+    """
+    import firebase_admin
+
+    app_name = "identity-token-signer"
+    try:
+        return firebase_admin.get_app(app_name)
+    except ValueError:
+        pass
+
+    project_id = os.getenv("FIREBASE_AUTH_PROJECT_ID", os.getenv("FIRESTORE_PROJECT_ID"))
+    signer_service_account = os.getenv(
+        "FIREBASE_TOKEN_SIGNER_SERVICE_ACCOUNT",
+        f"catalog-mx-api@{project_id}.iam.gserviceaccount.com",
+    )
+    return firebase_admin.initialize_app(
+        options={"projectId": project_id, "serviceAccountId": signer_service_account},
+        name=app_name,
+    )
+
 
 @lru_cache(maxsize=1)
 def get_db() -> firestore.Client:
