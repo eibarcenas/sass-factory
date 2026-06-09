@@ -8,6 +8,8 @@ interface Props {
   onChanged: (urls: string[]) => void
   folder?: string
   max?: number
+  uploadPath?: string
+  disabled?: boolean
 }
 
 const EXPORT_SIZE = 600
@@ -118,9 +120,10 @@ function CropDialog({
 
 // ── Single image slot ─────────────────────────────────────────────────────────
 
-function ImageSlot({ url, uploading, onPick, onRemove }: {
+function ImageSlot({ url, uploading, disabled, onPick, onRemove }: {
   url: string
   uploading: boolean
+  disabled: boolean
   onPick: () => void
   onRemove: () => void
 }) {
@@ -139,6 +142,7 @@ function ImageSlot({ url, uploading, onPick, onRemove }: {
         <button
           type="button"
           onClick={onRemove}
+          disabled={disabled}
           className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors z-10"
           aria-label="Eliminar foto"
         >
@@ -147,6 +151,7 @@ function ImageSlot({ url, uploading, onPick, onRemove }: {
         <button
           type="button"
           onClick={onPick}
+          disabled={disabled}
           className="absolute inset-0 bg-black/0 group-hover:bg-black/20 group-active:bg-black/30 transition-colors"
           aria-label="Cambiar foto"
         />
@@ -158,7 +163,8 @@ function ImageSlot({ url, uploading, onPick, onRemove }: {
     <button
       type="button"
       onClick={onPick}
-      className="aspect-square rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 flex items-center justify-center transition-colors"
+      disabled={disabled}
+      className="aspect-square rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center transition-colors"
       aria-label="Añadir foto"
     >
       <Plus className="w-5 h-5 text-muted-foreground/50" />
@@ -168,7 +174,14 @@ function ImageSlot({ url, uploading, onPick, onRemove }: {
 
 // ── Multi-image upload ────────────────────────────────────────────────────────
 
-export default function ImageUpload({ currentUrls = [], onChanged, folder = 'products', max = 3 }: Props) {
+export default function ImageUpload({
+  currentUrls = [],
+  onChanged,
+  folder = 'products',
+  max = 3,
+  uploadPath = '/api/v1/images/upload',
+  disabled = false,
+}: Props) {
   const [urls, setUrls]             = useState<string[]>(currentUrls)
   const [uploadingSlots, setUploadingSlots] = useState<Set<number>>(new Set())
   const [cropTarget, setCropTarget] = useState<{ slotIndex: number; file: File } | null>(null)
@@ -177,6 +190,7 @@ export default function ImageUpload({ currentUrls = [], onChanged, folder = 'pro
   const pendingSlot = useRef<number>(-1)
 
   function pickForSlot(index: number) {
+    if (disabled) return
     pendingSlot.current = index
     inputRef.current?.click()
   }
@@ -209,7 +223,7 @@ export default function ImageUpload({ currentUrls = [], onChanged, folder = 'pro
       const form = new FormData()
       form.append('file', cropped)
       form.append('folder', folder)
-      const data = await api.upload<{ url: string }>('/api/v1/images/upload', form)
+      const data = await api.upload<{ url: string }>(uploadPath, form)
       if (!data.url) throw new Error('No URL')
       URL.revokeObjectURL(localUrl)
       const finalUrls = [...urls]
@@ -263,6 +277,7 @@ export default function ImageUpload({ currentUrls = [], onChanged, folder = 'pro
               key={i}
               url={url}
               uploading={uploadingSlots.has(i)}
+              disabled={disabled}
               onPick={() => pickForSlot(i)}
               onRemove={() => removeSlot(i)}
             />

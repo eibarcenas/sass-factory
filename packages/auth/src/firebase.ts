@@ -30,14 +30,13 @@ export function useFirebaseAuthRestore({ store, firebaseConfig, buildUser, resol
 
     async function init() {
       try {
-        const { getAuth, onAuthStateChanged } = await import('firebase/auth')
-        const { initializeApp, getApps } = await import('firebase/app')
+        const [{ initializeApp, getApps, getApp }, { getAuth, onAuthStateChanged }] = await Promise.all([
+          import('firebase/app'),
+          import('firebase/auth'),
+        ])
 
-        if (!getApps().length) {
-          initializeApp(firebaseConfig!)
-        }
-
-        const auth = getAuth()
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig!)
+        const auth = getAuth(app)
         unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
           if (fbUser) {
             let tokenResult = await fbUser.getIdTokenResult()

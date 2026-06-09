@@ -120,6 +120,29 @@ def test_resolve_claims_sets_claims_when_pending(roleless_client):
     assert data["businessId"] == "heladeria-el-pinguino"
 
 
+def test_resolve_claims_super_admin_skips_firestore():
+    from factory_auth import get_current_user
+    from main import app
+
+    super_admin = UserContext(
+        firebase_uid="admin-uid",
+        email="admin@example.com",
+        role=Role.SUPER_ADMIN,
+        business_id=None,
+        modules=[],
+    )
+    app.dependency_overrides[get_current_user] = lambda: super_admin
+    try:
+        with patch("app.routers.auth.get_db") as get_db:
+            response = TestClient(app).post("/api/v1/auth/claims/resolve")
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+    assert response.status_code == 200
+    assert response.json() == {"resolved": False, "role": "SUPER_ADMIN"}
+    get_db.assert_not_called()
+
+
 def test_resolve_claims_noop_when_no_pending(roleless_client):
     db = _db_no_pending()
     with patch("app.routers.auth.get_db", return_value=db):

@@ -23,7 +23,7 @@ def test_consume_exchange_initializes_firebase_and_returns_custom_token():
 
     with (
         patch("app.routers.auth.get_db", return_value=db),
-        patch("firebase_admin._apps", {}),
+        patch("firebase_admin.get_app", side_effect=ValueError),
         patch("firebase_admin.initialize_app", return_value=firebase_app) as initialize_app,
         patch("firebase_admin.auth.create_custom_token", return_value=b"custom-token") as create_custom_token,
         patch.dict("os.environ", {"FIREBASE_AUTH_PROJECT_ID": "catalog-mx-dev"}),
@@ -32,10 +32,13 @@ def test_consume_exchange_initializes_firebase_and_returns_custom_token():
 
     assert response.status_code == 200
     assert response.json() == {"customToken": "custom-token"}
-    initialize_app.assert_called_once_with(options={
-        "projectId": "catalog-mx-dev",
-        "serviceAccountId": "catalog-mx-api@catalog-mx-dev.iam.gserviceaccount.com",
-    })
+    initialize_app.assert_called_once_with(
+        options={
+            "projectId": "catalog-mx-dev",
+            "serviceAccountId": "catalog-mx-api@catalog-mx-dev.iam.gserviceaccount.com",
+        },
+        name="identity-token-signer",
+    )
     create_custom_token.assert_called_once_with("owner-uid", app=firebase_app)
     exchange_ref.update.assert_called_once()
 

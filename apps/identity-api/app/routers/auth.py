@@ -4,8 +4,8 @@ from datetime import datetime, timezone, timedelta
 import secrets
 from pydantic import BaseModel, field_validator
 from app.db import get_db
-from app.domain.business import BusinessStatus, slugify
-from factory_auth import get_current_user, UserContext
+from app.domain.business import BusinessStatus, BusinessType, slugify
+from factory_auth import get_current_user, Role, UserContext
 
 router = APIRouter(tags=["auth"])
 
@@ -13,8 +13,11 @@ router = APIRouter(tags=["auth"])
 def get_firebase_app():
     import firebase_admin
 
-    if firebase_admin._apps:
-        return firebase_admin.get_app()
+    app_name = "identity-token-signer"
+    try:
+        return firebase_admin.get_app(app_name)
+    except ValueError:
+        pass
 
     import os
 
@@ -26,10 +29,13 @@ def get_firebase_app():
         "FIREBASE_TOKEN_SIGNER_SERVICE_ACCOUNT",
         f"catalog-mx-api@{project_id}.iam.gserviceaccount.com",
     )
-    return firebase_admin.initialize_app(options={
-        "projectId": project_id,
-        "serviceAccountId": signer_service_account,
-    })
+    return firebase_admin.initialize_app(
+        options={
+            "projectId": project_id,
+            "serviceAccountId": signer_service_account,
+        },
+        name=app_name,
+    )
 
 
 @router.post("/auth/claims/resolve")
@@ -47,6 +53,8 @@ def resolve_claims(
     """
     if not user.email:
         raise HTTPException(status_code=400, detail="No email on token")
+    if user.role == Role.SUPER_ADMIN:
+        return {"resolved": False, "role": Role.SUPER_ADMIN.value}
 
     db = get_db()
 
@@ -125,21 +133,80 @@ def check_slug(slug: str):
     return {"available": not exists, "slug": normalized_slug}
 
 
+class RegistrationProduct(BaseModel):
+    name: str
+    price: float
+    description: str
+    images: list[str]
+
+    @field_validator("name", "description")
+    @classmethod
+    def required_product_text(cls, value: str) -> str:
+        if len(value.strip()) < 2:
+            raise ValueError("Product name and description are required")
+        return value.strip()
+
+    @field_validator("price")
+    @classmethod
+    def positive_price(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("Product price must be greater than zero")
+        return value
+
+    @field_validator("images")
+    @classmethod
+    def product_image_required(cls, images: list[str]) -> list[str]:
+        if not images or not all(image.strip() for image in images):
+            raise ValueError("At least one product image is required")
+        return images
+
+
 class BusinessRegistrationRequest(BaseModel):
     businessName: str
-    type: str | None = None
-    whatsapp: str | None = None
-    city: str | None = None
-    state: str | None = None
-    tagline: str | None = None
-    contactName: str | None = None
+    type: BusinessType
+    whatsapp: str
+    city: str
+    state: str
+    contactName: str
+    logo: str
+    acceptedTerms: bool
+    products: list[RegistrationProduct]
 
     @field_validator("businessName")
     @classmethod
-    def name_not_empty(cls, v: str) -> str:
-        if not v.strip():
+    def name_not_empty(cls, value: str) -> str:
+        if not value.strip():
             raise ValueError("businessName cannot be empty")
-        return v.strip()
+        return value.strip()
+
+    @field_validator("whatsapp", "city", "state", "contactName", "logo")
+    @classmethod
+    def required_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("All business fields are required")
+        return value.strip()
+
+    @field_validator("whatsapp")
+    @classmethod
+    def valid_whatsapp(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized.replace("+", "", 1).isdigit() or not 7 <= len(normalized) <= 15:
+            raise ValueError("WhatsApp must be a valid phone number")
+        return normalized
+
+    @field_validator("acceptedTerms")
+    @classmethod
+    def terms_are_required(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("Terms and conditions must be accepted")
+        return value
+
+    @field_validator("products")
+    @classmethod
+    def at_least_one_product(cls, products: list[RegistrationProduct]):
+        if not products:
+            raise ValueError("At least one product is required")
+        return products
 
 
 @router.post("/business-registrations")
@@ -167,21 +234,43 @@ def create_business_registration(
         raise HTTPException(status_code=409, detail="Business name already taken")
 
     now = datetime.now(timezone.utc).isoformat()
-    biz_ref.set({
+    business = {
         "name": body.businessName,
         "slug": slug,
         "status": BusinessStatus.REVIEW,
         "ownerEmail": user.email,
         "ownerUid": user.firebase_uid,
-        "type": body.type,
+        "type": body.type.value,
         "whatsapp": body.whatsapp,
         "city": body.city,
         "state": body.state,
-        "tagline": body.tagline,
         "contactName": body.contactName,
+        "logo": body.logo,
+        "termsAcceptedAt": now,
+        "termsAccepted": True,
+        "termsVersion": "2025-06-01",
         "createdAt": now,
         "updatedAt": now,
-    })
+    }
+    batch = db.batch()
+    batch.set(biz_ref, business)
+    for order, product in enumerate(body.products, start=1):
+        product_ref = biz_ref.collection("items").document()
+        images = product.images[:3]
+        batch.set(product_ref, {
+            "businessId": slug,
+            "name": product.name,
+            "price": product.price,
+            "currency": "MXN",
+            "description": product.description,
+            "image": images[0],
+            "images": images,
+            "visible": True,
+            "order": order,
+            "createdAt": now,
+            "updatedAt": now,
+        })
+    batch.commit()
 
     try:
         from firebase_admin import auth as fa
@@ -192,6 +281,8 @@ def create_business_registration(
             "modules": ["CATALOG", "APPEARANCE"],
         }, app=get_firebase_app())
     except Exception as e:
+        for product_doc in biz_ref.collection("items").stream():
+            product_doc.reference.delete()
         biz_ref.delete()
         raise HTTPException(status_code=500, detail=f"Failed to set claims: {e}")
 
@@ -204,11 +295,14 @@ def create_exchange(
 ):
     code = secrets.token_urlsafe(32)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=2)
-    get_db().collection("auth_exchanges").document(code).set({
-        "uid": user.firebase_uid,
-        "expiresAt": expires_at,
-        "consumedAt": None,
-    })
+    try:
+        get_db().collection("auth_exchanges").document(code).set({
+            "uid": user.firebase_uid,
+            "expiresAt": expires_at,
+            "consumedAt": None,
+        })
+    except Exception as error:
+        raise HTTPException(status_code=503, detail=f"Authentication storage unavailable: {error}")
     return {"code": code, "expiresAt": expires_at.isoformat()}
 
 

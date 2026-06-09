@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { homeForRole, isLocale, routes } from '@/lib/routes'
 import type { BusinessFormValues } from './useBusinessFormState'
+import type { DraftProduct } from '@/components/catalog/ProductEditor'
 
 const API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3020'
@@ -14,9 +15,21 @@ export function useRegisterFlow(onError: (msg: string) => void, onSlugTaken: () 
   const setUser = useAuthStore(state => state.setUser)
   const [pending, setPending] = useState(false)
 
-  async function register(values: BusinessFormValues) {
-    const { getAuth } = await import('firebase/auth')
-    const firebaseUser = getAuth().currentUser
+  async function register(
+    values: BusinessFormValues,
+    products: DraftProduct[],
+    acceptedTerms: boolean,
+  ) {
+    const [{ initializeApp, getApps, getApp }, { getAuth }] = await Promise.all([
+      import('firebase/app'),
+      import('firebase/auth'),
+    ])
+    const app = getApps().length ? getApp() : initializeApp({
+      apiKey:     import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId:  import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    })
+    const firebaseUser = getAuth(app).currentUser
     if (!firebaseUser) {
       window.location.replace(`${LANDING_URL}/${locale}`)
       return
@@ -36,8 +49,15 @@ export function useRegisterFlow(onError: (msg: string) => void, onSlugTaken: () 
           whatsapp: values.whatsapp || undefined,
           city: values.city || undefined,
           state: values.state || undefined,
-          tagline: values.tagline || undefined,
           contactName: values.contactName || undefined,
+          logo: values.logo || undefined,
+          acceptedTerms,
+          products: products.map(({ name, price, description, images }) => ({
+            name,
+            price,
+            description,
+            images,
+          })),
         }),
       })
 

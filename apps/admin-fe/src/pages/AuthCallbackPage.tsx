@@ -29,17 +29,17 @@ export default function AuthCallbackPage() {
         if (!response.ok) throw new Error('Authentication code is invalid or expired.')
         const { customToken } = await response.json()
 
-        const { initializeApp, getApps } = await import('firebase/app')
-        const { getAuth, signInWithCustomToken } = await import('firebase/auth')
-        if (!getApps().length) {
-          initializeApp({
-            apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-            authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-            projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-          })
-        }
+        const [{ initializeApp, getApps, getApp }, { getAuth, signInWithCustomToken }] = await Promise.all([
+          import('firebase/app'),
+          import('firebase/auth'),
+        ])
+        const app = getApps().length ? getApp() : initializeApp({
+          apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+          authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+          projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        })
 
-        const credential = await signInWithCustomToken(getAuth(), customToken)
+        const credential = await signInWithCustomToken(getAuth(app), customToken)
         const tokenResult = await credential.user.getIdTokenResult(true)
         const role = tokenResult.claims.role as UserRole | undefined
         if (!cancelled) {

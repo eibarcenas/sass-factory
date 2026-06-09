@@ -1,6 +1,3 @@
-import { getApp, getApps, initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -20,7 +17,17 @@ function requireFirebaseConfig() {
   return { apiKey, authDomain, projectId }
 }
 
-export async function getFirebaseAuth() {
+export async function signInWithGoogle() {
+  // Load firebase/app and firebase/auth together so initializeApp(), getAuth() and
+  // signInWithPopup() share one SDK module instance — mixing this with a static
+  // import elsewhere produced a second instance with an empty app registry,
+  // surfacing as "No Firebase App '[DEFAULT]' has been created" after the popup closed.
+  const [{ getApp, getApps, initializeApp }, { getAuth, signInWithPopup, GoogleAuthProvider }] = await Promise.all([
+    import('firebase/app'),
+    import('firebase/auth'),
+  ])
+
   const app = getApps().length ? getApp() : initializeApp(requireFirebaseConfig())
-  return getAuth(app)
+  const auth = getAuth(app)
+  return signInWithPopup(auth, new GoogleAuthProvider())
 }

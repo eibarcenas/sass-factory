@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useLocale } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import { getFirebaseAuth } from '@/lib/firebase'
+import { signInWithGoogle } from '@/lib/firebase'
 
 const API_URL   = process.env.NEXT_PUBLIC_IDENTITY_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3000'
@@ -27,15 +27,17 @@ export default function GoogleSignInButton({
     setError('')
 
     try {
-      const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth')
-      const auth  = await getFirebaseAuth()
-      const cred  = await signInWithPopup(auth, new GoogleAuthProvider())
+      const cred  = await signInWithGoogle()
       const token = await cred.user.getIdToken(true)
 
-      await fetch(`${API_URL}/api/v1/auth/claims/resolve`, {
+      const claimsResponse = await fetch(`${API_URL}/api/v1/auth/claims/resolve`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
-      }).catch(() => null)
+      })
+      if (!claimsResponse.ok) {
+        const responseBody = await claimsResponse.json().catch(() => null)
+        throw new Error(responseBody?.detail ?? `No se pudo resolver tu acceso (${claimsResponse.status}).`)
+      }
 
       const exchangeResponse = await fetch(`${API_URL}/api/v1/auth/exchanges`, {
         method: 'POST',
@@ -59,7 +61,11 @@ export default function GoogleSignInButton({
         setLoading(false)
         return
       }
-      setError(err.message ?? 'Authentication failed.')
+      setError(
+        err instanceof TypeError
+          ? 'No se pudo conectar con el servicio de acceso local. Verifica que Identity API esté activo.'
+          : err.message ?? 'Authentication failed.',
+      )
       setLoading(false)
     }
   }

@@ -17,7 +17,6 @@ export function useUpdateBusiness(businessSlug?: string) {
         whatsapp: values.whatsapp || undefined,
         city:     values.city     || undefined,
         state:    values.state    || undefined,
-        tagline:  values.tagline  || undefined,
       })
     },
     onSuccess: () => {

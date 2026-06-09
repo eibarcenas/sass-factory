@@ -29,11 +29,11 @@ export default function RegisterPage() {
         catalog.mx
       </a>
 
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">Create your store</h1>
+      <div className="w-full max-w-2xl">
+        <div className="mb-6 text-left sm:text-center">
+          <h1 className="text-2xl font-bold">Crea tu tienda</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Empieza gratis · 7 semanas de prueba
+            Completa la información para enviar tu catálogo a revisión.
           </p>
         </div>
 
