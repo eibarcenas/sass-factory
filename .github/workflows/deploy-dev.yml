@@ -32,7 +32,7 @@ jobs:
         run: |
           git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
           trap 'git config --global --unset-all url."https://x-access-token:${GH_PAT}@github.com/".insteadOf || true' EXIT
-          for service in stores-api identity-api stores-api prospects-api notifications-webhook; do
+          for service in stores-api identity-api prospects-api notifications-webhook; do
             (cd "apps/${service}" && uv venv --python 3.13 && uv pip install -e ".[dev]")
           done
       - run: pnpm install --frozen-lockfile
@@ -43,7 +43,7 @@ jobs:
       - run: pnpm -F admin-fe test
       - name: Run backend tests
         run: |
-          for service in stores-api identity-api stores-api prospects-api notifications-webhook; do
+          for service in stores-api identity-api prospects-api notifications-webhook; do
             (cd "apps/${service}" && .venv/bin/pytest -q)
           done
         env:
@@ -78,7 +78,7 @@ jobs:
           DOCKER_BUILDKIT: "1"
           FIREBASE_AUTH_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
         run: |
-          for service in stores-api identity-api stores-api prospects-api notifications-webhook; do
+          for service in stores-api identity-api prospects-api notifications-webhook; do
             IMAGE="${{ env.AR_URL }}/catalog-mx-${service}:${{ github.sha }}"
             docker buildx build \
               --push \
@@ -94,7 +94,7 @@ jobs:
 
             if [ "$service" = "stores-api" ]; then
               ENV_VARS="${ENV_VARS},PUBSUB_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev"
-            elif [ "$service" = "stores-api" ] || [ "$service" = "prospects-api" ]; then
+            elif [ "$service" = "prospects-api" ]; then
               ENV_VARS="${ENV_VARS},PUBSUB_PROJECT_ID=${{ env.PROJECT }}"
             elif [ "$service" = "notifications-webhook" ]; then
               AUTH_FLAG="--no-allow-unauthenticated"
@@ -221,7 +221,7 @@ jobs:
       - name: Print URLs
         run: |
           echo "━━━ ei-catalog-dev URLs ━━━"
-          for svc in catalog-mx-stores-api-dev catalog-mx-identity-api-dev catalog-mx-stores-api-dev catalog-mx-prospects-api-dev catalog-mx-notifications-webhook-dev catalog-mx-store-dev catalog-mx-admin-dev catalog-mx-landing-dev; do
+          for svc in catalog-mx-stores-api-dev catalog-mx-identity-api-dev catalog-mx-prospects-api-dev catalog-mx-notifications-webhook-dev catalog-mx-store-dev catalog-mx-admin-dev catalog-mx-landing-dev; do
             URL=$(gcloud run services describe $svc \
               --region=${{ env.REGION }} --project=${{ env.PROJECT }} \
               --format='value(status.url)' 2>/dev/null)
