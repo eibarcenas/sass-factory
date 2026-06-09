@@ -94,6 +94,8 @@ jobs:
 
             if [ "$service" = "stores-api" ]; then
               ENV_VARS="${ENV_VARS},PUBSUB_PROJECT_ID=${{ env.PROJECT }},GCS_BUCKET=ei-catalog-images-dev"
+            elif [ "$service" = "identity-api" ]; then
+              ENV_VARS="${ENV_VARS},GCS_BUCKET=ei-catalog-images-dev"
             elif [ "$service" = "prospects-api" ]; then
               ENV_VARS="${ENV_VARS},PUBSUB_PROJECT_ID=${{ env.PROJECT }}"
             elif [ "$service" = "notifications-webhook" ]; then
