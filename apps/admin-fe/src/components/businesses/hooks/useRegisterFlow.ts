@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuthStore } from '@/store/auth'
 import { homeForRole, isLocale, routes } from '@/lib/routes'
-import type { BusinessFormValues } from './useBusinessFormState'
+import { clearOnboardingDraft, type BusinessFormValues } from './useBusinessFormState'
 import type { DraftProduct } from '@/components/catalog/ProductEditor'
 
 const API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
@@ -75,6 +75,7 @@ export function useRegisterFlow(onError: (msg: string) => void, onSlugTaken: () 
       const data = response.ok ? await response.json() : null
       const { claims } = await firebaseUser.getIdTokenResult(true)
       const role = (claims.role as string) ?? 'OWNER'
+      clearOnboardingDraft(firebaseUser.uid)
       setUser({
         uid: firebaseUser.uid,
         email: firebaseUser.email,

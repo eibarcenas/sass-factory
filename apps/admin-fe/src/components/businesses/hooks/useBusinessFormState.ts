@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { BusinessType } from '@eguru/core'
+import type { DraftProduct } from '@/components/catalog/ProductEditor'
 
 const API_URL = import.meta.env.VITE_IDENTITY_API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
@@ -28,6 +29,42 @@ export interface BusinessFormDefaults {
   city?: string
   state?: string
   slug?: string
+}
+
+export interface OnboardingDraft {
+  values: BusinessFormValues
+  draftProducts: DraftProduct[]
+  acceptedTerms: boolean
+  registrationStep: number
+  furthestStep: number
+}
+
+const ONBOARDING_DRAFT_PREFIX = 'eguru_onboarding_draft_'
+
+export function readOnboardingDraft(uid: string): OnboardingDraft | null {
+  try {
+    const raw = localStorage.getItem(ONBOARDING_DRAFT_PREFIX + uid)
+    if (!raw) return null
+    return JSON.parse(raw) as OnboardingDraft
+  } catch {
+    return null
+  }
+}
+
+export function writeOnboardingDraft(uid: string, draft: OnboardingDraft) {
+  try {
+    localStorage.setItem(ONBOARDING_DRAFT_PREFIX + uid, JSON.stringify(draft))
+  } catch {
+    // localStorage unavailable (e.g. private browsing) — draft persistence is best-effort
+  }
+}
+
+export function clearOnboardingDraft(uid: string) {
+  try {
+    localStorage.removeItem(ONBOARDING_DRAFT_PREFIX + uid)
+  } catch {
+    // ignore
+  }
 }
 
 export function useBusinessFormState(mode: BusinessFormMode, defaultValues?: BusinessFormDefaults) {

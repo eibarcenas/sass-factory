@@ -12,13 +12,16 @@ import ProductEditor, { isDraftProductComplete, type DraftProduct } from '@/comp
 import { BUSINESS_TYPES, MEXICO_STATES } from './businessFormConstants'
 import {
   useBusinessFormState,
+  readOnboardingDraft,
+  writeOnboardingDraft,
   type BusinessFormDefaults,
   type BusinessFormValues,
   type SlugStatus,
 } from './hooks/useBusinessFormState'
 import { useRegisterFlow } from './hooks/useRegisterFlow'
 import { useUpdateBusiness } from './hooks/useUpdateBusiness'
-import { useState } from 'react'
+import { useAuthStore } from '@/store/auth'
+import { useEffect, useState } from 'react'
 
 type RegisterProps = { mode: 'register' }
 type CreateProps  = { mode: 'create'; onSuccess?: (slug: string) => void }
@@ -99,22 +102,38 @@ export default function BusinessFormPanel(props: Props) {
 
   const isEdit      = mode === 'edit' || mode === 'seller'
   const isCreateMode = mode === 'register' || mode === 'create'
+  const isRegisterMode = mode === 'register'
   const readonly    = mode === 'seller' && !!(props as SellerProps).readonly
 
   const defaultValues = isEdit ? (props as EditProps | SellerProps).defaultValues : undefined
   const businessSlug  = isEdit ? ((props as EditProps | SellerProps).businessSlug ?? '') : ''
 
+  const uid = useAuthStore(state => state.user?.uid)
+  const draft = isRegisterMode && uid ? readOnboardingDraft(uid) : null
+  const draftDefaults: BusinessFormDefaults | undefined = draft
+    ? { ...draft.values, type: draft.values.type || undefined }
+    : undefined
+
   const { values, setters, slugStatus, slug, error, setError, validate, reset } =
-    useBusinessFormState(mode, defaultValues)
+    useBusinessFormState(mode, isRegisterMode ? draftDefaults ?? defaultValues : defaultValues)
 
   const { register, pending: registrationPending, redirectChecked } =
     useRegisterFlow(setError, () => setError('Ese nombre ya está en uso. Prueba con otro.'))
 
   const { save, isPending: savePending, saved } = useUpdateBusiness(businessSlug || undefined)
-  const [draftProducts, setDraftProducts] = useState<DraftProduct[]>([])
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
-  const [registrationStep, setRegistrationStep] = useState(0)
-  const [furthestStep, setFurthestStep] = useState(0)
+  const [draftProducts, setDraftProducts] = useState<DraftProduct[]>(draft?.draftProducts ?? [])
+  const [acceptedTerms, setAcceptedTerms] = useState(draft?.acceptedTerms ?? false)
+  const [registrationStep, setRegistrationStep] = useState(draft?.registrationStep ?? 0)
+  const [furthestStep, setFurthestStep] = useState(draft?.furthestStep ?? 0)
+
+  useEffect(() => {
+    if (!isRegisterMode || !uid) return
+    writeOnboardingDraft(uid, { values, draftProducts, acceptedTerms, registrationStep, furthestStep })
+  }, [
+    isRegisterMode, uid,
+    values.logo, values.type, values.name, values.contactName, values.whatsapp, values.city, values.state,
+    draftProducts, acceptedTerms, registrationStep, furthestStep,
+  ])
 
   const createStore = useCreateStore()
 
@@ -173,7 +192,6 @@ export default function BusinessFormPanel(props: Props) {
     draftProducts,
     acceptedTerms,
   )
-  const isRegisterMode = mode === 'register'
   const showBusinessIdentity = !isRegisterMode || registrationStep === 0
   const showContact = !isRegisterMode || registrationStep === 1
   const showProducts = isRegisterMode && registrationStep === 2
