@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocale } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import { signInWithGoogle } from '@/lib/firebase'
+import type { UserCredential } from 'firebase/auth'
+import { getGoogleRedirectResult, signInWithGoogle } from '@/lib/firebase'
 
 const API_URL   = process.env.NEXT_PUBLIC_IDENTITY_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3000'
@@ -22,40 +23,68 @@ export default function GoogleSignInButton({
   const locale = useLocale()
   const searchParams = useSearchParams()
 
+  async function completeSignIn(cred: UserCredential) {
+    const token = await cred.user.getIdToken(true)
+
+    const claimsResponse = await fetch(`${API_URL}/api/v1/auth/claims/resolve`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!claimsResponse.ok) {
+      const responseBody = await claimsResponse.json().catch(() => null)
+      throw new Error(responseBody?.detail ?? `No se pudo resolver tu acceso (${claimsResponse.status}).`)
+    }
+
+    const exchangeResponse = await fetch(`${API_URL}/api/v1/auth/exchanges`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${await cred.user.getIdToken(true)}` },
+    })
+    if (!exchangeResponse.ok) {
+      const responseBody = await exchangeResponse.json().catch(() => null)
+      const detail = responseBody?.detail ?? responseBody?.message
+      throw new Error(
+        `Could not create authentication exchange (${exchangeResponse.status})${detail ? `: ${detail}` : '.'}`,
+      )
+    }
+    const { code } = await exchangeResponse.json()
+    const callback = new URL(`${ADMIN_URL}/${locale}/auth/callback`)
+    callback.searchParams.set('code', code)
+    const returnTo = searchParams.get('returnTo')
+    if (returnTo?.startsWith(`/${locale}/`)) callback.searchParams.set('returnTo', returnTo)
+    window.location.replace(callback.toString())
+  }
+
+  // Recover the credential after a signInWithRedirect() round trip (mobile
+  // popup-blocked fallback). Keeps the button in a loading state while the
+  // exchange completes and the page navigates to the admin app.
+  useEffect(() => {
+    let cancelled = false
+    getGoogleRedirectResult()
+      .then((cred) => {
+        if (cancelled || !cred) return
+        setLoading(true)
+        return completeSignIn(cred).catch((err: any) => {
+          if (cancelled) return
+          setError(
+            err instanceof TypeError
+              ? 'No se pudo conectar con el servicio de acceso local. Verifica que Identity API esté activo.'
+              : err.message ?? 'Authentication failed.',
+          )
+          setLoading(false)
+        })
+      })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   async function handleClick() {
     setLoading(true)
     setError('')
 
     try {
-      const cred  = await signInWithGoogle()
-      const token = await cred.user.getIdToken(true)
-
-      const claimsResponse = await fetch(`${API_URL}/api/v1/auth/claims/resolve`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!claimsResponse.ok) {
-        const responseBody = await claimsResponse.json().catch(() => null)
-        throw new Error(responseBody?.detail ?? `No se pudo resolver tu acceso (${claimsResponse.status}).`)
-      }
-
-      const exchangeResponse = await fetch(`${API_URL}/api/v1/auth/exchanges`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${await cred.user.getIdToken(true)}` },
-      })
-      if (!exchangeResponse.ok) {
-        const responseBody = await exchangeResponse.json().catch(() => null)
-        const detail = responseBody?.detail ?? responseBody?.message
-        throw new Error(
-          `Could not create authentication exchange (${exchangeResponse.status})${detail ? `: ${detail}` : '.'}`,
-        )
-      }
-      const { code } = await exchangeResponse.json()
-      const callback = new URL(`${ADMIN_URL}/${locale}/auth/callback`)
-      callback.searchParams.set('code', code)
-      const returnTo = searchParams.get('returnTo')
-      if (returnTo?.startsWith(`/${locale}/`)) callback.searchParams.set('returnTo', returnTo)
-      window.location.replace(callback.toString())
+      const cred = await signInWithGoogle()
+      if (!cred) return // redirected away to complete sign-in
+      await completeSignIn(cred)
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
         setLoading(false)
