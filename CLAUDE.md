@@ -94,6 +94,7 @@ Rules:
 - Do not invent requirements.
 - Do not refactor unrelated code.
 - Do not change files outside the required scope.
+- Avoid hardcoded magic values (numbers, strings, limits). Define them as named constants in the relevant `*Constants.ts` file (or co-located near usage) and reuse them — never repeat the same literal across the JSX/logic.
 - Before editing, explain the root cause hypothesis.
 - Before editing, list the files you plan to touch.
 - Before editing, list the risks and affected flows.
