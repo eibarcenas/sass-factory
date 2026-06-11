@@ -392,7 +392,7 @@ export default function BusinessFormPanel(props: Props) {
           <Button
             type="submit"
             className="w-full gap-2"
-            disabled={isPending || slugStatus === 'taken' || slugStatus === 'invalid' || slugStatus === 'checking'}
+            disabled={isPending || !values.type || values.name.trim().length < 2 || slugStatus !== 'available'}
           >
             {registrationPending ? (
               <>
