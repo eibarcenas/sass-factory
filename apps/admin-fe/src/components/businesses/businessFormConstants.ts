@@ -1,5 +1,7 @@
 import { BusinessType } from '@eguru/core'
 
+export const BUSINESS_NAME_MAX_LENGTH = 20
+
 export const BUSINESS_TYPES: { key: BusinessType; label: string; emoji: string }[] = [
   { key: BusinessType.Heladeria,   label: 'Heladería',   emoji: '🍦' },
   { key: BusinessType.Barberia,    label: 'Barbería',    emoji: '💈' },

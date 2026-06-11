@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import ImageUpload from '@/components/catalog/ImageUpload'
 import ProductEditor, { isDraftProductComplete, type DraftProduct } from '@/components/catalog/ProductEditor'
-import { BUSINESS_TYPES, MEXICO_STATES } from './businessFormConstants'
+import { BUSINESS_NAME_MAX_LENGTH, BUSINESS_TYPES, MEXICO_STATES } from './businessFormConstants'
 import {
   useBusinessFormState,
   readOnboardingDraft,
@@ -376,6 +376,7 @@ export default function BusinessFormPanel(props: Props) {
                 onChange={e => setters.setName(e.target.value)}
                 placeholder="Ej. Barbería El Tigre"
                 readOnly={readonly}
+                maxLength={BUSINESS_NAME_MAX_LENGTH}
                 className={
                   mode === 'register'
                     ? slugStatus === 'taken' || slugStatus === 'invalid'
@@ -404,6 +405,9 @@ export default function BusinessFormPanel(props: Props) {
                 </div>
               )}
             </div>
+            <p className={`text-xs text-right ${values.name.length >= BUSINESS_NAME_MAX_LENGTH ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {values.name.length}/{BUSINESS_NAME_MAX_LENGTH}
+            </p>
             {mode === 'register' && slug && (slugStatus === 'available' || slugStatus === 'checking') && (
               <p className={`text-xs ${slugStatus === 'available' ? 'text-green-600' : 'text-muted-foreground'}`}>
                 Tu link: <span className="font-medium">catalog.mx/{slug}</span>
