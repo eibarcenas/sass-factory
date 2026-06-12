@@ -258,7 +258,7 @@ wheels = [
 [[package]]
 name = "factory-auth"
 version = "0.1.0"
-source = { git = "https://github.com/eibarcenas/factory-sdk.git?subdirectory=python#90f8fe12d0d3b0bf595103d4c90b2eb7a40cb36c" }
+source = { git = "https://github.com/eibarcenas/factory-sdk.git?subdirectory=python&rev=f28ceb78656faa87131c1955d7df7e3f3eff9e7f#f28ceb78656faa87131c1955d7df7e3f3eff9e7f" }
 dependencies = [
     { name = "cachetools" },
     { name = "fastapi" },
@@ -629,7 +629,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "factory-auth", git = "https://github.com/eibarcenas/factory-sdk.git?subdirectory=python" },
+    { name = "factory-auth", git = "https://github.com/eibarcenas/factory-sdk.git?subdirectory=python&rev=f28ceb78656faa87131c1955d7df7e3f3eff9e7f" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "google-cloud-firestore", specifier = ">=2.19.0" },
     { name = "google-cloud-pubsub", specifier = ">=2.25.0" },

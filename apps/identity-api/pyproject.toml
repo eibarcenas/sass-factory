@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "catalog.mx identity microservice"
 requires-python = ">=3.13"
 dependencies = [
-    "factory-auth @ git+https://github.com/eibarcenas/factory-sdk.git#subdirectory=python",
+    "factory-auth @ git+https://github.com/eibarcenas/factory-sdk.git@f28ceb78656faa87131c1955d7df7e3f3eff9e7f#subdirectory=python",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
     "pydantic>=2.10.0",
