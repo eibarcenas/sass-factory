@@ -40,6 +40,13 @@ type SellerProps   = {
 }
 type Props = RegisterProps | CreateProps | EditProps | SellerProps
 
+enum RegistrationStep {
+  Negocio = 0,
+  Contacto = 1,
+  Productos = 2,
+  Confirmar = 3,
+}
+
 const REGISTRATION_STEPS = [
   { title: 'Negocio', description: 'Identidad' },
   { title: 'Contacto', description: 'Datos' },
@@ -53,21 +60,21 @@ export function getRegistrationStepError(
   slugStatus: SlugStatus,
   products: DraftProduct[],
 ) {
-  if (step === 0) {
+  if (step === RegistrationStep.Negocio) {
     if (!values.logo) return 'Agrega el logo de tu negocio'
     if (!values.type) return 'Selecciona el tipo de negocio'
     if (values.name.trim().length < 2) return 'Escribe el nombre de tu negocio'
     if (slugStatus !== 'available') return 'Espera y verifica que el nombre esté disponible'
   }
 
-  if (step === 1) {
+  if (step === RegistrationStep.Contacto) {
     if (values.contactName.trim().length < 2) return 'Escribe tu nombre'
     if (!/^[0-9+]{7,15}$/.test(values.whatsapp.trim())) return 'Escribe un WhatsApp válido'
     if (values.city.trim().length < 2) return 'Escribe tu ciudad'
     if (!values.state) return 'Selecciona tu estado'
   }
 
-  if (step === 2 && (!products.length || !products.every(isDraftProductComplete))) {
+  if (step === RegistrationStep.Productos && (!products.length || !products.every(isDraftProductComplete))) {
     return 'Agrega al menos un producto con nombre, precio, descripción e imagen'
   }
 
@@ -123,7 +130,7 @@ export default function BusinessFormPanel(props: Props) {
   const { save, isPending: savePending, saved } = useUpdateBusiness(businessSlug || undefined)
   const [draftProducts, setDraftProducts] = useState<DraftProduct[]>(draft?.draftProducts ?? [])
   const [acceptedTerms, setAcceptedTerms] = useState(draft?.acceptedTerms ?? false)
-  const [registrationStep, setRegistrationStep] = useState(draft?.registrationStep ?? 0)
+  const [registrationStep, setRegistrationStep] = useState(draft?.registrationStep ?? RegistrationStep.Negocio)
   const [furthestStep, setFurthestStep] = useState(draft?.furthestStep ?? 0)
 
   useEffect(() => {
@@ -192,20 +199,17 @@ export default function BusinessFormPanel(props: Props) {
     draftProducts,
     acceptedTerms,
   )
-  const showBusinessIdentity = !isRegisterMode || registrationStep === 0
-  const showContact = !isRegisterMode || registrationStep === 1
-  const showProducts = isRegisterMode && registrationStep === 2
-  const showConfirmation = isRegisterMode && registrationStep === 3
+  const showBusinessIdentity = !isRegisterMode || registrationStep === RegistrationStep.Negocio
+  const showContact = !isRegisterMode || registrationStep === RegistrationStep.Contacto
+  const showProducts = isRegisterMode && registrationStep === RegistrationStep.Productos
+  const showConfirmation = isRegisterMode && registrationStep === RegistrationStep.Confirmar
+  const currentStepError = isRegisterMode
+    ? getRegistrationStepError(registrationStep, values, slugStatus, draftProducts)
+    : ''
 
   function goToNextStep() {
-    const stepError = getRegistrationStepError(
-      registrationStep,
-      values,
-      slugStatus,
-      draftProducts,
-    )
-    if (stepError) {
-      setError(stepError)
+    if (currentStepError) {
+      setError(currentStepError)
       return
     }
 
@@ -684,6 +688,7 @@ export default function BusinessFormPanel(props: Props) {
                 type="button"
                 className="w-full sm:flex-1"
                 onClick={goToNextStep}
+                disabled={!!currentStepError}
               >
                 Continuar
               </Button>
