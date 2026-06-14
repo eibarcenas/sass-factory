@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime, timezone, timedelta
 import secrets
 from pydantic import BaseModel, field_validator
@@ -24,7 +24,7 @@ def resolve_claims(
     response to pick up the new claims.
     """
     if not user.email:
-        raise HTTPException(status_code=400, detail="No email on token")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No email on token")
     if user.role == Role.SUPER_ADMIN:
         return {"resolved": False, "role": Role.SUPER_ADMIN.value}
 
@@ -37,7 +37,7 @@ def resolve_claims(
     if pending_doc.exists:
         data = pending_doc.to_dict()
         business_id = data.get("businessId")
-        role = data.get("role", "OWNER")
+        role = data.get("role", Role.OWNER.value)
         modules = data.get("modules", ["CATALOG", "APPEARANCE"])
         resolve_pending_ref = pending_ref
     else:
@@ -70,10 +70,10 @@ def resolve_claims(
             BusinessStatus.ACTIVE,
         }
         if biz.get("status") not in claimable_statuses:
-            raise HTTPException(status_code=403, detail="Account not eligible for activation")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account not eligible for activation")
 
         business_id = biz.get("slug")
-        role = "OWNER"
+        role = Role.OWNER.value
         modules = ["CATALOG", "APPEARANCE"]
         resolve_pending_ref = None
 
@@ -90,7 +90,7 @@ def resolve_claims(
             resolve_pending_ref.update({"resolvedAt": datetime.now(timezone.utc).isoformat(), "resolvedUid": user.firebase_uid})
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to set claims: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to set claims: {e}")
 
     return {"resolved": True, "role": role, "businessId": business_id}
 
