@@ -9,6 +9,7 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 from factory_auth import UserContext, Role
+from app.domain.business import BusinessStatus
 
 
 def _make_pending_owner(email: str, business_id: str):
@@ -192,7 +193,8 @@ def test_resolve_claims_fallback_self_registered_pending(roleless_client):
     # Businesses created via /business-registrations have status "pending"
     # (stores-api's BusinessStatus enum) — must still be claimable.
     db = _db_no_pending_but_has_business(
-        "owner@example.com", "heladeria-el-pinguino", status="pending"
+        "owner@example.com", "heladeria-el-pinguino",
+        status=BusinessStatus.PENDING.value,
     )
     with (
         patch("app.routers.auth.get_db", return_value=db),

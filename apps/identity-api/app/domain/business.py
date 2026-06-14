@@ -5,6 +5,10 @@ from enum import Enum
 
 class BusinessStatus(str, Enum):
     DRAFT          = "draft"
+    # Entry status for self-service registration (mirrors stores-api's
+    # BusinessStatus.PENDING). Owned by the stores-api activation flow, so it
+    # is not part of identity-api's admin-curated VALID_TRANSITIONS pipeline.
+    PENDING        = "pending"
     PENDING_REVIEW = "pending_review"
     REVIEW         = "review"
     DEMO           = "demo"
@@ -15,6 +19,28 @@ class BusinessStatus(str, Enum):
     EXPIRED        = "expired"
     REJECTED       = "rejected"
     ARCHIVED       = "archived"
+
+
+class Module(str, Enum):
+    """Owner-facing feature modules granted via Firebase custom claims."""
+    CATALOG    = "CATALOG"
+    APPEARANCE = "APPEARANCE"
+
+
+# Default modules provisioned for a new business owner.
+DEFAULT_OWNER_MODULES: list[str] = [Module.CATALOG.value, Module.APPEARANCE.value]
+
+# Statuses for which /auth/claims/resolve may grant OWNER claims. Excludes
+# terminal/punitive states (SUSPENDED, REJECTED, EXPIRED, ARCHIVED) so owners
+# cannot self-reactivate. Membership matches the raw Firestore string because
+# BusinessStatus is a str-enum.
+CLAIMABLE_STATUSES: frozenset[BusinessStatus] = frozenset({
+    BusinessStatus.PENDING,
+    BusinessStatus.DRAFT,
+    BusinessStatus.PENDING_REVIEW,
+    BusinessStatus.REVIEW,
+    BusinessStatus.ACTIVE,
+})
 
 
 class BusinessType(str, Enum):
