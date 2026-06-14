@@ -29,6 +29,13 @@ pnpm -F landing-fe typecheck         # landing
 cd apps/catalog-api && uv run pytest -q
 ```
 
+**Before finishing any PR, run the relevant live verification locally** — do
+not declare a fix done on unit tests alone. Bring the real services up against
+Firebase emulators in Docker (portable, no host installs) and exercise the
+actual flow end-to-end. For identity-api auth flows: `make test-live`
+(see `apps/identity-api/test/live/`). Add a live test when a PR fixes
+behaviour that unit tests with mocks can't truly prove.
+
 ## @eguru Packages
 All new UI components MUST go in `packages/ui/src/` and be exported from `packages/ui/src/index.ts`. Never create UI components directly inside `apps/`.
 

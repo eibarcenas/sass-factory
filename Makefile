@@ -1,5 +1,5 @@
 .PHONY: help install up down status ports dev dev-admin dev-store dev-api \
-        test test-unit test-api test-e2e typecheck lint deploy email
+        test test-unit test-api test-live test-e2e typecheck lint deploy email
 
 SHELL := /bin/bash
 
@@ -157,6 +157,9 @@ test-unit: ## Run Vitest unit tests
 
 test-api: ## Run stores-api pytest suite
 	cd apps/stores-api && DEV_USER_EMAIL=dev@test.local ENVIRONMENT=local uv run pytest -q
+
+test-live: ## Run identity-api live auth verification (Firebase emulators in Docker)
+	bash apps/identity-api/test/live/run.sh
 
 test-e2e: ## Run Playwright E2E tests
 	pnpm exec playwright test
