@@ -186,3 +186,22 @@ def test_resolve_claims_fallback_blocked_suspended(roleless_client):
     with patch("app.routers.auth.get_db", return_value=db):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
     assert resp.status_code == 403
+
+
+def test_resolve_claims_fallback_self_registered_pending(roleless_client):
+    # Businesses created via /business-registrations have status "pending"
+    # (stores-api's BusinessStatus enum) — must still be claimable.
+    db = _db_no_pending_but_has_business(
+        "owner@example.com", "heladeria-el-pinguino", status="pending"
+    )
+    with (
+        patch("app.routers.auth.get_db", return_value=db),
+        patch("app.routers.auth.get_firebase_app"),
+        patch("firebase_admin.auth.set_custom_user_claims"),
+    ):
+        resp = roleless_client.post("/api/v1/auth/claims/resolve")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["resolved"] is True
+    assert data["role"] == "OWNER"
+    assert data["businessId"] == "heladeria-el-pinguino"

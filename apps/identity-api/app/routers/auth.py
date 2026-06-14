@@ -60,7 +60,10 @@ def resolve_claims(
 
         # Only grant claims for active-ish statuses; suspended/rejected/archived
         # owners must not be able to reactivate themselves via this endpoint.
+        # "pending" is the status set by self-registration (stores-api's
+        # BusinessStatus enum) and is not part of identity-api's own enum.
         claimable_statuses = {
+            "pending",
             BusinessStatus.DRAFT,
             BusinessStatus.PENDING_REVIEW,
             BusinessStatus.REVIEW,
