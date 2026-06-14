@@ -1,10 +1,16 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime, timezone, timedelta
 import secrets
 from pydantic import BaseModel, field_validator
 from app.db import get_db, get_firebase_app
-from app.domain.business import BusinessStatus, BusinessType, slugify
+from app.domain.business import (
+    BusinessStatus,
+    BusinessType,
+    CLAIMABLE_STATUSES,
+    DEFAULT_OWNER_MODULES,
+    slugify,
+)
 from factory_auth import get_current_user, Role, UserContext
 
 router = APIRouter(tags=["auth"])
@@ -24,7 +30,7 @@ def resolve_claims(
     response to pick up the new claims.
     """
     if not user.email:
-        raise HTTPException(status_code=400, detail="No email on token")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No email on token")
     if user.role == Role.SUPER_ADMIN:
         return {"resolved": False, "role": Role.SUPER_ADMIN.value}
 
@@ -37,8 +43,8 @@ def resolve_claims(
     if pending_doc.exists:
         data = pending_doc.to_dict()
         business_id = data.get("businessId")
-        role = data.get("role", "OWNER")
-        modules = data.get("modules", ["CATALOG", "APPEARANCE"])
+        role = data.get("role", Role.OWNER.value)
+        modules = data.get("modules", DEFAULT_OWNER_MODULES)
         resolve_pending_ref = pending_ref
     else:
         # Fallback: businesses created via auto-provision (ownerEmail match)
@@ -58,20 +64,14 @@ def resolve_claims(
         if biz.get("ownerUid") != user.firebase_uid:
             return {"resolved": False, "role": user.role}
 
-        # Only grant claims for active-ish statuses; suspended/rejected/archived
-        # owners must not be able to reactivate themselves via this endpoint.
-        claimable_statuses = {
-            BusinessStatus.DRAFT,
-            BusinessStatus.PENDING_REVIEW,
-            BusinessStatus.REVIEW,
-            BusinessStatus.ACTIVE,
-        }
-        if biz.get("status") not in claimable_statuses:
-            raise HTTPException(status_code=403, detail="Account not eligible for activation")
+        # Only grant claims for non-terminal statuses (see CLAIMABLE_STATUSES);
+        # suspended/rejected/archived owners must not self-reactivate here.
+        if biz.get("status") not in CLAIMABLE_STATUSES:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account not eligible for activation")
 
         business_id = biz.get("slug")
-        role = "OWNER"
-        modules = ["CATALOG", "APPEARANCE"]
+        role = Role.OWNER.value
+        modules = DEFAULT_OWNER_MODULES
         resolve_pending_ref = None
 
     try:
@@ -87,7 +87,7 @@ def resolve_claims(
             resolve_pending_ref.update({"resolvedAt": datetime.now(timezone.utc).isoformat(), "resolvedUid": user.firebase_uid})
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to set claims: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to set claims: {e}")
 
     return {"resolved": True, "role": role, "businessId": business_id}
 
@@ -192,24 +192,24 @@ def create_business_registration(
     lands directly in the seller workspace without waiting for manual activation.
     """
     if not user.email:
-        raise HTTPException(status_code=400, detail="No email on token")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No email on token")
     if user.role:
-        raise HTTPException(status_code=409, detail="Account already active")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account already active")
 
     slug = slugify(body.businessName)
     if not slug:
-        raise HTTPException(status_code=400, detail="Could not derive a valid slug from that name")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Could not derive a valid slug from that name")
 
     db = get_db()
     biz_ref = db.collection("businesses").document(slug)
     if biz_ref.get().exists:
-        raise HTTPException(status_code=409, detail="Business name already taken")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Business name already taken")
 
     now = datetime.now(timezone.utc).isoformat()
     business = {
         "name": body.businessName,
         "slug": slug,
-        "status": "pending",
+        "status": BusinessStatus.PENDING.value,
         "ownerEmail": user.email,
         "ownerUid": user.firebase_uid,
         "type": body.type.value,
@@ -248,15 +248,15 @@ def create_business_registration(
         from firebase_admin import auth as fa
 
         fa.set_custom_user_claims(user.firebase_uid, {
-            "role": "OWNER",
+            "role": Role.OWNER.value,
             "business_id": slug,
-            "modules": ["CATALOG", "APPEARANCE"],
+            "modules": DEFAULT_OWNER_MODULES,
         }, app=get_firebase_app())
     except Exception as e:
         for product_doc in biz_ref.collection("items").stream():
             product_doc.reference.delete()
         biz_ref.delete()
-        raise HTTPException(status_code=500, detail=f"Failed to set claims: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to set claims: {e}")
 
     return {"provisioned": True, "slug": slug, "businessName": body.businessName}
 

@@ -1,18 +1,33 @@
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
 from factory_auth import Role, UserContext, get_current_user
+from fastapi import status as http_status
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from app.domain.business import BusinessStatus, BusinessType, DEFAULT_OWNER_MODULES
 from app.routers.auth import BusinessRegistrationRequest
 from main import app
+
+
+@pytest.fixture(autouse=True)
+def _local_auth_env():
+    """AuthMiddleware runs before the route and 401s without a Bearer token.
+    DEV_USER_EMAIL + ENVIRONMENT=local makes it pass the request through so
+    the get_current_user dependency override supplies the actual test user."""
+    with patch.dict(
+        os.environ,
+        {"DEV_USER_EMAIL": "dev@example.com", "ENVIRONMENT": "local"},
+    ):
+        yield
 
 
 def valid_registration():
     return {
         "businessName": "Cocina Norte",
-        "type": "restaurante",
+        "type": BusinessType.RESTAURANTE.value,
         "whatsapp": "+525512345678",
         "city": "Monterrey",
         "state": "Nuevo León",
@@ -95,11 +110,12 @@ def test_registration_succeeds_for_unassigned_user():
         business_id=None,
         modules=[],
     ))
+    db = _no_existing_business()
     try:
         with (
-            patch("app.routers.auth.get_db", return_value=_no_existing_business()),
+            patch("app.routers.auth.get_db", return_value=db),
             patch("app.routers.auth.get_firebase_app"),
-            patch("firebase_admin.auth.set_custom_user_claims"),
+            patch("firebase_admin.auth.set_custom_user_claims") as set_claims,
         ):
             response = TestClient(app).post(
                 "/api/v1/business-registrations", json=valid_registration()
@@ -107,8 +123,18 @@ def test_registration_succeeds_for_unassigned_user():
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
-    assert response.status_code == 200
+    assert response.status_code == http_status.HTTP_200_OK
     assert response.json()["provisioned"] is True
+
+    # The created business must carry the self-registration status the
+    # claims/resolve fallback later treats as claimable (the bug being fixed).
+    written_business = db.batch.return_value.set.call_args_list[0].args[1]
+    assert written_business["status"] == BusinessStatus.PENDING.value
+
+    # OWNER claims must be provisioned with the default modules.
+    granted_claims = set_claims.call_args.args[1]
+    assert granted_claims["role"] == Role.OWNER.value
+    assert granted_claims["modules"] == DEFAULT_OWNER_MODULES
 
 
 def test_registration_rejects_already_active_account():
@@ -117,7 +143,7 @@ def test_registration_rejects_already_active_account():
         email="owner@example.com",
         role=Role.OWNER,
         business_id="heladeria-el-pinguino",
-        modules=["CATALOG", "APPEARANCE"],
+        modules=DEFAULT_OWNER_MODULES,
     ))
     try:
         with patch("app.routers.auth.get_db", return_value=_no_existing_business()):
@@ -127,4 +153,4 @@ def test_registration_rejects_already_active_account():
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
-    assert response.status_code == 409
+    assert response.status_code == http_status.HTTP_409_CONFLICT

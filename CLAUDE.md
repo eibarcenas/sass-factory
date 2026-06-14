@@ -29,6 +29,13 @@ pnpm -F landing-fe typecheck         # landing
 cd apps/catalog-api && uv run pytest -q
 ```
 
+**Before finishing any PR, run the relevant live verification locally** — do
+not declare a fix done on unit tests alone. Bring the real services up against
+Firebase emulators in Docker (portable, no host installs) and exercise the
+actual flow end-to-end. For identity-api auth flows: `make test-live`
+(see `apps/identity-api/test/live/`). Add a live test when a PR fixes
+behaviour that unit tests with mocks can't truly prove.
+
 ## @eguru Packages
 All new UI components MUST go in `packages/ui/src/` and be exported from `packages/ui/src/index.ts`. Never create UI components directly inside `apps/`.
 
@@ -95,6 +102,7 @@ Rules:
 - Do not refactor unrelated code.
 - Do not change files outside the required scope.
 - Avoid hardcoded magic values (numbers, strings, limits). Define them as named constants in the relevant `*Constants.ts` file (or co-located near usage) and reuse them — never repeat the same literal across the JSX/logic.
+- In PRs, prefer existing enum members over hardcoded string/number literals for domain values (status, role, type, etc.). If no matching enum member exists across services, flag the cross-service enum gap instead of adding a raw literal.
 - Before editing, explain the root cause hypothesis.
 - Before editing, list the files you plan to touch.
 - Before editing, list the risks and affected flows.
