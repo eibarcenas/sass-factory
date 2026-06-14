@@ -95,7 +95,7 @@ Rules:
 - Do not refactor unrelated code.
 - Do not change files outside the required scope.
 - Avoid hardcoded magic values (numbers, strings, limits). Define them as named constants in the relevant `*Constants.ts` file (or co-located near usage) and reuse them — never repeat the same literal across the JSX/logic.
-- In MRs/PRs, prefer existing enum members over hardcoded string/number literals for domain values (status, role, type, etc.). If no matching enum member exists across services, flag the cross-service enum gap instead of adding a raw literal.
+- In PRs, prefer existing enum members over hardcoded string/number literals for domain values (status, role, type, etc.). If no matching enum member exists across services, flag the cross-service enum gap instead of adding a raw literal.
 - Before editing, explain the root cause hypothesis.
 - Before editing, list the files you plan to touch.
 - Before editing, list the risks and affected flows.
