@@ -7,9 +7,10 @@ when the record is absent.
 from unittest.mock import MagicMock, patch
 import os
 import pytest
+from fastapi import status as http_status
 from fastapi.testclient import TestClient
 from factory_auth import UserContext, Role
-from app.domain.business import BusinessStatus
+from app.domain.business import BusinessStatus, DEFAULT_OWNER_MODULES
 
 
 def _make_pending_owner(email: str, business_id: str):
@@ -18,8 +19,8 @@ def _make_pending_owner(email: str, business_id: str):
     doc.to_dict.return_value = {
         "email": email,
         "businessId": business_id,
-        "role": "OWNER",
-        "modules": ["CATALOG", "APPEARANCE"],
+        "role": Role.OWNER.value,
+        "modules": DEFAULT_OWNER_MODULES,
     }
     return doc
 
@@ -80,7 +81,7 @@ def _db_no_pending_but_has_business(
     email: str,
     slug: str,
     uid: str = "new-owner-uid",
-    status: str = "review",
+    status: str = BusinessStatus.REVIEW.value,
 ):
     db = MagicMock()
     pending_ref = MagicMock()
@@ -114,10 +115,10 @@ def test_resolve_claims_sets_claims_when_pending(roleless_client):
         patch("firebase_admin.auth.set_custom_user_claims"),
     ):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
-    assert resp.status_code == 200
+    assert resp.status_code == http_status.HTTP_200_OK
     data = resp.json()
     assert data["resolved"] is True
-    assert data["role"] == "OWNER"
+    assert data["role"] == Role.OWNER.value
     assert data["businessId"] == "heladeria-el-pinguino"
 
 
@@ -139,8 +140,8 @@ def test_resolve_claims_super_admin_skips_firestore():
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
-    assert response.status_code == 200
-    assert response.json() == {"resolved": False, "role": "SUPER_ADMIN"}
+    assert response.status_code == http_status.HTTP_200_OK
+    assert response.json() == {"resolved": False, "role": Role.SUPER_ADMIN.value}
     get_db.assert_not_called()
 
 
@@ -148,7 +149,7 @@ def test_resolve_claims_noop_when_no_pending(roleless_client):
     db = _db_no_pending()
     with patch("app.routers.auth.get_db", return_value=db):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
-    assert resp.status_code == 200
+    assert resp.status_code == http_status.HTTP_200_OK
     assert resp.json()["resolved"] is False
 
 
@@ -162,10 +163,10 @@ def test_resolve_claims_fallback_to_businesses(roleless_client):
         patch("firebase_admin.auth.set_custom_user_claims"),
     ):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
-    assert resp.status_code == 200
+    assert resp.status_code == http_status.HTTP_200_OK
     data = resp.json()
     assert data["resolved"] is True
-    assert data["role"] == "OWNER"
+    assert data["role"] == Role.OWNER.value
     assert data["businessId"] == "heladeria-el-pinguino"
 
 
@@ -176,17 +177,18 @@ def test_resolve_claims_fallback_blocked_uid_mismatch(roleless_client):
     )
     with patch("app.routers.auth.get_db", return_value=db):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
-    assert resp.status_code == 200
+    assert resp.status_code == http_status.HTTP_200_OK
     assert resp.json()["resolved"] is False
 
 
 def test_resolve_claims_fallback_blocked_suspended(roleless_client):
     db = _db_no_pending_but_has_business(
-        "owner@example.com", "heladeria-el-pinguino", status="suspended"
+        "owner@example.com", "heladeria-el-pinguino",
+        status=BusinessStatus.SUSPENDED.value,
     )
     with patch("app.routers.auth.get_db", return_value=db):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
-    assert resp.status_code == 403
+    assert resp.status_code == http_status.HTTP_403_FORBIDDEN
 
 
 def test_resolve_claims_fallback_self_registered_pending(roleless_client):
@@ -202,8 +204,8 @@ def test_resolve_claims_fallback_self_registered_pending(roleless_client):
         patch("firebase_admin.auth.set_custom_user_claims"),
     ):
         resp = roleless_client.post("/api/v1/auth/claims/resolve")
-    assert resp.status_code == 200
+    assert resp.status_code == http_status.HTTP_200_OK
     data = resp.json()
     assert data["resolved"] is True
-    assert data["role"] == "OWNER"
+    assert data["role"] == Role.OWNER.value
     assert data["businessId"] == "heladeria-el-pinguino"
