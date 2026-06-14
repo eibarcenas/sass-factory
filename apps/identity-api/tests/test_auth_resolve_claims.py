@@ -135,7 +135,13 @@ def test_resolve_claims_super_admin_skips_firestore():
     )
     app.dependency_overrides[get_current_user] = lambda: super_admin
     try:
-        with patch("app.routers.auth.get_db") as get_db:
+        # DEV_USER_EMAIL + ENVIRONMENT=local lets AuthMiddleware pass the
+        # request through to the get_current_user override (otherwise the
+        # tokenless request is rejected with 401 before reaching the route).
+        with (
+            patch.dict(os.environ, {"DEV_USER_EMAIL": "admin@example.com", "ENVIRONMENT": "local"}),
+            patch("app.routers.auth.get_db") as get_db,
+        ):
             response = TestClient(app).post("/api/v1/auth/claims/resolve")
     finally:
         app.dependency_overrides.pop(get_current_user, None)
