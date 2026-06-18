@@ -2,8 +2,20 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from app.db import get_db
 from app.domain.business import BusinessStatus
+from app.application.errors import ApplicationError
+from app.application.use_cases import legal as legal_use_cases
+from app.presentation.http.errors import raise_http
 
 router = APIRouter(tags=["stores"])
+
+
+@router.get("/stores/{slug}/legal/{doc_type}")
+def get_public_legal_doc(slug: str, doc_type: str):
+    """Public read of a published legal document (Términos / Aviso de Privacidad)."""
+    try:
+        return legal_use_cases.get_public_legal_doc(slug, doc_type)
+    except ApplicationError as error:
+        raise_http(error)
 
 @router.get("/stores/{slug}")
 def get_store(slug: str, review: bool = False):

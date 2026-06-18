@@ -17,6 +17,23 @@ export enum BusinessType {
   Otro        = 'otro',
 }
 
+/** Legal document kinds a seller can publish on their storefront. */
+export enum LegalDocType {
+  Terms   = 'terms',
+  Privacy = 'privacy',
+}
+
+/** A single legal document. `content` is sanitized HTML produced by the rich-text editor. */
+export interface LegalDocument {
+  content: string
+  updatedAt: string | null
+  /** Set when the content was last produced by AI generation; null/undefined if hand-written. */
+  generatedAt?: string | null
+}
+
+/** Per-business legal documents, keyed by {@link LegalDocType}. */
+export type LegalDocs = Partial<Record<LegalDocType, LegalDocument>>
+
 export interface BusinessTheme {
   primary: string
   secondary: string
@@ -38,6 +55,7 @@ export interface Business {
   contactName?: string
   logo?: string
   tagline?: string
+  legalDocs?: LegalDocs
   theme: BusinessTheme
   status: BusinessStatus
   plan: 'free' | 'pro' | 'growth'

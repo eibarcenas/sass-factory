@@ -4,23 +4,15 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from app.routers import health, businesses, storefront, images, requests, stores
+from app.limiter import limiter
+from app.routers import health, businesses, storefront, images, requests, stores, legal
 from factory_auth import AuthMiddleware
-
-def _client_ip(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return get_remote_address(request)
-
-limiter = Limiter(key_func=_client_ip)
 
 app = FastAPI(title="catalog.mx Stores API", version="0.1.0", docs_url="/docs")
 
@@ -51,3 +43,4 @@ app.include_router(storefront.router, prefix="/api/v1")
 app.include_router(requests.router, prefix="/api/v1")
 app.include_router(images.router, prefix="/api/v1")
 app.include_router(stores.router, prefix="/api/v1")
+app.include_router(legal.router, prefix="/api/v1")
