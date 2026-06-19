@@ -1,4 +1,4 @@
-"""Seed heladeria-pinguino store business into Firestore (reads FIRESTORE_PROJECT_ID from .env)."""
+"""Seed heladeria-el-pinguino store business into Firestore (reads FIRESTORE_PROJECT_ID from .env)."""
 import os, sys
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.path.dirname(__file__), "service-account.json")
 
@@ -19,16 +19,28 @@ cred = credentials.Certificate(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
 firebase_admin.initialize_app(cred, {"projectId": project_id})
 db = firestore.client()
 
-SLUG = "heladeria-pinguino"
+SLUG = "heladeria-el-pinguino"
 
 business = {
-    "name": "Heladeria Pinguino",
+    "name": "Heladería El Pingüino",
     "tagline": "Los mejores helados artesanales de la ciudad",
     "slug": SLUG,
-    "status": "pending",
+    "status": "active",
     "type": "heladeria",
     "whatsapp": "5211234567890",
-    "theme": {"color": "#25D366"},
+    "city": "Monterrey",
+    "state": "Nuevo León",
+    "plan": "free",
+    "ownerEmail": "admin@catalog.mx",
+    "theme": {
+        "primary": "#25D366",
+        "secondary": "#0EA5E9",
+        "accent": "#FDE047",
+        "background": "#F8FAFC",
+        "font": "Inter",
+        "emoji": "🍦",
+        "gradient": ["#25D366", "#0EA5E9"],
+    },
     "whatsappClicks": 0,
     "createdAt": now,
     "updatedAt": now,
@@ -61,4 +73,4 @@ for item in items:
     })
     print(f"  + {item['name']} (${item['price']})")
 
-print("\nDone. Visit: https://catalog-mx-store-dev-q3peeste7q-uc.a.run.app/store/heladeria-pinguino")
+print(f"\nDone. Visit: https://catalog-mx-store-dev-q3peeste7q-uc.a.run.app/{SLUG}")
