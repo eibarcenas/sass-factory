@@ -11,6 +11,7 @@ import { Minus, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
+import { LEGAL_DOC_ORDER, LEGAL_DOC_TITLES } from '@/lib/legal'
 
 type CartLine = {
   productId: string
@@ -81,7 +82,11 @@ function ProductCard({
   )
 }
 
-function ViralFooter() {
+function ViralFooter({ slug, legalDocs }: { slug: string; legalDocs?: StoreData['legalDocs'] }) {
+  const legalLinks = LEGAL_DOC_ORDER
+    .filter(doc => (legalDocs?.[doc]?.content ?? '').trim())
+    .map(doc => ({ doc, label: LEGAL_DOC_TITLES[doc] }))
+
   return (
     <footer className="mt-12 py-6 text-center">
       <Separator className="mb-6" />
@@ -93,6 +98,18 @@ function ViralFooter() {
       >
         🚀 Powered by <span className="font-semibold">catalog.mx</span> — Free for your business
       </a>
+      {legalLinks.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          {legalLinks.map((link, i) => (
+            <span key={link.doc} className="inline-flex items-center gap-2">
+              {i > 0 && <span aria-hidden="true">·</span>}
+              <a href={`/${slug}/legal/${link.doc}`} className="hover:text-foreground transition-colors">
+                {link.label}
+              </a>
+            </span>
+          ))}
+        </div>
+      )}
     </footer>
   )
 }
@@ -420,7 +437,7 @@ export default function StoreView({ data, isReview = false }: { data: StoreData;
           </div>
         )}
 
-        <ViralFooter />
+        <ViralFooter slug={data.slug} legalDocs={data.legalDocs} />
       </main>
 
       {showCart && (

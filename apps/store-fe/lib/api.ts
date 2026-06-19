@@ -7,6 +7,26 @@ const API_URL = process.env.STORES_API_URL ?? process.env.API_URL ?? process.env
 
 export type StoreData = Business & { items: Item[] }
 
+export type LegalDocData = {
+  slug: string
+  docType: string
+  businessName: string
+  content: string
+  updatedAt: string | null
+}
+
+export async function getLegalDoc(slug: string, docType: string): Promise<LegalDocData | null> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/stores/${slug}/legal/${docType}`, {
+      next: { revalidate: 60 },
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
 export async function getRequest(hash: string): Promise<CatalogRequest | null> {
   try {
     const res = await fetch(`${API_URL}/api/v1/requests/${hash}`, {

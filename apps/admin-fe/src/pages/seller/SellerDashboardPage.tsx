@@ -18,12 +18,13 @@ import { BusinessStatus, BusinessType } from '@eguru/core'
 // BusinessType imported for bizData queryFn type annotation
 import SettingsPage from '../settings/SettingsPage'
 import SellerRequestsPage from '../../components/seller/SellerRequestsPage'
+import LegalSection from '../../components/legal/LegalSection'
 import { isLocale, routes } from '@/lib/routes'
 import { useSellerItems } from '../../hooks/useItems'
 
 const STORE_URL = import.meta.env.VITE_STORE_URL ?? 'http://localhost:3010'
 
-type Page = 'products' | 'profile' | 'requests'
+type Page = 'products' | 'profile' | 'requests' | 'legal'
 
 // ── Onboarding stepper (shown while status === 'pending', i.e. awaiting activation) ──
 type OnboardingBizData = { logo?: string; whatsapp?: string; city?: string; status: BusinessStatus }
@@ -105,6 +106,7 @@ function OnboardingStepper({ bizData, businessId, onNavigate }: {
 const SELLER_NAV: NavItem<Page>[] = [
   { key: 'products', icon: '🛍️', label: 'Products' },
   { key: 'requests', icon: '📋', label: 'Requests' },
+  { key: 'legal', icon: '📄', label: 'Legal' },
   { key: 'profile', icon: '🎨', label: 'Profile' },
 ]
 
@@ -197,11 +199,16 @@ export default function SellerDashboardPage({ reviewSlug }: SellerDashboardProps
   const isReview = !!reviewSlug
   const isImpersonating = !!impersonating && !isReview
   const businessId = impersonating?.businessId ?? reviewSlug ?? user?.businessId ?? 'heladeria-el-pinguino'
-  const page: Page = section === 'requests' || section === 'profile' ? section : 'products'
+  const page: Page = section === 'requests' || section === 'profile' || section === 'legal' ? section : 'products'
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   function navigate_to(p: Page) {
-    navigate(p === 'products' ? routes.sellerProducts(locale) : p === 'requests' ? routes.sellerRequests(locale) : routes.sellerProfile(locale))
+    const path =
+      p === 'products' ? routes.sellerProducts(locale)
+      : p === 'requests' ? routes.sellerRequests(locale)
+      : p === 'legal' ? routes.sellerLegal(locale)
+      : routes.sellerProfile(locale)
+    navigate(path)
     setMobileSidebarOpen(false)
   }
 
@@ -325,6 +332,13 @@ export default function SellerDashboardPage({ reviewSlug }: SellerDashboardProps
             </div>
             <SellerRequestsPage />
           </div>
+        )}
+        {page === 'legal' && (
+          <LegalSection
+            businessId={businessId}
+            businessOverride={isImpersonating ? businessId : undefined}
+            readonly={isReview}
+          />
         )}
         {page === 'profile' && !isReview && <SettingsPage onSignOut={handleSignOut} />}
         </div>

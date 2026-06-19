@@ -48,7 +48,7 @@ export default function RichTextEditor({ value, onChange, onAiClick, disabled, p
     editable: !disabled,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none min-h-[260px] px-3.5 py-3 focus:outline-none',
+        class: 'legal-content min-h-[260px] px-3.5 py-3 focus:outline-none',
       },
     },
     onUpdate: ({ editor }) => onChange(editor.getHTML()),

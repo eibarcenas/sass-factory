@@ -18,6 +18,7 @@ export const routes = {
   sellerProducts: (locale: Locale) => `/${locale}/seller/products`,
   sellerRequests: (locale: Locale) => `/${locale}/seller/requests`,
   sellerProfile: (locale: Locale) => `/${locale}/seller/profile`,
+  sellerLegal: (locale: Locale) => `/${locale}/seller/legal`,
   platformDashboard: (locale: Locale) => `/${locale}/platform/dashboard`,
   platformBusinesses: (locale: Locale) => `/${locale}/platform/businesses`,
   platformBusinessNew: (locale: Locale) => `/${locale}/platform/businesses/new`,
