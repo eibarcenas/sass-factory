@@ -1,4 +1,5 @@
 """Seed heladeria-el-pinguino store business into Firestore (reads FIRESTORE_PROJECT_ID from .env)."""
+import logging
 import os, sys
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.path.dirname(__file__), "service-account.json")
 
@@ -9,9 +10,13 @@ from datetime import datetime, timezone
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
+
 project_id = os.getenv("FIRESTORE_PROJECT_ID")
 if not project_id:
-    sys.exit("Error: FIRESTORE_PROJECT_ID is not set. Check your .env file.")
+    logger.error("FIRESTORE_PROJECT_ID is not set. Check your .env file.")
+    sys.exit(1)
 
 now = datetime.now(timezone.utc).isoformat()
 
@@ -59,7 +64,7 @@ items = [
 
 biz_ref = db.collection("businesses").document(SLUG)
 biz_ref.set(business)
-print(f"Created business: {SLUG}")
+logger.info("Created business: %s", SLUG)
 
 for item in items:
     doc_ref = biz_ref.collection("items").document()
@@ -71,6 +76,6 @@ for item in items:
         "createdAt": now,
         "updatedAt": now,
     })
-    print(f"  + {item['name']} (${item['price']})")
+    logger.info("  + %s ($%s)", item["name"], item["price"])
 
-print(f"\nDone. Visit: https://catalog-mx-store-dev-q3peeste7q-uc.a.run.app/{SLUG}")
+logger.info("Done. Visit: https://catalog-mx-store-dev-q3peeste7q-uc.a.run.app/%s", SLUG)
