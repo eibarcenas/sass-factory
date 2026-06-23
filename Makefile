@@ -1,5 +1,6 @@
 .PHONY: help install up down status ports dev dev-admin dev-store dev-api \
-        test test-unit test-api test-live test-e2e typecheck lint deploy email
+        test test-unit test-api test-live test-e2e typecheck lint deploy email \
+        verify verify-typecheck verify-api
 
 SHELL := /bin/bash
 
@@ -160,6 +161,25 @@ test-api: ## Run stores-api pytest suite
 
 test-live: ## Run identity-api live auth verification (Firebase emulators in Docker)
 	bash apps/identity-api/test/live/run.sh
+
+# ── Dockerized verification (portable — no host installs; only Docker required) ──
+DOCKER_NODE ?= node:20
+DOCKER_UV   ?= ghcr.io/astral-sh/uv:python3.13-bookworm
+
+verify: verify-typecheck verify-api ## Verify everything in Docker (typecheck + pytest)
+
+verify-typecheck: ## Typecheck JS/TS in a Node container (updates pnpm-lock.yaml)
+	docker run --rm -v "$(CURDIR)":/app -w /app $(DOCKER_NODE) bash -lc \
+	  "corepack enable && pnpm install && \
+	   pnpm -F @eguru/core typecheck && pnpm -F admin-fe typecheck && \
+	   pnpm -F store-fe typecheck && pnpm -F landing-fe typecheck"
+
+verify-api: ## Run stores-api pytest in a uv container (needs GH_TOKEN for private dep)
+	docker run --rm -e GH_TOKEN -v "$(CURDIR)/apps/stores-api":/app -w /app $(DOCKER_UV) bash -lc \
+	  'apt-get update >/dev/null && apt-get install -y --no-install-recommends git >/dev/null && \
+	   git config --global url."https://x-access-token:$$GH_TOKEN@github.com/".insteadOf "https://github.com/" && \
+	   uv sync --extra dev && \
+	   DEV_USER_EMAIL=dev@test.local ENVIRONMENT=local uv run pytest -q'
 
 test-e2e: ## Run Playwright E2E tests
 	pnpm exec playwright test
