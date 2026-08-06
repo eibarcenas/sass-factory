@@ -1,5 +1,5 @@
 .PHONY: help install up down status ports dev dev-admin dev-store dev-api \
-        test test-unit test-api test-live test-e2e typecheck lint deploy email
+        test test-unit test-api test-live test-e2e typecheck lint deploy email graph
 
 SHELL := /bin/bash
 
@@ -17,6 +17,9 @@ LOCAL_API_SERVICE_ACCOUNT   ?= catalog-mx-api@$(LOCAL_GCP_PROJECT).iam.gservicea
 
 SERVICES := admin-fe store-fe landing-fe stores-api identity-api prospects-api notifications-webhook
 API_BASE ?= http://localhost:$(PORT_stores-api)
+
+PORT_graph-ui := 9749
+GRAPH_UI_BIN  := $(HOME)/.local/bin/codebase-memory-mcp-ui-offline
 
 help: ## Show available targets
 	@echo "Run from repo root: ~/Desktop/erickbarcenas/sass-factory/"
@@ -215,5 +218,80 @@ email: ## Manage SMTP email config. action=setup|check
 	  echo ""; \
 	else \
 	  echo "❌ Unknown action=$(action). Use action=setup or action=check"; \
+	  exit 1; \
+	fi
+
+graph: ## Manage code graph tools. action=index|ui-up|ui-down|verify
+	@[ -n "$(action)" ] || (echo "❌ action is required. Usage: make graph action=index|ui-up|ui-down|verify"; exit 1)
+	@if [ "$(action)" = "index" ]; then \
+	  command -v codebase-memory-mcp >/dev/null || { echo "❌ codebase-memory-mcp missing — see docs/runbooks/code-graph-tools.md"; exit 1; }; \
+	  command -v graphify >/dev/null || { echo "❌ graphify missing — see docs/runbooks/code-graph-tools.md"; exit 1; }; \
+	  echo "━━━ codebase-memory-mcp ━━━"; \
+	  codebase-memory-mcp cli --progress index_repository --repo-path "$(CURDIR)" >/dev/null; \
+	  echo "━━━ graphify (code-only, no LLM, no API key) ━━━"; \
+	  graphify extract "$(CURDIR)" --code-only; \
+	  graphify cluster-only "$(CURDIR)" --no-label; \
+	  echo "✓ both graphs indexed"; \
+	elif [ "$(action)" = "ui-up" ]; then \
+	  [ -x "$(GRAPH_UI_BIN)" ] || { echo "❌ $(GRAPH_UI_BIN) missing — see docs/runbooks/code-graph-tools.md"; exit 1; }; \
+	  if ss -ltn 2>/dev/null | grep -q "127.0.0.1:$(PORT_graph-ui)"; then \
+	    echo "✓ already running"; \
+	  else \
+	    setsid bash -c 'exec tail -f /dev/null | "$(GRAPH_UI_BIN)" --ui=true --port=$(PORT_graph-ui)' >/dev/null 2>&1 & \
+	    sleep 10; \
+	  fi; \
+	  ss -ltn 2>/dev/null | grep -q "127.0.0.1:$(PORT_graph-ui)" \
+	    && echo "→ http://127.0.0.1:$(PORT_graph-ui)" \
+	    || { echo "❌ failed to start — see docs/runbooks/code-graph-tools.md"; exit 1; }; \
+	elif [ "$(action)" = "ui-down" ]; then \
+	  PID=$$(ss -ltnp 2>/dev/null | grep "127.0.0.1:$(PORT_graph-ui)" | grep -oP 'pid=\K[0-9]+' | head -1); \
+	  if [ -n "$$PID" ]; then \
+	    PGID=$$(ps -o pgid= -p "$$PID" 2>/dev/null | tr -d ' '); \
+	    if [ -n "$$PGID" ]; then kill -- -"$$PGID" 2>/dev/null || kill "$$PID"; else kill "$$PID"; fi; \
+	    echo "✓ stopped (pid $$PID)"; \
+	  else echo "  (not running)"; fi; \
+	elif [ "$(action)" = "verify" ]; then \
+	  command -v strace >/dev/null || { echo "❌ strace missing: sudo apt install strace"; exit 1; }; \
+	  T=$$(mktemp); L=$$(mktemp); RC=0; \
+	  echo "━━━ 1/3 control: the detector must SEE an external connect ━━━"; \
+	  strace -f -qq -e trace=connect -o "$$T" \
+	    curl -s --max-time 2 http://192.0.2.1/ >/dev/null 2>&1 || true; \
+	  if grep 'AF_INET' "$$T" 2>/dev/null | grep -vE '127\.0\.0\.1|"::1"' | grep -q .; then \
+	    echo "  ✓ detector works (saw the connect to 192.0.2.1)"; \
+	  else \
+	    echo "  ❌ DETECTOR BROKEN — it cannot see a known external connect."; \
+	    echo "     Every result below would be a false pass. Fix strace first."; \
+	    rm -f "$$T" "$$L"; exit 1; \
+	  fi; \
+	  echo "━━━ 2/3 MCP server via codebase-memory-mcp-offline ━━━"; \
+	  strace -f -qq -e trace=connect -o "$$T" \
+	    $(HOME)/.local/bin/codebase-memory-mcp-offline > "$$L" 2>&1 < /dev/null || true; \
+	  if ! grep -q 'server.start' "$$L"; then \
+	    echo "  ❌ server never started — nothing was exercised, result is meaningless:"; \
+	    tail -3 "$$L"; RC=1; \
+	  elif grep 'AF_INET' "$$T" 2>/dev/null | grep -vE '127\.0\.0\.1|"::1"' | grep -q .; then \
+	    echo "  ❌ EXTERNAL CONNECTION — confinement broken:"; \
+	    grep 'AF_INET' "$$T" | grep -vE '127\.0\.0\.1|"::1"' | head -5; RC=1; \
+	  else echo "  ✓ started, zero external connections"; fi; \
+	  echo "━━━ 3/3 Graph UI via codebase-memory-mcp-ui-offline ━━━"; \
+	  if ss -ltn 2>/dev/null | grep -q "127.0.0.1:$(PORT_graph-ui)"; then \
+	    echo "  ⊘ skipped — UI already running on $(PORT_graph-ui). Run: make graph action=ui-down"; \
+	  elif [ ! -x "$(GRAPH_UI_BIN)" ]; then \
+	    echo "  ⊘ skipped — UI build not installed"; \
+	  else \
+	    strace -f -qq -e trace=connect -o "$$T" \
+	      $(GRAPH_UI_BIN) --ui=true --port=$(PORT_graph-ui) > "$$L" 2>&1 < /dev/null || true; \
+	    if ! grep -q 'server.start' "$$L"; then \
+	      echo "  ❌ UI server never started — result is meaningless:"; tail -3 "$$L"; RC=1; \
+	    elif grep 'AF_INET' "$$T" 2>/dev/null | grep -vE '127\.0\.0\.1|"::1"' | grep -q .; then \
+	      echo "  ❌ EXTERNAL CONNECTION — proxy confinement broken:"; \
+	      grep 'AF_INET' "$$T" | grep -vE '127\.0\.0\.1|"::1"' | head -5; RC=1; \
+	    else echo "  ✓ started, zero external connections"; fi; \
+	  fi; \
+	  rm -f "$$T" "$$L"; \
+	  [ $$RC -eq 0 ] && echo "✓ confinement holds" || echo "❌ confinement FAILED"; \
+	  exit $$RC; \
+	else \
+	  echo "❌ Unknown action=$(action). Use action=index|ui-up|ui-down|verify"; \
 	  exit 1; \
 	fi
