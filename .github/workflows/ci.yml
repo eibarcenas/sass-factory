@@ -1,5 +1,8 @@
 name: CI
 
+# The `backend` matrix job was removed with the four FastAPI services it
+# tested. Only the shared packages remain, so only the JS job is left.
+
 on:
   pull_request:
     branches: [develop, 'release/*']
@@ -49,31 +52,3 @@ jobs:
         run: pnpm -F @eguru/core test
       - name: Lint
         run: pnpm -r --if-present run lint
-
-  backend:
-    name: Backend tests (${{ matrix.service }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        service:
-          - stores-api
-          - identity-api
-          - prospects-api
-          - notifications-webhook
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-      - name: Backend tests (Python 3.13)
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
-          DEV_USER_EMAIL: dev@catalog.mx
-          ENVIRONMENT: local
-        run: |
-          git config --global url."https://x-access-token:${GH_PAT}@github.com/".insteadOf "https://github.com/"
-          trap 'git config --global --unset-all url."https://x-access-token:${GH_PAT}@github.com/".insteadOf || true' EXIT
-          cd "apps/${{ matrix.service }}"
-          uv venv --python 3.13
-          uv pip install -e ".[dev]"
-          .venv/bin/pytest -q
